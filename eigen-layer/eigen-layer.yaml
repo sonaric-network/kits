@@ -1,0 +1,137 @@
+namespace: eigen-layer
+
+eigen-layer-common:
+  metadata:
+    name: eigen-layer
+    shortname: Eigenlayer
+    description: |
+      Integrated services with a reverse proxy and a backend node for data handling and API serving.
+    website: https://docs.eigenlayer.xyz/
+    publisher: monk.io
+    icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
+    version: 1.0
+    source: https://github.com/Layr-Labs
+    tags: web, api
+    private: true
+
+nginx:
+  defines: runnable
+  metadata:
+    publisher: sonaric
+    tags: load balancing, dynamic content serving, security, reverse proxy, high performance, ssl/tls encryption, scalability, nginx web server, optimization, ipv6 support, web acceleration, web application firewall, content delivery network, high availability, low resource usage, static content serving, web traffic management, http cache
+    icon: https://assets.monk.io/icons/nginx-logo-FF65602A76-seeklogo.com.png
+    version: 1.0
+    website: https://www.nginx.com/
+    source: https://github.com/nginx/nginx
+    private: true
+  services:
+    nginx:
+      container: nginx-reverse-proxy
+      port: <- $listen-port
+      protocol: tcp
+      host-port: <- $listen-port
+  connections:
+    da-node:
+      runnable: eigen-layer/da-node
+      service: da-node
+  files:
+    server-def:
+      contents: |
+        server {
+          listen 0.0.0.0:{{ v "listen-port" }};
+          location / {
+            proxy_set_header X-Real-IP  $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Host $host;
+            proxy_pass http://{{ v "proxy-target-host" }}:9091;
+          }
+        }
+      mode: 511
+      path: /opt/bitnami/nginx/conf/server_blocks/reverse_proxy.conf
+      container: nginx-reverse-proxy
+  containers:
+    nginx-reverse-proxy:
+      image: docker.io/bitnami/nginx
+      image-tag: <- $nginx-image-tag default("latest")
+      cap-add:
+        - CAP_NET_BIND_SERVICE
+  variables:
+    proxy-target-host:
+      value: "da-node"
+      type: string
+    listen-port:
+      value: 80
+      type: int
+
+da-node:
+  defines: runnable
+  metadata:
+    name: data-node
+    description: |
+      Core service node for handling specific business logic, data processing, and API responses.
+  inherits: eigen-layer/eigen-layer-common
+  services:
+    da-node:
+      container: node
+      port: 9091
+      protocol: tcp
+  containers:
+    node:
+      image: <- `${node-image}`
+      image-tag: <- `${node-version}`
+      ports:
+        - 32005:32005
+        - 9092:9092
+      paths:
+        - <- `${node_ecdsa_key_file_host}:/app/operator_keys/ecdsa_key.json`
+        - <- `${node_bls_key_file_host}:/app/operator_keys/bls_key.json`
+        - <- `${node_g1_path_host}:/app/g1.point`
+        - <- `${node_g2_path_host}:/app/g2.point.powerOf2`
+        - <- `${node_cache_path_host}:/app/cache`
+        - <- `${node_log_path_host}:/app/logs`
+        - <- `${node_db_path_host}:/data/operator/db`
+      restart: unless-stopped
+  variables:
+    node-image:
+      description: "Docker image for the data node."
+      type: string
+      value: "ghcr.io/layr-labs/eigenda/opr-node:release-0.6.2"
+    node-version:
+      description: "Version of the node software."
+      type: string
+      value: "release-0.6.2"
+    node_ecdsa_key_file_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/.eigenlayer/operator_keys/opr.ecdsa.key.json"
+    node_bls_key_file_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/.eigenlayer/operator_keys/opr.bls.key.json"
+    node_g1_path_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/eigenda-operator-setup/resources/g1.point"
+    node_g2_path_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/eigenda-operator-setup/resources/g2.point.powerof2"
+    node_cache_path_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/eigenda-operator-setup/resources/cache"
+    node_log_path_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/.eigenlayer/eigenda/holesky/logs"
+    node_db_path_host:
+      description: ""
+      type: string
+      value: "/home/ubuntu/.eigenlayer/eigenda/holesky/db"
+
+group:
+  defines: process-group
+  runnable-list:
+    - reverse-proxy
+    - da-node
