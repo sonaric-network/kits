@@ -1,0 +1,3 @@
+REPO avail
+RESOURCES files/light/config.toml files/light/identity.toml
+LOAD avail.yaml

@@ -1,0 +1,231 @@
+namespace: avail
+
+avail-common:
+  metadata:
+    name: avail
+    shortname: Avail
+    description: |
+      Build with Avail DA, the validity proven data availability layer unifying Web3
+    website: https://docs.availproject.org/
+    publisher: monk.io
+    icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
+    version: 1.0
+    source: https://github.com/availproject
+    tags: blockchain
+    private: true
+
+full-node:
+  defines: runnable
+  metadata:
+    name: avail
+    description: |
+      Avail full node
+  inherits: avail/avail-common
+  containers:
+    node:
+      image: availj/avail
+      image-tag: <- `${version}`
+      cmd: <- `--chain ${chain} --name ${name} -d /da/state`
+      ports:
+        - 30333:30333
+        - 9615:9615
+        - 9944:9944
+      paths:
+        - <- `${volume-state}:/da/state`
+      restart: unless-stopped
+  variables:
+    version:
+      description: "Version to use."
+      type: string
+      value: "v1.10.0.0"
+    chain:
+      description: "Blockchain network to join."
+      type: string
+      value: "goldberg"
+    name:
+      description: "Name of the node."
+      type: string
+      value: "MonkAvailNode"
+    volume-state:
+      description: "Volume to store the state."
+      type: string
+      value: <- `${monk-volume-path}/avail-full-node/state`
+  services:
+    http-service:
+      container: node
+      port: 9944
+      protocol: tcp
+      host-port: 9944
+      publish: true
+    p2p-service:
+      container: node
+      port: 30333
+      protocol: tcp
+      host-port: 30333
+      publish: true
+    rpc-service:
+      container: node
+      port: 9615
+      protocol: tcp
+      host-port: 9615
+      publish: true
+
+
+rpc-node:
+  defines: runnable
+  inherits: avail/full-node
+  metadata:
+    name: avail-rpc
+    description: |
+      Avail full node with RPC endpoint
+  containers:
+    node:
+      cmd: <- `--chain ${chain} --name ${name} -d /da/state --rpc-external --rpc-port ${rpc-port} --rpc-cors=${rpc-cors}`
+  variables:
+    rpc-port:
+      description: "Port for the RPC service."
+      type: int
+      value: 9944
+    rpc-cors:
+      description: "CORS for the RPC service."
+      type: string
+      value: "all"
+
+light-client:
+    defines: runnable
+    containers:
+        avail-light-client:
+            image: availj/avail-light:v1.7.10
+            entrypoint: /home/avail/entrypoint.sh
+            ports:
+                - 7000:7000
+                - 37000:37000
+            paths:
+                - <- `${monk-volume-path}/avail-lc/data:/home/avail/data`
+                - <- `${monk-volume-path}/avail-lc/identity:/home/avail/identity`
+                - <- `${monk-volume-path}/avail-lc/config:/home/avail/config`
+    files:
+        config-file:
+            container: avail-light-client
+            path: <- `${config-path}`
+            contents: <<< files/light/config.toml
+            mode: 0755
+        identity-file:
+            container: avail-light-client
+            path: <- `${identity-path}`
+            contents: <<< files/light/identity.toml
+            mode: 0755
+        entrypoint:
+            container: avail-light-client
+            path: /home/avail/entrypoint.sh
+            contents: |
+                #!/bin/bash
+                # Start command construction
+                cmd="--config {{ v "config-path" }} --identity {{ v "identity-path" }}"
+                
+                # Add conditional parameters
+                [[ -n "{{ v "network" }}" ]] && cmd+=" --network {{ v "network" }}"
+                [[ -n "{{ v "port" }}" ]] && cmd+=" --port {{ v "port" }}"
+                [[ -n "{{ v "avail-passphrase" }}" ]] && cmd+=" --avail-passphrase {{ v "avail-passphrase" }}"
+                [[ -n "{{ v "seed" }}" ]] && cmd+=" --seed {{ v "seed" }}"
+                [[ -n "{{ v "secret-key" }}" ]] && cmd+=" --secret-key {{ v "secret-key" }}"
+                
+                # Execute the command
+                echo "Starting avail-light with command: avail-light $cmd"
+                exec avail-light $cmd
+            mode: 0755
+
+    variables:
+        network:
+            description: "Network where the node is syncing."
+            type: string
+            value: ""
+        config-path:
+            description: "Path to the configuration file."
+            type: string
+            value: "/home/avail/config.toml"
+        identity-path:
+            description: "Path to the identity file."
+            type: string
+            value: "/home/avail/identity.toml"
+        port:
+            description: "LibP2P listener port (overrides port from config file)."
+            type: string
+            value: ""
+        avail-passphrase:
+            description: "Avail secret seed phrase password, optional, overrides password from identity file."
+            type: string
+            value: ""
+        seed:
+            description: "Seed string for libp2p keypair generation."
+            type: string
+            value: ""
+        secret-key:
+            description: "Ed25519 private key for libp2p keypair generation."
+            type: string
+            value: ""
+
+    services:
+        http-service:
+            container: avail-light-client
+            port: 7000
+            protocol: tcp
+            host-port: 7000
+            publish: true
+        tcp-service:
+            container: avail-light-client
+            port: 37000
+            protocol: tcp
+            host-port: 37000
+            publish: true
+
+validator:
+    defines: runnable
+    inherits: avail/full-node
+    metadata:
+        name: avail-validator
+        description: |
+            Avail validator node
+    containers:
+        node:
+            entrypoint: /usr/local/bin/entrypoint.sh
+            cmd: ""
+            paths:
+                - <- `${monk-volume-path}/avail-validator/node-data:/da/node-data`
+            restart: on-failure
+    variables:
+        version:
+            value: "v1.8.0.7"
+        chain:
+            value: "goldberg"
+        name:
+            value: "MonkAvailValidator"
+    files:
+        rotate-keys:
+            container: node
+            path: /usr/local/bin/rotate-keys.sh
+            contents: |
+                #!/bin/bash
+                curl -H 'Content-Type: application/json' -d '{"id":1, "jsonrpc":"2.0", "method": "author_rotateKeys", "params":[]}' http://127.0.0.1:9944
+            mode: 0755
+        entrypoint:
+            container: node
+            path: /usr/local/bin/entrypoint.sh
+            contents: |
+                #!/bin/bash
+                if ! command -v curl &> /dev/null
+                then
+                echo "Installing curl..."
+                apt-get update && apt-get install -y curl
+                echo "curl installed."
+                else
+                echo "curl is already installed."
+                fi
+                echo "Starting validator node"
+                exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
+            mode: 0755
+
+    actions:
+        generate-session-keys:
+            description: "Generate new session keys."
+            code: exec("node", "/usr/local/bin/rotate-keys.sh")
