@@ -1,2 +1,3 @@
-REPO sonaric 
-LOAD ethereum.yaml gnosis.yaml polygon.yaml solana.yaml 
+REPO sonaric
+DIR avail
+LOAD ethereum.yaml gnosis.yaml polygon.yaml solana.yaml
