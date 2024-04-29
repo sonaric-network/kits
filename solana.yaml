@@ -1,0 +1,252 @@
+namespace: solana
+common:
+  metadata:
+    defines: metadata
+    name: Solana
+    description: Solana is the name of an open source project that is implementing a new, high-performance, permissionless blockchain. Requires 2TB of storage.
+    tags: blockchain
+    currency: Solana
+    icon: https://avatars.githubusercontent.com/u/35608259
+    website: https://solana.com
+    source: https://github.com/solana-labs
+    publisher: "monk.io"
+    white-paper: https://solana.com/solana-whitepaper.pdf
+    twitter: https://twitter.com/solanalabs
+    reddit: https://www.reddit.com/r/solana
+    telegram: https://t.me/solanaio
+    network-name: "testnet"
+    node-type: "full"
+    consensus-type: "Proof of Stake"
+
+  containers:
+    defines: containers
+    solana-node:
+      image: docker.io/solanalabs/solana
+      paths:
+        - <- `${volume-data}:/usr/bin/config/`
+  services:
+    rpc:
+      container: solana-node
+      port: <- `${rpc-port}`
+      protocol: tcp
+      host-port: <- `${rpc-port}`
+      publish: true
+
+    rpc-pubsub:
+      container: solana-node
+      port: <- `${rpc-pubsub-port}`
+      protocol: tcp
+      host-port: <- `${rpc-pubsub-port}`
+      publish: true
+
+    entrypoint:
+      container: solana-node
+      port: <- `${entrypoint-port}`
+      protocol: tcp
+      host-port: <- `${entrypoint-port}`
+      publish: true
+
+    bank-service:
+      container: solana-node
+      port: <- `${bank-service-port}`
+      protocol: tcp
+      host-port: <- `${bank-service-port}`
+      publish: true
+
+    bank-service2:
+      container: solana-node
+      port: <- `${bank-service-port2}`
+      protocol: tcp
+      host-port: <- `${bank-service-port2}`
+      publish: true
+
+    faucet:
+      container: solana-node
+      port: <- `${faucet-port}`
+      protocol: tcp
+      host-port: <- `${faucet-port}`
+      publish: true
+
+    tvu:
+      container: solana-node
+      port: <- `${tvu-port}`
+      protocol: udp
+      host-port: <- `${tvu-port}`
+      publish: true
+
+    gossip:
+      container: solana-node
+      port: <- `${gossip-port}`
+      protocol: udp
+      host-port: <- `${gossip-port}`
+      publish: true
+
+    tvu-quic:
+      container: solana-node
+      port: <- `${tvu-quic-port}`
+      protocol: udp
+      host-port: <- `${tvu-quic-port}`
+      publish: true
+
+    tpu:
+      container: solana-node
+      port: <- `${tpu-port}`
+      protocol: udp
+      host-port: <- `${tpu-port}`
+      publish: true
+
+    tpu-forwards:
+      container: solana-node
+      port: <- `${tpu-forwards-port}`
+      protocol: udp
+      host-port: <- `${tpu-forwards-port}`
+      publish: true
+
+    retransmit:
+      container: solana-node
+      port: <- `${retransmit-port}`
+      protocol: udp
+      host-port: <- `${retransmit-port}`
+      publish: true
+
+    repair:
+      container: solana-node
+      port: <- `${repair-port}`
+      protocol: udp
+      host-port: <- `${repair-port}`
+      publish: true
+
+    serve-repair:
+      container: solana-node
+      port: <- `${serve-repair-port}`
+      protocol: udp
+      host-port: <- `${serve-repair-port}`
+      publish: true
+
+    broadcast:
+      container: solana-node
+      port: <- `${broadcast-port}`
+      protocol: udp
+      host-port: <- `${broadcast-port}`
+      publish: true
+
+    tpu-vote:
+      container: solana-node
+      port: <- `${tpu-vote-port}`
+      protocol: udp
+      host-port: <- `${tpu-vote-port}`
+      publish: true
+  variables:
+    defines: variables
+
+    volume-data:
+      type: string
+      value: <- `${monk-volume-path}/solana`
+    rpc-port:
+      type: string
+      value: 8899
+
+    rpc-pubsub-port:
+      type: string
+      value: 8900
+
+    entrypoint-port:
+      type: string
+      value: 8001
+
+    bank-service-port:
+      type: string
+      value: 8901
+
+    bank-service-port2:
+      type: string
+      value: 8902
+
+    faucet-port:
+      type: string
+      value: 9900
+
+    tvu-port:
+      type: string
+      value: 8000
+
+    gossip-port:
+      type: string
+      value: 8001
+
+    tvu-quic-port:
+      type: string
+      value: 8002
+
+    tpu-port:
+      type: string
+      value: 8003
+
+    tpu-forwards-port:
+      type: string
+      value: 8004
+
+    retransmit-port:
+      type: string
+      value: 8005
+
+    repair-port:
+      type: string
+      value: 8006
+
+    serve-repair-port:
+      type: string
+      value: 8007
+
+    broadcast-port:
+      type: string
+      value: 8008
+    tpu-vote-port:
+      type: string
+      value: 8009
+    solana-run-validator-args:
+      type: string
+      value: ""
+      env: SOLANA_RUN_SH_VALIDATOR_ARGS
+      description: "Additional arguments to pass to run.sh when starting a validator. Example: https://docs.solanalabs.com/operations/setup-a-validator#create-a-validator-startup-script"
+    solana-run-cluster-type:
+      type: string
+      value: ""
+      env: SOLANA_RUN_SH_CLUSTER_TYPE
+    spl-genesis-args:
+      type: string
+      value: ""
+      env: SPL_GENESIS_ARGS
+    host:
+      type: string
+      value: 0.0.0.0
+
+beta:
+  defines: runnable
+  inherits: ./common
+  metadata:
+    network-name: "testnet-beta"
+  version: beta
+  containers:
+    solana-node:
+      image-tag: beta
+
+edge:
+  defines: runnable
+  inherits: ./common
+  metadata:
+    network-name: "testnet-edge"
+  version: edge
+  containers:
+    solana-node:
+      image-tag: edge
+
+stable:
+  defines: runnable
+  inherits: ./common
+  metadata:
+    network-name: "testnet-stable"
+  version: stable
+  containers:
+    solana-node:
+      image-tag: stable

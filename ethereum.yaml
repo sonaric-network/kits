@@ -1,0 +1,165 @@
+namespace: ethereum
+
+base:
+  defines: runnable
+  metadata:
+    tags: blockchain, evm
+  containers:
+    erigon:
+      image: "thorax/erigon"
+      image-tag: v2.58.2
+      entrypoint: <- `erigon --chain=${chain} --internalcl --torrent.download.rate=512mb --http.addr=0.0.0.0 --http.api=eth,web3,net,debug,trace,txpool ${options}`
+  services:
+    grpc-server:
+      container: erigon
+      port: 9090
+      protocol: tcp
+    snap-sync-tcp:
+      container: erigon
+      port: 42069
+      host-port: 42069
+      protocol: tcp
+    snap-sync-udp:
+      container: erigon
+      port: 42069
+      host-port: 42069
+      protocol: udp
+    engine-api:
+      container: erigon
+      port: 8551
+      protocol: tcp
+    peering:
+      container: erigon
+      port: 30303
+      host-port: 30303
+      protocol: tcp
+      publish: true
+    peering-udp:
+      container: erigon
+      port: 30303
+      host-port: 30303
+      protocol: udp
+      publish: true
+    peering2:
+      container: erigon
+      port: 30304
+      host-port: 30304
+      protocol: tcp
+      publish: true
+    peering2-udp:
+      container: erigon
+      port: 30304
+      host-port: 30304
+      protocol: udp
+      publish: true
+    incoming-grpc:
+      container: erigon
+      port: 9091
+      protocol: tcp
+    rpc:
+      container: erigon
+      port: 8545
+      host-port: 8545
+      protocol: tcp
+      publish: true
+    caplin:
+      container: erigon
+      port: 4000
+      host-port: 4000
+      protocol: udp
+      publish: true
+    caplin-tcp:
+      container: erigon
+      port: 4001
+      host-port: 4001
+      protocol: tcp
+      publish: true
+  variables:
+    chain:
+      type: string
+      value: "mainnet"
+    options:
+      type: string
+      value: ""
+
+mainnet:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: "Ethereum Mainnet Archive Node"
+    description: "An Ethereum mainnet archive node, requires 3.5TB of storage"
+    network-name: "mainnet"
+    node-type: archive
+
+mainnet-pruned:
+  defines: runnable
+  inherits: ethereum/mainnet
+  metadata:
+    name: "Ethereum Mainnet Pruned Node"
+    description: "An Ethereum mainnet pruned node, requires 2TB of storage"
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"
+
+goerli:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: "Ethereum Goerli Testnet Archive Node"
+    description: "An Ethereum Goerli testnet archive node, requires 1TB of storage"
+    network-name: "goerli"
+    node-type: archive
+  variables:
+    chain: "goerli"
+
+goerli-pruned:
+  defines: runnable
+  inherits: ethereum/goerli
+  metadata:
+    name: "Ethereum Goerli Testnet Pruned Node"
+    description: "An Ethereum Goerli testnet pruned node, requires 500GB of storage"
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"
+
+sepolia:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: "Ethereum Sepolia Testnet Archive Node"
+    description: "An Ethereum Sepolia testnet archive node, requires 1TB of storage"
+    network-name: "sepolia"
+    node-type: archive
+  variables:
+    chain: "sepolia"
+
+sepolia-pruned:
+  defines: runnable
+  inherits: ethereum/sepolia
+  metadata:
+    name: "Ethereum Sepolia Testnet Pruned Node"
+    description: "An Ethereum Sepolia testnet pruned node, requires 500GB of storage"
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"
+
+holesky:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: "Ethereum Holesky Testnet Archive Node"
+    description: "An Ethereum Holesky testnet archive node, requires 1TB of storage"
+    network-name: "holesky"
+    node-type: archive
+  variables:
+    chain: "holesky"
+
+holesky-pruned:
+  defines: runnable
+  inherits: ethereum/holesky
+  metadata:
+    name: "Ethereum Holesky Testnet Pruned Node"
+    description: "An Ethereum Holesky testnet pruned node, requires 500GB of storage"
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"

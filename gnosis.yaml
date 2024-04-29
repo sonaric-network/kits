@@ -1,0 +1,43 @@
+namespace: gnosis
+
+mainnet:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: Gnosis Mainnet
+    description: Gnosis Mainnet archive node, requires 600GB of storage
+    network-name: mainnet
+    node-type: archive
+  variables:
+    chain: gnosis
+
+mainnet-pruned:
+  defines: runnable
+  inherits: gnosis/mainnet
+  metadata:
+    name: Gnosis Mainnet (pruned)
+    description: Gnosis Mainnet archive node with pruned state, requires 350GB of storage
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"
+
+chiado:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: Gnosis Chiado
+    description: Gnosis Chiado testnet archive node, requires 2GB of storage
+    network-name: chiado
+    node-type: archive
+  variables:
+    chain: chiado
+
+chiado-pruned:
+  defines: runnable
+  inherits: gnosis/chiado
+  metadata:
+    name: Gnosis Chiado (pruned)
+    description: Gnosis Chiado testnet archive node with pruned state, requires 1GB of storage
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc"

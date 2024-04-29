@@ -1,0 +1,45 @@
+namespace: polygon
+
+mainnet:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: Polygon Mainnet
+    description: Polygon Mainnet archive node, requires 8.5TB of storage
+    network-name: mainnet
+    node-type: archive
+  variables:
+    chain: bor-mainnet
+    options: "--bor.heimdall=https://heimdall-api.polygon.technology/"
+
+mainnet-pruned:
+  defines: runnable
+  inherits: polygon/mainnet
+  metadata:
+    name: Polygon Mainnet (pruned)
+    description: Polygon Mainnet pruned node, requires 5.1TB of storage
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc --prune.*.older 15768000 --bor.heimdall=https://heimdall-api.polygon.technology/"
+
+mumbai:
+  defines: runnable
+  inherits: ethereum/base
+  metadata:
+    name: Polygon Mumbai Testnet
+    description: Polygon Mumbai Testnet archive node, requires 1TB of storage
+    network-name: mumbai
+    node-type: archive
+  variables:
+    chain: mumbai
+    options: "--bor.heimdall=https://heimdall-api-testnet.polygon.technology/"
+
+mumbai-pruned:
+  defines: runnable
+  inherits: polygon/mumbai
+  metadata:
+    name: Polygon Mumbai Testnet (pruned)
+    description: Polygon Mumbai Testnet pruned node, requires 600GB of storage
+    node-type: pruned
+  variables:
+    options: "--prune=hrtc --bor.heimdall=https://heimdall-api-testnet.polygon.technology/"
