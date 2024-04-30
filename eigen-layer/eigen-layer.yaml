@@ -13,6 +13,12 @@ eigen-layer-common:
     source: https://github.com/Layr-Labs
     tags: web, api
     private: true
+  requirements:
+    defines: requirements
+    CPU: "2 Cores"
+    RAM: 8192
+    GPU: false
+    disk: 0
 
 nginx:
   defines: runnable
@@ -133,5 +139,5 @@ da-node:
 group:
   defines: process-group
   runnable-list:
-    - reverse-proxy
+    - nginx
     - da-node
