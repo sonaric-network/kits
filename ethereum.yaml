@@ -7,7 +7,7 @@ base:
   requirements:
     defines: requirements
     CPU: "Multi-core processor"
-    RAM: 32000
+    RAM: 32768
     GPU: false
     disk: 8500000
   containers:

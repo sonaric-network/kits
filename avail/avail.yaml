@@ -99,7 +99,7 @@ rpc-node:
 
 light-client:
     defines: runnable
-    inherits: avail/full-node
+    inherits: avail/avail-common
     containers:
         avail-light-client:
             image: availj/avail-light:v1.7.10

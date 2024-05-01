@@ -20,7 +20,7 @@ common:
   requirements:
     defines: requirements
     CPU: "12 Cores"
-    RAM: 128000
+    RAM: 131072
     GPU: false
     disk: 1500000
 
