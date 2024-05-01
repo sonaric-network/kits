@@ -17,6 +17,12 @@ common:
     network-name: "testnet"
     node-type: "full"
     consensus-type: "Proof of Stake"
+  requirements:
+    defines: requirements
+    CPU: "12 Cores"
+    RAM: 128000
+    GPU: false
+    disk: 1500000
 
   containers:
     defines: containers

@@ -4,6 +4,12 @@ base:
   defines: runnable
   metadata:
     tags: blockchain, evm
+  requirements:
+    defines: requirements
+    CPU: "Multi-core processor"
+    RAM: 32000
+    GPU: false
+    disk: 8500000
   containers:
     erigon:
       image: "thorax/erigon"

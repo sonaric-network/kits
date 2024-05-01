@@ -13,6 +13,12 @@ avail-common:
     source: https://github.com/availproject
     tags: blockchain
     private: true
+  requirements:
+    defines: requirements
+    CPU: "4 Cores"
+    RAM: 8192
+    GPU: false
+    disk: 40960
 
 full-node:
   defines: runnable
@@ -93,6 +99,7 @@ rpc-node:
 
 light-client:
     defines: runnable
+    inherits: avail/full-node
     containers:
         avail-light-client:
             image: availj/avail-light:v1.7.10
