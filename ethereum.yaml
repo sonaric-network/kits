@@ -9,7 +9,7 @@ base:
     CPU: "Multi-core processor"
     RAM: 32768
     GPU: false
-    disk: 8500000
+    disk: 3670016
   containers:
     erigon:
       image: "thorax/erigon"

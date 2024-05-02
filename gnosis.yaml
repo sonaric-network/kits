@@ -8,6 +8,8 @@ mainnet:
     description: Gnosis Mainnet archive node, requires 600GB of storage
     network-name: mainnet
     node-type: archive
+  requirements:
+    disk: 614400
   variables:
     chain: gnosis
 
@@ -18,6 +20,8 @@ mainnet-pruned:
     name: Gnosis Mainnet (pruned)
     description: Gnosis Mainnet archive node with pruned state, requires 350GB of storage
     node-type: pruned
+  requirements:
+    disk: 358400
   variables:
     options: "--prune=hrtc"
 
@@ -29,6 +33,8 @@ chiado:
     description: Gnosis Chiado testnet archive node, requires 2GB of storage
     network-name: chiado
     node-type: archive
+  requirements:
+    disk: 2048
   variables:
     chain: chiado
 
@@ -39,5 +45,7 @@ chiado-pruned:
     name: Gnosis Chiado (pruned)
     description: Gnosis Chiado testnet archive node with pruned state, requires 1GB of storage
     node-type: pruned
+  requirements:
+    disk: 1024
   variables:
     options: "--prune=hrtc"

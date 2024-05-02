@@ -22,7 +22,7 @@ common:
     CPU: "12 Cores"
     RAM: 131072
     GPU: false
-    disk: 1500000
+    disk: 1572864
 
   containers:
     defines: containers
