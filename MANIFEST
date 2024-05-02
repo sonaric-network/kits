@@ -1,3 +1,4 @@
 REPO sonaric
 DIR avail
+DIR mina
 LOAD ethereum.yaml gnosis.yaml polygon.yaml solana.yaml
