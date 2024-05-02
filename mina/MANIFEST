@@ -1,0 +1,3 @@
+REPO mina
+RESOURCES files/entrypoint.sh files/entrypoint-dev.sh
+LOAD mina.yaml
