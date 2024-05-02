@@ -8,6 +8,8 @@ mainnet:
     description: Polygon Mainnet archive node, requires 8.5TB of storage
     network-name: mainnet
     node-type: archive
+  requirements:
+    disk: 8912896
   variables:
     chain: bor-mainnet
     options: "--bor.heimdall=https://heimdall-api.polygon.technology/"
@@ -19,6 +21,8 @@ mainnet-pruned:
     name: Polygon Mainnet (pruned)
     description: Polygon Mainnet pruned node, requires 5.1TB of storage
     node-type: pruned
+  requirements:
+    disk: 5347737
   variables:
     options: "--prune=hrtc --prune.*.older 15768000 --bor.heimdall=https://heimdall-api.polygon.technology/"
 
@@ -30,6 +34,8 @@ mumbai:
     description: Polygon Mumbai Testnet archive node, requires 1TB of storage
     network-name: mumbai
     node-type: archive
+  requirements:
+    disk: 1048576
   variables:
     chain: mumbai
     options: "--bor.heimdall=https://heimdall-api-testnet.polygon.technology/"
@@ -41,5 +47,7 @@ mumbai-pruned:
     name: Polygon Mumbai Testnet (pruned)
     description: Polygon Mumbai Testnet pruned node, requires 600GB of storage
     node-type: pruned
+  requirements:
+    disk: 614400
   variables:
     options: "--prune=hrtc --bor.heimdall=https://heimdall-api-testnet.polygon.technology/"
