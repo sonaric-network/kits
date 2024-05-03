@@ -76,6 +76,16 @@ full-node:
       host-port: 9615
       publish: true
 
+turing:
+    defines: runnable
+    inherits: avail/full-node
+    metadata:
+        name: avail-turing
+        description: "Avail full node with Turing network"
+    variables:
+        chain: "turing"
+        value: "MonkAvailTuringNode"
+        version: "v2.2.0.0-rc1"
 
 rpc-node:
   defines: runnable
