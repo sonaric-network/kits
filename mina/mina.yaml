@@ -1,0 +1,196 @@
+namespace: mina
+
+base:
+    defines: runnable
+    metadata:
+        name: "Mina"
+        shortname: Mina
+        description: |
+            Mina is a layer-1 blockchain with a 22KB blockchain & zero knowledge smart contracts (“zkApps”) written in TypeScript.
+        website: https://minaprotocol.com/
+        publisher: "monk.io"
+        source: https://github.com/MinaProtocol/mina
+        tags: blockchain
+        private: false
+    requirements:
+        defines: requirements
+        CPU: "8 Cores"
+        RAM: 16384
+        GPU: false
+        disk: 0
+    containers:
+        mina:
+            image: minaprotocol/mina-daemon
+            image-tag: <- `${version}`
+            ports:
+                - 3085:3085
+                - 8302:8302
+            restart: unless-stopped
+            environment:
+                - <- `MINA_PRIVKEY_PASS=${private-key-password}`
+                - <- `MINA_LIBP2P_PASS=${libp2p-password}`
+                - <- `PEER_LIST_URL=${peer-list-url}`
+                - <- `EXTRA_FLAGS=${extra-flags}`
+                - <- `LOG_LEVEL=${log-level}`
+                - <- `FILE_LOG_LEVEL=${file-log-level}`
+#            paths: # TODO
+#                - <- `${monk-volume-path}/mina/keys:/keys
+    files:
+        keys-check-generate:
+            container: mina
+            path: /monk/keys-check-generate.sh
+            contents: <<< files/keys-check-generate.sh
+            mode: 0755
+    variables:
+        private-key-password:
+            description: "Password for the private key."
+            type: string
+            value: ""
+        libp2p-password:
+            description: "Password for the libp2p key."
+            type: string
+            value: ""
+        version:
+            description: "Version of the Mina daemon to deploy."
+            type: string
+            value: "1.4.0-c980ba8-bullseye-mainnet"
+        peer-list-url:
+            description: "URL to fetch the peer list from."
+            type: string
+            value: "https://storage.googleapis.com/o1labs-gitops-infrastructure/mainnet/seed-list.txt"
+        extra-flags:
+            description: "Extra flags to pass to the Mina daemon. Example: --block-producer-key <BLOCK_PRODUCER_KEY_PATH>"
+            type: string
+            value: ""
+        log-level:
+            description: "Log level for the Mina daemon."
+            type: string
+            value: "Info"
+        file-log-level:
+            description: "File log level for the Mina daemon."
+            type: string
+            value: "Debug"
+
+    services:
+        # Unless the -external-ip YOUR_IP flag is provided, the daemon uses HTTPS (443) and HTTP (80) to determine its own IP address.
+        #         TODO: open 80 and 443 ports? what if no ip provided?
+        graphql-service:
+            container: mina
+            port: 3085
+            protocol: tcp
+            host-port: 3085
+            publish: true
+        tcp-service:
+            container: mina
+            port: 8302
+            protocol: tcp
+            host-port: 8302
+            publish: true
+    actions:
+        status:
+            description: "Get the status of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "mina client status")
+        get-public-key:
+            description: "Get the public key of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-key.pub")
+        get-peer-id:
+            description: "Get the peer ID of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-libp2p-key.peerid")
+        get-private-key:
+            description: "Get the the encrypted private key of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-key")
+
+
+sandbox:
+    defines: runnable
+    metadata:
+        name: "Mina Sandbox"
+        shortname: "Mina Sandbox"
+        description: |
+            The Mina Sandbox Node enables you to test and get familiar with core features of the protocol and build tooling in a stable environment -- it's a single-node private network that uses the same configuration as the live testnet. 
+            The sandbox does NOT connect you to a live network.
+        network-name: "sandbox"
+    inherits: mina/base
+    containers:
+        mina:
+            image-tag: <- `${version}`
+            ports:
+                - 3085:3085
+            restart: unless-stopped
+            environment:
+                - <- `RUN_DEMO=true`
+                - <- `MINA_PRIVKEY_PASS=${private-key-password}`
+    variables:
+        private-key-password: ""
+        version: "1.3.0-9b0369c-bullseye-devnet"
+        peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
+    services:
+        graphql-service:
+            container: mina
+            port: 3085
+            protocol: tcp
+            host-port: 3085
+            publish: true
+
+devnet:
+    defines: runnable
+    metadata:
+        name: "Mina Devnet"
+        description: |
+            The Devnet network is designed for testing and experimentation. Devnet is a dedicated network for developers who are building on top of the Mina protocol.
+            On the Devnet network, MINA holds no real value.
+    inherits: mina/base
+    containers:
+        mina:
+            entrypoint: /monk/entrypoint.sh
+            ports:
+                - 3085:3085
+                - 8302:8302
+                - 80:80
+            restart: unless-stopped
+            paths:
+                - <- `${monk-volume-path}/mina/keys:/keys`
+                - <- `${monk-volume-path}/mina/.mina-config:/root/.mina-config`
+    variables:
+        version: "3.0.0-dc6bf78-focal-devnet"
+        private-key-password: "My_V3ry_S3cure_Privat3K3yPassw0rd"
+        libp2p-password: "My_V3ry_S3cure_LiBp2pPassword"
+        peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
+    files:
+        entrypoint:
+            container: mina
+            path: /monk/entrypoint.sh
+            contents: <<< files/entrypoint-dev.sh
+            mode: 0755
+
+mainnet:
+    defines: runnable
+    metadata:
+        name: "Mina Mainnet"
+        description: |
+            The Mina Mainnet is the main network for the Mina protocol. It is a decentralized network that is secured by a large number of independent validators.
+    inherits: mina/base
+    containers:
+        mina:
+            entrypoint: /monk/entrypoint.sh
+            ports:
+                - 3085:3085
+                - 8302:8302
+            restart: unless-stopped
+            paths:
+                - <- `${monk-volume-path}/mina/keys:/keys`
+                - <- `${monk-volume-path}/mina/.mina-config:/root/.mina-config`
+    variables:
+        version: "1.4.0-c980ba8-bullseye-mainnet"
+        private-key-password: "My_V3ry_S3cure_Privat3K3yPassw0rd"
+        libp2p-password: ""
+        peer-list-url: "https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt"
+    files:
+        entrypoint:
+            container: mina
+            path: /monk/entrypoint.sh
+            contents: <<< files/entrypoint.sh
+            mode: 0755
+
+
+

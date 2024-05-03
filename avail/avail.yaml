@@ -12,7 +12,7 @@ avail-common:
     version: 1.0
     source: https://github.com/availproject
     tags: blockchain
-    private: true
+    private: false
   requirements:
     defines: requirements
     CPU: "4 Cores"
