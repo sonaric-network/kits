@@ -33,8 +33,6 @@ base:
                 - <- `EXTRA_FLAGS=${extra-flags}`
                 - <- `LOG_LEVEL=${log-level}`
                 - <- `FILE_LOG_LEVEL=${file-log-level}`
-#            paths: # TODO
-#                - <- `${monk-volume-path}/mina/keys:/keys
     files:
         keys-check-generate:
             container: mina
@@ -72,8 +70,6 @@ base:
             value: "Debug"
 
     services:
-        # Unless the -external-ip YOUR_IP flag is provided, the daemon uses HTTPS (443) and HTTP (80) to determine its own IP address.
-        #         TODO: open 80 and 443 ports? what if no ip provided?
         graphql-service:
             container: mina
             port: 3085
