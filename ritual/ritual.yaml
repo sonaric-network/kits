@@ -85,7 +85,7 @@ ritual-node:
       config-file: /monk/config.json
       paths:
         - <- `${monk-volume-path}/node-logs:/logs`
-        - <- `${monk-volume-path}/var/run/docker.sock:/var/run/docker.sock`
+        - <- `${docker-socket-path}:/var/run/docker.sock`
       restart: on-failure
   services:
     http-service:
