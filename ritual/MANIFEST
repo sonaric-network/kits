@@ -1,0 +1,3 @@
+REPO ritual
+RESOURCES files/fluent-bit.conf files/redis.conf files/config.json
+LOAD ritual.yaml
