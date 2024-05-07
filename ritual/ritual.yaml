@@ -1,0 +1,107 @@
+namespace: ritual
+
+ritual-common:
+  metadata:
+    name: ritual
+    shortname: Ritual
+    description: |
+      Ritual is pioneering an execution layer for AI, integrating 
+      blockchain technology to provide developers access to AI models through both on-chain and off-chain methods.
+    website: https://docs.ritual.net/
+    publisher: sonaric
+    icon: https://avatars.githubusercontent.com/u/150227560?s=200&v=4
+    version: 0.2.0
+    source: https://github.com/ritual-net
+    tags: blockchain
+    private: true
+  requirements:
+    defines: requirements
+    CPU: "2 Cores"
+    RAM: 2048
+    GPU: false
+    disk: 51200
+
+redis:
+  defines: runnable
+  metadata:
+    name: redis
+    description: |
+      Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache, and message broker.
+  containers:
+    redis:
+      image: redis:latest
+      ports:
+        - 6379:6379
+  services:
+    http-service:
+      container: redis
+      port: 6379
+      protocol: tcp
+  redis-config: /monk/redis.conf
+  paths:
+    - <- `${monk-volume-path}/redis-data:/data`
+  restart:
+    on-failure
+  files:
+    redis-config:
+      container: redis
+      path: /monk/redis.conf
+      contents: <<< files/redis.conf
+      mode: 0755
+
+fluentbit:
+  defines: runnable
+  inherits: ritual/ritual-common
+  containers:
+    fluentbit:
+      image: fluent/fluent-bit:latest
+      ports:
+        - 24224:24224
+      environment:
+        - <- `FLUENTBIT_CONFIG_PATH=/fluent-bit/etc/fluent-bit.conf`
+      fluent-bit: /monk/fluent-bit.conf
+      paths:
+        - <- `${monk-volume-path}/fluent-bit:/fluent-bit/etc/fluent-bit.conf`
+        - <- `${monk-volume-path}/var/log:/var/log:ro`
+      restart: on-failure
+  files:
+    fluent-bit:
+      container: fluentbit
+      path: /monk/fluent-bit.conf
+      contents: <<< files/fluent-bit.conf
+      mode: 0755
+
+ritual-node:
+  defines: runnable
+  metadata:
+    name: ritual-node
+    description: |
+      Ritual node
+  containers:
+    node:
+      image: ritualnetwork/infernet-node:latest
+      ports:
+        - 4000:4000
+      config-file: /monk/config.json
+      paths:
+        - <- `${monk-volume-path}/node-logs:/logs`
+        - <- `${docker-socket-path}:/var/run/docker.sock`
+      restart: on-failure
+  services:
+    http-service:
+      container: node
+      port: 4000
+      protocol: tcp
+  files:
+    config-file:
+      container: node
+      path: /monk/config.json
+      contents: <<< files/config.json
+      mode: 0755
+
+group:
+  defines: process-group
+  runnable-list:
+    - ritual-node
+    - redis
+    - fluentbit
