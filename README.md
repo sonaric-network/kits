@@ -3,10 +3,10 @@
 
 ## Templates
 
-- [Mina](https://github.com/sonaric-network/kits/tree/main/mina)
-- [Ritual](https://github.com/sonaric-network/kits/tree/main/ritual)
-- [Avail](https://github.com/sonaric-network/kits/tree/main/avail)
-- [Eigen Layer](https://github.com/sonaric-network/kits/tree/main/eigen-layer)
+- [Mina](https://github.com/sonaric-network/kits/tree/main/docs/mina.md)
+- [Ritual](https://github.com/sonaric-network/kits/tree/main/docs/ritual.md)
+- [Avail](https://github.com/sonaric-network/kits/tree/main/docs/avail.md)
+- [Eigen Layer](https://github.com/sonaric-network/kits/tree/main/docs/eigen-layer.md)
 
 
 ## Load Template

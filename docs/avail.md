@@ -6,7 +6,7 @@ cd sonaric-avail
 sonaric load MANIFEST
 ```
 
-### Let's take a look at the themes I have installed
+### Confirm templates loaded
 
 ```bash
 foo@bar:~$ sonaric list avail
