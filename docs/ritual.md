@@ -20,7 +20,7 @@ runnable    ritual/redis        local      -          -
 runnable    ritual/ritual-node  local      -          -
 ```
 
-### Run mina sandbox
+### Run ritual ritual-node
 
 ```bash
 sonaric run ritual/ritual-node

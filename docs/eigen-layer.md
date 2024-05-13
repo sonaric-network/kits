@@ -17,10 +17,10 @@ group       eigen-layer/group    local      -          -
 runnable    eigen-layer/nginx    local      1.0        load balancing, dynamic content serving, security, reverse proxy, high performance, ssl/tls encryption...
 ```
 
-### Run mina sandbox
+### Run eigen-layer group
 
 ```bash
-sonaric run gnosis/mainnet
+sonaric run eigen-layer/group
 ```
 Output:
 ```bash

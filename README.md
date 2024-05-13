@@ -16,48 +16,47 @@ sonaric load MANIFEST
 ```
 Output:
 ```bash
-Loaded 29 runnables, 0 process groups, 0 services, 0 entities and 5 entity instances from 6 files
+Loaded 28 runnables, 0 process groups, 0 services, 0 entities and 5 entity instances from 6 files
 ✨ Loaded:
  ├─🔩 Runnables:
  │  ├─🧩 avail/full-node
+ │  ├─🧩 avail/light-client
  │  ├─🧩 avail/validator
  │  ├─🧩 avail/rpc-node
  │  ├─🧩 avail/turing
- │  ├─🧩 avail/light-client
- │  ├─🧩 mina/sandbox
- │  ├─🧩 mina/base
- │  ├─🧩 mina/devnet
  │  ├─🧩 mina/mainnet
- │  ├─🧩 ethereum/mainnet-pruned
- │  ├─🧩 ethereum/mainnet
- │  ├─🧩 ethereum/base
- │  ├─🧩 ethereum/goerli
+ │  ├─🧩 mina/devnet
+ │  ├─🧩 mina/sandbox
  │  ├─🧩 ethereum/sepolia-pruned
+ │  ├─🧩 ethereum/mainnet
  │  ├─🧩 ethereum/holesky-pruned
- │  ├─🧩 ethereum/goerli-pruned
- │  ├─🧩 ethereum/sepolia
+ │  ├─🧩 ethereum/goerli
  │  ├─🧩 ethereum/holesky
+ │  ├─🧩 ethereum/sepolia
+ │  ├─🧩 ethereum/goerli-pruned
+ │  ├─🧩 ethereum/mainnet-pruned
+ │  ├─🧩 ethereum/base
  │  ├─🧩 gnosis/mainnet
- │  ├─🧩 gnosis/mainnet-pruned
  │  ├─🧩 gnosis/chiado-pruned
+ │  ├─🧩 gnosis/mainnet-pruned
  │  ├─🧩 gnosis/chiado
  │  ├─🧩 polygon/mumbai
+ │  ├─🧩 polygon/mainnet-pruned
  │  ├─🧩 polygon/mumbai-pruned
  │  ├─🧩 polygon/mainnet
- │  ├─🧩 polygon/mainnet-pruned
  │  ├─🧩 solana/beta
  │  ├─🧩 solana/edge
  │  └─🧩 solana/stable
  └─⚙️ Entity instances:
-    ├─🧩 avail/avail-common/requirements
     ├─🧩 avail/light-client/requirements
+    ├─🧩 avail/avail-common/requirements
     ├─🧩 mina/base/requirements
     ├─🧩 ethereum/base/requirements
     └─🧩 solana/common/requirements
 ✔ All templates loaded successfully
 ```
 
-### Run mina sandbox
+### Run gnosis mainnet
 
 ```bash
 sonaric run gnosis/mainnet
