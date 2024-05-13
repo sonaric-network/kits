@@ -1,7 +1,6 @@
 namespace: mina
 
 base:
-    defines: runnable
     metadata:
         name: "Mina"
         shortname: Mina
