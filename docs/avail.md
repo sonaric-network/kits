@@ -1,28 +1,3 @@
-# sonaric-avail
-
-sonaric-avail basic template
-
-## Prerequisites
-
-- [Install Monk](https://docs.monk.io/docs/get-monk)
-- [Register and Login Monk](https://docs.monk.io/docs/acc-and-auth)
-- [Add Cloud Provider](https://docs.monk.io/docs/cloud-provider)
-- [Add Instance](https://docs.monk.io/docs/multi-cloud)
-
-### Make sure monkd is running
-
-```bash
-foo@bar:~$ monk status
-daemon: ready
-auth: logged in
-not connected to cluster
-```
-
-## Clone Repository
-
-```bash
-git clone https://github.com/monk-io/sonaric-avail
-```
 
 ## Load Template
 
@@ -36,7 +11,7 @@ sonaric load MANIFEST
 ```bash
 foo@bar:~$ sonaric list avail
 ✔ Got the list
-Type      Template                      Repository  Version  Tags
+Type      Template             Repository  Version  Tags
 runnable  avail/full-node      local       1.0        blockchain
 runnable  avail/rpc-node       local       1.0        blockchain
 runnable  avail/light-client   local       -          blockchain
@@ -76,8 +51,8 @@ foo@bar:~$ sonaric describe avail/full-node
 ## Stop, remove and clean up workloads and templates
 
 ```bash
-monk purge sonaric-avail/full-node
-monk purge sonaric-avail/light-client
+sonaric purge sonaric-avail/full-node
+sonaric purge sonaric-avail/light-client
 ```
 
 
@@ -144,7 +119,7 @@ curl "http://35.222.191.87:7000/v1/status"
 
 Run the following command to deploy a validator node
 ```bash
-monk load MANIFEST && monk run templates/local/avail/validator
+sonaric load MANIFEST && sonaric run templates/local/avail/validator
 ```
 
 | Name          | Type   | Description                                                                 | Default Value                                    |
@@ -160,7 +135,7 @@ More about session keys can be found [here](https://docs.availproject.org/docs/o
 Our template provides a helper action to generate session keys for a validator node. 
 Run the following command:
 ```bash
-monk do templates/local/avail/validator/generate-session-keys
+sonaric do templates/local/avail/validator/generate-session-keys
 ```
 example output:
 ```

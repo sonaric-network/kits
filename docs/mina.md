@@ -1,35 +1,19 @@
-# sonaric-mina
-
-Mina basic templates
-
-
-## Prerequisites
-
-- [Install Monk](https://docs.monk.io/docs/get-monk)
-- [Register and Login Monk](https://docs.monk.io/docs/acc-and-auth)
-- [Add Cloud Provider](https://docs.monk.io/docs/cloud-provider)
-- [Add Instance](https://docs.monk.io/docs/multi-cloud)
-
-### Make sure monkd is running
-
-```bash
-foo@bar:~$ monk status
-daemon: ready
-auth: logged in
-not connected to cluster
-```
-
-
 ### Generate Mina keypair
 
 [Generate Mina keypair](https://docs.minaprotocol.com/node-operators/generating-a-keypair)
 
 
+## Load Template
+
+```bash
+cd mina
+sonaric load MANIFEST
+```
 
 ### Run mina sandbox
 
 ```bash
-monk run mina/sandbox
+sonaric run mina/sandbox
 ```
 Output:
 ```bash
@@ -62,7 +46,7 @@ The keys will be generated only on the first run.
 ### Actions:
 #### Node status:
 ````bash
-monk do templates/local/mina/devnet/status
+sonaric do templates/local/mina/devnet/status
 ````
 Example output:
 ```bash
@@ -79,10 +63,10 @@ Local uptime:                                  10m58s
 
 #### Get public key:
 ```bash
-monk do templates/local/mina/devnet/get-public-key
+sonaric do templates/local/mina/devnet/get-public-key
 ```
 ```bash
-monk do templates/local/mina/mainnet/get-public-key
+sonaric do templates/local/mina/mainnet/get-public-key
 ```
 Example output:
 ```bash
@@ -94,7 +78,7 @@ B62qk1TxzXVyp736wQ333dJdUx2Rwsb4ygknR7vfeBSZp9hnn8vn9Xj
 monk do templates/local/mina/devnet/get-private-key
 ```
 ```bash
-monk do templates/local/mina/mainnet/get-private-key
+sonaric do templates/local/mina/mainnet/get-private-key
 ```
 Example output:
 ```bash
@@ -102,10 +86,10 @@ Example output:
 ```
 ### Get libp2p peer id:
 ```bash
-monk do templates/local/mina/devnet/get-peer-id
+sonaric do templates/local/mina/devnet/get-peer-id
 ```
 ```bash
-monk do templates/local/mina/mainnet/get-peer-id
+sonaric do templates/local/mina/mainnet/get-peer-id
 ```
 
 
