@@ -2,7 +2,7 @@ secret_key = { seed = 'test_seed' } # seed for generating keys
 app_id = 0
 log_level = 'info'
 http_server_host = '0.0.0.0'
-http_server_port = 7000
+http_server_port = 7001
 port = 37000
 avail_path = '/home/avail/data'
 bootstraps = ['/dns/bootnode.2.lightclient.goldberg.avail.tools/tcp/37000/p2p/12D3KooWRCgfvaLSnQfkwGehrhSNpY7i5RenWKL2ARst6ZqgdZZd']

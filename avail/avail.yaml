@@ -121,7 +121,7 @@ light-client:
             image: availj/avail-light:v1.7.10
             entrypoint: /home/avail/entrypoint.sh
             ports:
-                - 7000:7000
+                - 7001:7001
                 - 37000:37000
             paths:
                 - <- `${monk-volume-path}/avail-lc/data:/home/avail/data`
@@ -191,9 +191,9 @@ light-client:
     services:
         http-service:
             container: avail-light-client
-            port: 7000
+            port: 7001
             protocol: tcp
-            host-port: 7000
+            host-port: 7001
             publish: true
         tcp-service:
             container: avail-light-client
