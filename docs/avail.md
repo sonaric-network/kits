@@ -46,7 +46,7 @@ foo@bar:~$ sonaric describe avail/full-node
 `curl -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "rpc_methods"}' <CLOUD_NODE_IP>:9944/`
 
 ## sonaric-avail/light-client usage example:
-`curl "http://localhost:7000/v1/confidence/1"`
+`curl "http://localhost:7001/v1/confidence/1"`
 
 ## Stop, remove and clean up workloads and templates
 
@@ -108,10 +108,10 @@ API reference: [usage] https://github.com/availproject/avail-light?tab=readme-ov
 example (light client deployed on instance with IP 35.222.191.87)
 it might take a few minutes for the API to be available
 ````
-curl "http://35.222.191.87:7000/v1/latest_block"
+curl "http://35.222.191.87:7001/v1/latest_block"
 {"latest_block":714729}%
 
-curl "http://35.222.191.87:7000/v1/status"      
+curl "http://35.222.191.87:7001/v1/status"      
 {"block_num":714738,"confidence":87.5,"app_id":0}
 ````
 
