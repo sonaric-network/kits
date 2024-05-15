@@ -152,6 +152,7 @@ light-client:
                 [[ -n "{{ v "avail-passphrase" }}" ]] && cmd+=" --avail-passphrase {{ v "avail-passphrase" }}"
                 [[ -n "{{ v "seed" }}" ]] && cmd+=" --seed {{ v "seed" }}"
                 [[ -n "{{ v "secret-key" }}" ]] && cmd+=" --secret-key {{ v "secret-key" }}"
+                [[ "{{ v "finality-sync-enable" }}" == "true" ]] && cmd+=" --finality-sync-enable"
                 
                 # Execute the command
                 echo "Starting avail-light with command: avail-light $cmd"
@@ -160,7 +161,7 @@ light-client:
 
     variables:
         network:
-            description: "Network where the node is syncing."
+            description: "Network to connect to."
             type: string
             value: ""
         config-path:
@@ -187,6 +188,11 @@ light-client:
             description: "Ed25519 private key for libp2p keypair generation."
             type: string
             value: ""
+        finality-sync-enable:
+            description: "Enable finality sync."
+            type: bool
+            value: false
+
 
     services:
         http-service:
