@@ -119,6 +119,7 @@ light-client:
     containers:
         avail-light-client:
             image: availj/avail-light:v1.7.10
+            arch: linux/amd64
             entrypoint: /home/avail/entrypoint.sh
             ports:
                 - 7000:7000
