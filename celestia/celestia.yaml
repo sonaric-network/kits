@@ -1,0 +1,186 @@
+namespace: celestia
+
+base:
+    metadata:
+        name: "Celestia"
+        shortname: "Celestia"
+        description: |
+            Celestia is a modular data availability network that securely scales with the number of users, making it easy for anyone to launch their own blockchain.
+        website: https://minaprotocol.com/
+        publisher: "monk.io"
+        source: https://github.com/celestiaorg/celestia-app
+        tags: blockchain
+        private: false
+        node-type-options: "light, bridge, full"
+        network-type-options: "celestia, mocha, arabica"
+    requirements: # TODO
+        defines: requirements
+        CPU: "8 Cores"
+        RAM: 16384
+        GPU: false
+        disk: 500
+    containers:
+        celestia:
+            image: ghcr.io/celestiaorg/celestia-node
+            image-tag: <- `${version}`
+            entrypoint: /home/start.sh
+            ports:
+                - 2121:2121
+                - 26657:26657
+                - 26659:26659
+                - 9090:9090
+            environment:
+                - <- `P2P_NETWORK=${network}`
+                - <- `NODE_TYPE=${node-type}`
+                - <- `RPC_URL=${rpc-url}`
+            paths:
+                - <- `${monk-volume-path}/celestia/store:/home/celestia`
+    variables:
+        version:
+            description: "Version of the Celestia node."
+            type: string
+            value: "v0.13.5"
+        node-type:
+            description: "Type of the Celestia node"
+            type: string
+            value: "light"
+        network:
+            description: "Network of the Celestia node"
+            type: string
+            value: "celestia"
+        rpc-url:
+            description: "URL to fetch the peer list from."
+            type: string
+            value: "consensus.lunaroasis.net"
+    files:
+        start:
+            container: celestia
+            path: /home/start.sh
+            contents: |
+                #!/bin/bash
+                celestia $NODE_TYPE init --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+                find /home/celestia/.celestia-*/keys -type f -exec chmod 600 {} \;
+                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+            mode: 0755
+    services:
+        tcp:
+            container: celestia
+            port: 2121
+            host-port: 2121
+            protocol: tcp
+            publish: true
+        rpc:
+            container: celestia
+            port: 26657
+            host-port: 26657
+            protocol: tcp
+            publish: true
+        p2p:
+            container: celestia
+            port: 26659
+            host-port: 26659
+            protocol: tcp
+            publish: true
+        grpc:
+            container: celestia
+            port: 9090
+            host-port: 9090
+            protocol: tcp
+            publish: true
+
+
+light:
+    defines: runnable
+    inherits: celestia/base
+    metadata:
+        name: "Celestia Light"
+        shortname: "Celestia Light"
+        description: |
+            Light clients conduct data availability sampling on the Data Availability network.
+        network: celestia
+    requirements:
+        CPU: "1 Core"
+        RAM: 500
+        disk: 50
+    variables:
+        network: "celestia"
+        rpc-url: "consensus.lunaroasis.net"
+    actions:
+        get-auth-token:
+            description: "Get the auth token for the Celestia Light node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
+
+light-mainnet:
+    defines: runnable
+    inherits: celestia/light
+
+light-arabica:
+    defines: runnable
+    inherits: celestia/light
+    metadata:
+        network: arabica
+    variables:
+        network: "arabica"
+        rpc-url: "validator-1.celestia-arabica-11.com"
+
+light-mocha:
+    defines: runnable
+    inherits: celestia/light
+    metadata:
+        network: mocha
+    variables:
+        network: "mocha"
+        rpc-url: "rpc-mocha.pops.one"
+
+
+bridge:
+    #    defines: runnable # TODO
+    inherits: celestia/base
+    metadata:
+        name: "Celestia Bridge"
+        shortname: "Celestia Bridge"
+        description: |
+            This node bridges blocks between the Data-Availability network and the Consensus network.
+    requirements:
+        CPU: "6 Cores"
+        RAM: 4096
+        disk: 10000
+
+storage:
+    #    defines: runnable # TODO
+    inherits: celestia/base
+    metadata:
+        name: "Celestia full storage node"
+        shortname: "Celestia Storage"
+        description: |
+            Full storage node stores all the data but does not connect to Consensus.
+    requirements:
+        CPU: "Quad Core"
+        RAM: 4096
+        disk: 100000
+
+validator:
+    #    defines: runnable # TODO
+    inherits: celestia/base
+    metadata:
+        name: "Celestia Validator"
+        shortname: "Celestia Validator"
+        description: |
+            Validator node  participates in consensus by producing and voting on blocks.
+    requirements:
+        CPU: "6 Cores"
+        RAM: 8192
+        disk: 500
+
+consensus:
+#    defines: runnable # TODO
+    inherits: celestia/base
+    metadata:
+        name: "Celestia full consensus node"
+        shortname: "Celestia Consensus"
+        description: |
+            Full consensus node  node to sync blockchain history.
+    requirements:
+        CPU: "Quad Core"
+        RAM: 8192
+        disk: 10000
