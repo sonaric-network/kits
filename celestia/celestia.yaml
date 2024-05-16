@@ -23,13 +23,12 @@ base:
         celestia:
             image: ghcr.io/celestiaorg/celestia-node
             image-tag: <- `${version}`
-#            entrypoint: /home/start.sh
-            entrypoint: sleep 10000
-
+            entrypoint: /home/start.sh
             ports:
                 - 2121:2121
                 - 26657:26657
                 - 26659:26659
+                - 9090:9090
             environment:
                 - <- `P2P_NETWORK=${network}`
                 - <- `NODE_TYPE=${node-type}`
@@ -40,7 +39,7 @@ base:
         version:
             description: "Version of the Celestia node."
             type: string
-            value: "v0.13.4"
+            value: "v0.13.5"
         node-type:
             description: "Type of the Celestia node"
             type: string
@@ -52,18 +51,19 @@ base:
         rpc-url:
             description: "URL to fetch the peer list from."
             type: string
-            value: "rpc.celestia.pops.one"
+            value: "consensus.lunaroasis.net"
     files:
         start:
             container: celestia
             path: /home/start.sh
             contents: |
                 #!/bin/bash
-                celestia $NODE_TYPE init --p2p.network $P2P_NETWORK
-                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL -–core.grpc.port 26657
+                celestia $NODE_TYPE init --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+                find /home/celestia/.celestia-*/keys -type f -exec chmod 600 {} \;
+                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL
             mode: 0755
     services:
-        celestia:
+        tcp:
             container: celestia
             port: 2121
             host-port: 2121
@@ -81,6 +81,13 @@ base:
             host-port: 26659
             protocol: tcp
             publish: true
+        grpc:
+            container: celestia
+            port: 9090
+            host-port: 9090
+            protocol: tcp
+            publish: true
+
 
 light:
     defines: runnable
@@ -95,6 +102,13 @@ light:
         CPU: "1 Core"
         RAM: 500
         disk: 50
+    variables:
+        network: "celestia"
+        rpc-url: "consensus.lunaroasis.net"
+    actions:
+        get-auth-token:
+            description: "Get the auth token for the Celestia Light node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
 
 light-mainnet:
     defines: runnable
@@ -116,11 +130,11 @@ light-mocha:
         network: mocha
     variables:
         network: "mocha"
-        rpc-url: "validator-1.celestia-mocha-11.com"
+        rpc-url: "rpc-mocha.pops.one"
 
 
 bridge:
-    defines: runnable
+    #    defines: runnable # TODO
     inherits: celestia/base
     metadata:
         name: "Celestia Bridge"
@@ -133,7 +147,7 @@ bridge:
         disk: 10000
 
 storage:
-    defines: runnable
+    #    defines: runnable # TODO
     inherits: celestia/base
     metadata:
         name: "Celestia full storage node"
@@ -146,7 +160,7 @@ storage:
         disk: 100000
 
 validator:
-    defines: runnable
+    #    defines: runnable # TODO
     inherits: celestia/base
     metadata:
         name: "Celestia Validator"
@@ -159,7 +173,7 @@ validator:
         disk: 500
 
 consensus:
-    defines: runnable
+#    defines: runnable # TODO
     inherits: celestia/base
     metadata:
         name: "Celestia full consensus node"
