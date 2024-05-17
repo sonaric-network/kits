@@ -91,7 +91,9 @@ base:
         get-auth-token:
             description: "Get the auth token for the Celestia Light node."
             code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
-
+# -------------------------
+# LIGHT NODES
+# -------------------------
 light:
     defines: runnable
     inherits: celestia/base
@@ -135,7 +137,9 @@ light-mocha:
         network: "mocha"
         rpc-url: "rpc-mocha.pops.one"
 
-
+# -------------------------
+# STORAGE NODES
+# -------------------------
 storage:
     defines: runnable
     inherits: celestia/base
@@ -188,10 +192,11 @@ storage-mocha:
         node-type: "full"
 
 
-
-
+# -------------------------
+# BRIDGE NODES
+# -------------------------
 bridge:
-    #    defines: runnable # TODO
+    defines: runnable
     inherits: celestia/base
     metadata:
         name: "Celestia Bridge"
@@ -200,9 +205,45 @@ bridge:
             This node bridges blocks between the Data-Availability network and the Consensus network.
     requirements:
         CPU: "6 Cores"
-        RAM: 4096
+        RAM: 16384
         disk: 10000
+        bandwidth: 1000 Mbps
+    variables:
+        node-type: "bridge"
+    files:
+        start:
+            container: celestia
+            path: /home/start.sh
+            contents: |
+                #!/bin/bash
+                celestia $NODE_TYPE init --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+                find /home/celestia/.celestia-*/keys -type f -exec chmod 600 {} \;
+                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+            mode: 0755
+    actions:
+        get-auth-token:
+            description: "Get the auth token for the Celestia Bridge node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
 
+bridge-arabica:
+    defines: runnable
+    inherits: celestia/bridge
+    metadata:
+        network: "arabica"
+    variables:
+        network: "arabica"
+        rpc-url: "validator-1.celestia-arabica-11.com"
+        node-type: "bridge"
+
+bridge-mocha:
+    defines: runnable
+    inherits: celestia/bridge
+    metadata:
+        network: "mocha"
+    variables:
+        network: "mocha"
+        rpc-url: "rpc-mocha.pops.one"
+        node-type: "bridge"
 
 validator:
     #    defines: runnable # TODO
