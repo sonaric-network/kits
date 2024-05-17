@@ -87,7 +87,10 @@ base:
             host-port: 9090
             protocol: tcp
             publish: true
-
+    actions:
+        get-auth-token:
+            description: "Get the auth token for the Celestia Light node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
 
 light:
     defines: runnable
@@ -118,7 +121,7 @@ light-arabica:
     defines: runnable
     inherits: celestia/light
     metadata:
-        network: arabica
+        network: "arabica"
     variables:
         network: "arabica"
         rpc-url: "validator-1.celestia-arabica-11.com"
@@ -127,10 +130,64 @@ light-mocha:
     defines: runnable
     inherits: celestia/light
     metadata:
-        network: mocha
+        network: "mocha"
     variables:
         network: "mocha"
         rpc-url: "rpc-mocha.pops.one"
+
+
+storage:
+    defines: runnable
+    inherits: celestia/base
+    metadata:
+        name: "Celestia full storage node"
+        shortname: "Celestia Storage"
+        description: |
+            Full storage node stores all the data but does not connect to Consensus.
+    requirements:
+        CPU: "6 Cores"
+        RAM: 16384
+        disk: 10000
+        bandwidth: 1000 Mbps
+    variables:
+        node-type: "full"
+    files:
+        start:
+            container: celestia
+            path: /home/start.sh
+            contents: |
+                #!/bin/bash
+                celestia $NODE_TYPE init --p2p.network $P2P_NETWORK
+                find /home/celestia/.celestia-*/keys -type f -exec chmod 600 {} \;
+                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK
+            mode: 0755
+    actions:
+        get-auth-token:
+            description: "Get the auth token for the Celestia Storage node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
+
+
+storage-arabica:
+    defines: runnable
+    inherits: celestia/storage
+    metadata:
+        network: "arabica"
+    variables:
+        network: "arabica"
+        rpc-url: "validator-1.celestia-arabica-11.com"
+        node-type: "full"
+
+storage-mocha:
+    defines: runnable
+    inherits: celestia/storage
+    metadata:
+        network: "mocha"
+    variables:
+        network: "mocha"
+        rpc-url: "rpc-mocha.pops.one"
+        node-type: "full"
+
+
 
 
 bridge:
@@ -146,18 +203,6 @@ bridge:
         RAM: 4096
         disk: 10000
 
-storage:
-    #    defines: runnable # TODO
-    inherits: celestia/base
-    metadata:
-        name: "Celestia full storage node"
-        shortname: "Celestia Storage"
-        description: |
-            Full storage node stores all the data but does not connect to Consensus.
-    requirements:
-        CPU: "Quad Core"
-        RAM: 4096
-        disk: 100000
 
 validator:
     #    defines: runnable # TODO
