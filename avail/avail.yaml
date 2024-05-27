@@ -230,20 +230,31 @@ validator-base:
             type: string
             value: "MonkAvailValidator"
     files:
-        entrypoint:
+        start:
             container: node
-            path: /usr/local/bin/entrypoint.sh
+            path: /usr/local/bin/start.sh
             contents: |
                 #!/bin/bash
                 echo "Starting validator node"
-                exec avail-node --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
+                avail-node --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
+            mode: 0755
+        entrypoint:
+            container: node
+            path: /usr/local/bin/entrypoint.sh
+            contents: <<< files/scripts/validator-entrypoint.sh
+            mode: 0755
+        restart:
+            container: node
+            path: /usr/local/bin/restart.sh
+            contents: |
+                #!/bin/bash
+                # Send the USR1 signal to the process with PID 1. It should restart the avail process.
+                kill -USR1 1
             mode: 0755
         rotate-keys:
             container: node
             path: /usr/local/bin/rotate-keys.sh
-            contents: |
-                #!/bin/bash
-                curl -H 'Content-Type: application/json' -d '{"id":1, "jsonrpc":"2.0", "method": "author_rotateKeys", "params":[]}' http://127.0.0.1:9944
+            contents: <<< files/scripts/rotate-keys.sh
             mode: 0755
     actions:
         generate-session-keys:
@@ -277,9 +288,9 @@ validator-goldberg:
         name: "MonkAvailValidatorGoldberg"
         version: "v1.8.0.7"
     files:
-        entrypoint:
+        start:
             container: node
-            path: /usr/local/bin/entrypoint.sh
+            path: /usr/local/bin/start.sh
             contents: |
                 #!/bin/bash
                 exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
@@ -294,9 +305,9 @@ validator-dev:
             Avail validator node for development
             Running with --dev flag. This flag combines the following flags into one: --chain=dev, --force-authoring, --alice, --tmp, and --rpc-cors=all
     files:
-        entrypoint:
+        start:
             container: node
-            path: /usr/local/bin/entrypoint.sh
+            path: /usr/local/bin/start.sh
             contents: |
                 #!/bin/bash
                 echo "Starting validator node"
