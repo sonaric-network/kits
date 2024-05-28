@@ -26,7 +26,7 @@ full-node:
     name: avail
     description: |
       Avail full node
-  inherits: avail/avail-common
+  inherits: ./avail-common
   containers:
     node:
       image: availj/avail
@@ -37,7 +37,7 @@ full-node:
         - 9615:9615
         - 9944:9944
       paths:
-        - <- `${volume-state}:/da/state`
+        - <- `${monk-volume-path}/avail-full-node/state:/da/state`
       restart: unless-stopped
   variables:
     version:
@@ -52,10 +52,6 @@ full-node:
       description: "Name of the node."
       type: string
       value: "MonkAvailNode"
-    volume-state:
-      description: "Volume to store the state."
-      type: string
-      value: <- `${monk-volume-path}/avail-full-node/state`
   services:
     http-service:
       container: node
@@ -78,7 +74,7 @@ full-node:
 
 turing:
     defines: runnable
-    inherits: avail/full-node
+    inherits: ./full-node
     metadata:
         name: avail-turing
         description: "Avail full node with Turing network"
@@ -89,7 +85,7 @@ turing:
 
 rpc-node:
   defines: runnable
-  inherits: avail/full-node
+  inherits: ./full-node
   metadata:
     name: avail-rpc
     description: |
@@ -109,7 +105,7 @@ rpc-node:
 
 light-client:
     defines: runnable
-    inherits: avail/avail-common
+    inherits: ./avail-common
     requirements:
       defines: requirements
       CPU: "2 Cores"
@@ -208,10 +204,11 @@ light-client:
             protocol: tcp
             host-port: 37000
             publish: true
-
-validator:
-    defines: runnable
-    inherits: avail/full-node
+# ---------------------- #
+#    VALIDATOR NODES
+# ---------------------- #
+validator-base:
+    inherits: ./full-node
     metadata:
         name: avail-validator
         description: |
@@ -219,43 +216,104 @@ validator:
     containers:
         node:
             entrypoint: /usr/local/bin/entrypoint.sh
+            arch: linux/amd64
             cmd: ""
             paths:
                 - <- `${monk-volume-path}/avail-validator/node-data:/da/node-data`
-            restart: on-failure
     variables:
         version:
-            value: "v1.8.0.7"
+            type: string
+            value: "v2.2.2.0-rc1"
         chain:
-            value: "goldberg"
+            type: string
         name:
+            type: string
             value: "MonkAvailValidator"
     files:
-        rotate-keys:
+        start:
             container: node
-            path: /usr/local/bin/rotate-keys.sh
+            path: /usr/local/bin/start.sh
             contents: |
                 #!/bin/bash
-                curl -H 'Content-Type: application/json' -d '{"id":1, "jsonrpc":"2.0", "method": "author_rotateKeys", "params":[]}' http://127.0.0.1:9944
+                echo "Starting validator node"
+                avail-node --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
             mode: 0755
         entrypoint:
             container: node
             path: /usr/local/bin/entrypoint.sh
+            contents: <<< files/scripts/validator-entrypoint.sh
+            mode: 0755
+        restart:
+            container: node
+            path: /usr/local/bin/restart.sh
             contents: |
                 #!/bin/bash
-                if ! command -v curl &> /dev/null
-                then
-                echo "Installing curl..."
-                apt-get update && apt-get install -y curl
-                echo "curl installed."
-                else
-                echo "curl is already installed."
-                fi
-                echo "Starting validator node"
-                exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
+                # Send the USR1 signal to the process with PID 1. It should restart the avail process.
+                kill -USR1 1
             mode: 0755
-
+        rotate-keys:
+            container: node
+            path: /usr/local/bin/rotate-keys.sh
+            contents: <<< files/scripts/rotate-keys.sh
+            mode: 0755
     actions:
         generate-session-keys:
             description: "Generate new session keys."
             code: exec("node", "/usr/local/bin/rotate-keys.sh")
+
+
+validator-turing:
+    defines: runnable
+    inherits: ./validator-base
+    metadata:
+        name: avail-validator-turing
+        description: |
+            Avail validator node for Turing network
+            The Turing Testnet is the latest test network of the Avail Project.
+    variables:
+        chain: "turing"
+        name: "MonkAvailValidatorTuring"
+
+validator-goldberg:
+    defines: runnable
+    inherits: ./validator-base
+    metadata:
+        name: avail-validator-goldberg
+        description: |
+            Avail validator node for Goldberg network
+            The Goldberg Testnet is the first test network of the Avail Project.
+            Deprecated.
+    variables:
+        chain: "goldberg"
+        name: "MonkAvailValidatorGoldberg"
+        version: "v1.8.0.7"
+    files:
+        start:
+            container: node
+            path: /usr/local/bin/start.sh
+            contents: |
+                #!/bin/bash
+                exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
+            mode: 0755
+
+validator-dev:
+    defines: runnable
+    inherits: ./validator-base
+    metadata:
+        name: avail-validator-dev
+        description: |
+            Avail validator node for development
+            Running with --dev flag. This flag combines the following flags into one: --chain=dev, --force-authoring, --alice, --tmp, and --rpc-cors=all
+    files:
+        start:
+            container: node
+            path: /usr/local/bin/start.sh
+            contents: |
+                #!/bin/bash
+                echo "Starting validator node"
+                exec avail-node --name {{ v "name" }} -d /da/node-data --validator --dev
+            mode: 0755
+    variables:
+        chain: ""
+        name: "MonkAvailValidatorDev"
+

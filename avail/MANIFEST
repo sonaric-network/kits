@@ -1,3 +1,4 @@
 REPO avail
 RESOURCES files/light/config.toml files/light/identity.toml
+RESOURCES files/scripts/validator-entrypoint.sh files/scripts/rotate-keys.sh
 LOAD avail.yaml
