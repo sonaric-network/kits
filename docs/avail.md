@@ -157,3 +157,14 @@ monk restart templates/local/avail/validator
 
 More about staking can be found [here](https://docs.availproject.org/docs/operate-a-node/become-a-validator/0020-staking/)
 
+
+
+### Telemetry error
+Sometimes you might see the following error in the logs:
+```bash
+❌ Error while dialing /dns/telemetry.avail.tools/tcp/8001/x-parity-ws/%2Fsubmit: Custom { kind: Other, error: Timeout }
+```
+
+This issue is a common error caused by rate limiting and the max capacity of the telemetry server.   
+This error is nothing to be concerned about though it is important to note you will not see your node on the shown [telemetry server](https://telemetry.avail.tools/) if you see this error.  
+Ignore the error, and wait for it to self resolve  

@@ -11,7 +11,7 @@ start_avail() {
 
 # Function to stop the avail process
 stop_avail() {
-    echo "Stopping avail at $(date)"
+    echo "Stopping avail..."
 
     # Kill the avail-node process if it is running
     if [ -n "$AVAIL_PID" ] && kill -0 $AVAIL_PID 2>/dev/null; then
@@ -31,6 +31,11 @@ stop_avail() {
 restart_avail() {
     echo "Restarting avail process"
     stop_avail
+
+    # Add a delay before starting the avail process again
+    echo "Waiting for resources to free up..."
+    sleep 10
+
     start_avail
 }
 
