@@ -385,3 +385,6 @@ You can use `sonaric shell` to connect to the container's shell.
 Access detailed API documentation and examples:
 - [Avail Documentation](https://docs.availproject.org/docs/introduction-to-avail)
 - [Light Client API Reference](https://docs.availproject.org/docs/operate-a-node/run-a-light-client/light-client-api-reference)
+- [RPC Substrate Framework Documentation](https://docs.substrate.io/build/remote-procedure-calls/)
+- [Polkadot RPC](https://wiki.polkadot.network/docs/build-node-interaction#polkadot-rpc)
+```
