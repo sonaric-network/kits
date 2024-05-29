@@ -18,6 +18,7 @@
   - [Stop Workloads](#stop-workloads)
   - [Custom configuration](#custom-configuration)
   - [Telemetry error in logs](#telemetry-error-in-logs)
+  - [Check sync status](#check-sync-status)
   - [Failed RPC requests](#failed-rpc-requests)
 - [Documentation and API References](#documentation-and-api-references)
 
@@ -231,7 +232,9 @@ Response:
 {"jsonrpc":"2.0","result":{"methods":["account_nextIndex","author_hasKey","author_hasSessionKeys","author_insertKey","author_pendingExtrinsics","author_removeExtrinsic","author_rotateKeys","author_submitAndWatchExtrinsic","author_submitExtrinsic","author_unwatchExtrinsic","babe_epochAuthorship","chainHead_unstable_body","chainHead_unstable_call","chainHead_unstable_follow","chainHead_unstable_genesisHash","chainHead_unstable_header","chainHead_unstable_stopBody","chainHead_unstable_stopCall","chainHead_unstable_stopStorage","chainHead_unstable_storage","chainHead_unstable_unfollow","chainHead_unstable_unpin","chainSpec_unstable_chainName","chainSpec_unstable_genesisHash","chainSpec_unstable_properties","chain_getBlock","chain_getBlockHash","chain_getFinalisedHead","chain_getFinalizedHead","chain_getHead","chain_getHeader","chain_getRuntimeVersion","chain_subscribeAllHeads","chain_subscribeFinalisedHeads","chain_subscribeFinalizedHeads","chain_subscribeNewHead","chain_subscribeNewHeads","chain_subscribeRuntimeVersion","chain_unsubscribeAllHeads","chain_unsubscribeFinalisedHeads","chain_unsubscribeFinalizedHeads","chain_unsubscribeNewHead","chain_unsubscribeNewHeads","chain_unsubscribeRuntimeVersion","childstate_getKeys","childstate_getKeysPaged","childstate_getKeysPagedAt","childstate_getStorage","childstate_getStorageEntries","childstate_getStorageHash","childstate_getStorageSize","grandpa_proveFinality","grandpa_roundState","grandpa_subscribeJustifications","grandpa_unsubscribeJustifications","mmr_generateProof","mmr_root","mmr_verifyProof","mmr_verifyProofStateless","offchain_localStorageGet","offchain_localStorageSet","payment_queryFeeDetails","payment_queryInfo","state_call","state_callAt","state_getChildReadProof","state_getKeys","state_getKeysPaged","state_getKeysPagedAt","state_getMetadata","state_getPairs","state_getReadProof","state_getRuntimeVersion","state_getStorage","state_getStorageAt","state_getStorageHash","state_getStorageHashAt","state_getStorageSize","state_getStorageSizeAt","state_queryStorage","state_queryStorageAt","state_subscribeRuntimeVersion","state_subscribeStorage","state_traceBlock","state_trieMigrationStatus","state_unsubscribeRuntimeVersion","state_unsubscribeStorage","subscribe_newHead","sync_state_genSyncSpec","system_accountNextIndex","system_addLogFilter","system_addReservedPeer","system_chain","system_chainType","system_dryRun","system_dryRunAt","system_health","system_localListenAddresses","system_localPeerId","system_name","system_nodeRoles","system_peers","system_properties","system_removeReservedPeer","system_reservedPeers","system_resetLogFilter","system_syncState","system_unstable_networkState","system_version","transaction_unstable_submitAndWatch","transaction_unstable_unwatch","unsubscribe_newHead"]},"id":1}
 ```
 
-More about RPC methods can be found in the [Substrate framework documentation](https://docs.substrate.io/build/remote-procedure-calls/).
+More about RPC methods can be found in the [Substrate framework documentation](https://docs.substrate.io/build/remote-procedure-calls/).  
+Polkadot docs also might be useful, since Avail uses it's SDK: [Polkadot RPC](https://wiki.polkadot.network/docs/build-node-interaction#polkadot-rpc).
+
 
 ### Validator Node
 Deploy a validator node using:
@@ -267,6 +270,11 @@ Sonaric implements session key rotation for validators. (Step 2 from the [doc](h
 ### Rotating Session Keys
 Rotating session keys enhances security by updating the cryptographic keys used for validator operations.   
 This prevents long-term exposure and potential key compromise.
+
+
+> **Warning!**  
+> Ensure your node is fully synchronized before rotating keys.   
+> You can check the sync status by running sonaric [status action](#check-sync-status)
 
 Generate new keys:
 ```bash
@@ -335,8 +343,23 @@ If encountering telemetry connection errors:
 ```
 This error often resolves itself and does not impact node operations other than telemetry reporting.
 
+### Check sync status
+Sonaric Avail template has action to check if the node is synced.  
+```bash
+sonaric do templates/local/avail/avail/health
+```
+Example output:
+```
+✔ Running action: 
+{"jsonrpc":"2.0","result":{"peers":7,"isSyncing":true,"shouldHavePeers":true},"id":1}
+```
+
+If node is still syncing, you will see `"isSyncing":true` in the output.  
+You should wait until the node is fully synced before operations like staking or rotating keys.
+
 ### Failed RPC requests
 If RPC requests fail, ensure the node is running and the correct port is used.  
+Node may need a few minutes to start up and start to sync with the network.
 Ensure you are running `avail-rpc` since the full node does not expose the RPC port by default!  
 As example we use `author_rotateKeys` RPC method from docs:
 
