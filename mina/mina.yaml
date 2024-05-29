@@ -7,7 +7,7 @@ base:
         description: |
             Mina is a layer-1 blockchain with a 22KB blockchain & zero knowledge smart contracts (“zkApps”) written in TypeScript.
         website: https://minaprotocol.com/
-        publisher: "monk.io"
+        publisher: sonaric
         source: https://github.com/MinaProtocol/mina
         tags: blockchain
         private: false

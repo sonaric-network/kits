@@ -368,7 +368,7 @@ curl -sS -H 'Content-Type: application/json' -d '{"id":1, "jsonrpc":"2.0", "meth
 curl: (56) Recv failure: Connection reset by peer
 ```
 
-You can, however, use the RPC methods for debugging purposes if you connect to container's shell and run the curl command from there.  
+You can, however, use the RPC methods for debugging purposes if you connect to container's shell and run the curl commands in there.  
 You can use `sonaric shell` to connect to the container's shell.
 
 ```bash
@@ -387,4 +387,3 @@ Access detailed API documentation and examples:
 - [Light Client API Reference](https://docs.availproject.org/docs/operate-a-node/run-a-light-client/light-client-api-reference)
 - [RPC Substrate Framework Documentation](https://docs.substrate.io/build/remote-procedure-calls/)
 - [Polkadot RPC](https://wiki.polkadot.network/docs/build-node-interaction#polkadot-rpc)
-```

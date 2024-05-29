@@ -5,7 +5,7 @@ common:
         name: avail
         shortname: Avail
         website: https://docs.availproject.org/
-        publisher: monk.io
+        publisher: sonaric
         icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
         version: 1.0
         source: https://github.com/availproject
