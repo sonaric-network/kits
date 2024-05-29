@@ -51,7 +51,7 @@ full-node:
     name:
       description: "Name of the node."
       type: string
-      value: "MonkAvailNode"
+      value: "SonaricAvailNode"
   services:
     http-service:
       container: node
@@ -80,7 +80,7 @@ turing:
         description: "Avail full node with Turing network"
     variables:
         chain: "turing"
-        value: "MonkAvailTuringNode"
+        value: "SonaricAvailTuringNode"
         version: "v2.2.0.0-rc1"
 
 rpc-node:
@@ -228,7 +228,7 @@ validator-base:
             type: string
         name:
             type: string
-            value: "MonkAvailValidator"
+            value: "SonaricAvailValidator"
     files:
         start:
             container: node
@@ -272,7 +272,7 @@ validator-turing:
             The Turing Testnet is the latest test network of the Avail Project.
     variables:
         chain: "turing"
-        name: "MonkAvailValidatorTuring"
+        name: "SonaricAvailValidatorTuring"
 
 validator-goldberg:
     defines: runnable
@@ -285,7 +285,7 @@ validator-goldberg:
             Deprecated.
     variables:
         chain: "goldberg"
-        name: "MonkAvailValidatorGoldberg"
+        name: "SonaricAvailValidatorGoldberg"
         version: "v1.11.0.0"
     files:
         start:
@@ -315,5 +315,5 @@ validator-dev:
             mode: 0755
     variables:
         chain: ""
-        name: "MonkAvailValidatorDev"
+        name: "SonaricAvailValidatorDev"
 
