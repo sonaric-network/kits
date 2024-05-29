@@ -1,119 +1,139 @@
 namespace: avail
 
-avail-common:
-  metadata:
-    name: avail
-    shortname: Avail
-    description: |
-      Build with Avail DA, the validity proven data availability layer unifying Web3
-    website: https://docs.availproject.org/
-    publisher: monk.io
-    icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
-    version: 1.0
-    source: https://github.com/availproject
-    tags: blockchain
-    private: false
-  requirements:
-    defines: requirements
-    CPU: "4 Cores"
-    RAM: 8192
-    GPU: false
-    disk: 204800
-
-full-node:
-  defines: runnable
-  metadata:
-    name: avail
-    description: |
-      Avail full node
-  inherits: ./avail-common
-  containers:
-    node:
-      image: availj/avail
-      image-tag: <- `${version}`
-      cmd: <- `--chain ${chain} --name ${name} -d /da/state`
-      ports:
-        - 30333:30333
-        - 9615:9615
-        - 9944:9944
-      paths:
-        - <- `${monk-volume-path}/avail-full-node/state:/da/state`
-      restart: unless-stopped
-  variables:
-    version:
-      description: "Version to use."
-      type: string
-      value: "v1.10.0.0"
-    chain:
-      description: "Blockchain network to join."
-      type: string
-      value: "goldberg"
-    name:
-      description: "Name of the node."
-      type: string
-      value: "MonkAvailNode"
-  services:
-    http-service:
-      container: node
-      port: 9944
-      protocol: tcp
-      host-port: 9944
-      publish: true
-    p2p-service:
-      container: node
-      port: 30333
-      protocol: tcp
-      host-port: 30333
-      publish: true
-    rpc-service:
-      container: node
-      port: 9615
-      protocol: tcp
-      host-port: 9615
-      publish: true
-
-turing:
-    defines: runnable
-    inherits: ./full-node
+common:
     metadata:
-        name: avail-turing
-        description: "Avail full node with Turing network"
+        name: avail
+        shortname: Avail
+        website: https://docs.availproject.org/
+        publisher: sonaric
+        icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
+        version: 1.0
+        source: https://github.com/availproject
+        tags: blockchain
+        private: false
+# ---------------------- #
+# ---- FULL NODES ------ #
+# ---------------------- #
+avail:
+    defines: runnable
+    metadata:
+        name: Avail
+        description: |
+            Avail full node.
+            Full nodes maintain the blockchain's current state but do not store its entire history. Optimized for quick access to current data, they are ideal for tasks like transaction verification.
+    inherits: ./common
+    containers:
+        node:
+            image: availj/avail
+            image-tag: <- `${version}`
+            arch: linux/amd64
+            cmd: <- `--chain ${chain} --name ${name} -d /da/state`
+            ports:
+                - 30333:30333
+                - 9615:9615
+            paths:
+                - <- `${monk-volume-path}/avail-${chain}/state:/da/state`
+            restart: unless-stopped
+    variables:
+        version:
+            description: "Version to use."
+            type: string
+            value: "v1.11.0.0"
+        chain:
+            description: "Blockchain network to join."
+            type: string
+            value: "goldberg"
+        name:
+            description: "Name of the node."
+            type: string
+            value: "SonaricAvailNode"
+    services:
+        p2p-service:
+            container: node
+            port: 30333
+            protocol: tcp
+            host-port: 30333
+            publish: true
+
+    requirements:
+        defines: requirements
+        CPU: "4 Cores"
+        RAM: 8192
+        GPU: false
+        disk: 40960
+
+    actions:
+        health:
+            description: "Check the health of the node and syncing status"
+            code: exec("node", "/usr/local/bin/health.sh")
+
+    files:
+        health:
+            container: node
+            path: /usr/local/bin/health.sh
+            contents: |
+                #!/bin/bash
+                curl -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_health"}' http://localhost:9944
+            mode: 0755
+
+
+avail-turing:
+    defines: runnable
+    inherits: ./avail
+    metadata:
+        name: Avail Turing
+        description: "Avail full node for Turing network"
     variables:
         chain: "turing"
-        value: "MonkAvailTuringNode"
+        value: "SonaricAvailTuringNode"
         version: "v2.2.0.0-rc1"
 
-rpc-node:
-  defines: runnable
-  inherits: ./full-node
-  metadata:
-    name: avail-rpc
-    description: |
-      Avail full node with RPC endpoint
-  containers:
-    node:
-      cmd: <- `--chain ${chain} --name ${name} -d /da/state --rpc-external --rpc-port ${rpc-port} --rpc-cors=${rpc-cors}`
-  variables:
-    rpc-port:
-      description: "Port for the RPC service."
-      type: int
-      value: 9944
-    rpc-cors:
-      description: "CORS for the RPC service."
-      type: string
-      value: "all"
-
-light-client:
+avail-rpc:
     defines: runnable
-    inherits: ./avail-common
-    requirements:
-      defines: requirements
-      CPU: "2 Cores"
-      RAM: 4096
-      GPU: false
-      disk: 20480
+    inherits: ./avail
+    metadata:
+        name: Avail RPC Node
+        description: |
+            Avail full node with RPC endpoint enabled.
     containers:
-        avail-light-client:
+        node:
+            cmd: <- `--chain ${chain} --name ${name} -d /da/state --rpc-external --rpc-port ${rpc-port} --rpc-cors=${rpc-cors}`
+            ports:
+                - <- `${rpc-port}:${rpc-port}`
+    variables:
+        rpc-port:
+            description: "Port for the RPC service."
+            type: int
+            value: 9944
+        rpc-cors:
+            description: "CORS for the RPC service."
+            type: string
+            value: "all"
+    services:
+        rpc-service:
+            container: node
+            port: 9944
+            protocol: tcp
+            host-port: 9944
+            publish: true
+# ---------------------- #
+#    LIGHT CLIENT        #
+# ---------------------- #
+light:
+    defines: runnable
+    inherits: ./common
+    metadata:
+        name: Avail Light Client
+        description: |
+            Light clients are optimized for low resource consumption and are ideal for mobile devices or low-power hardware.
+    requirements:
+        defines: requirements
+        CPU: "2 Cores"
+        RAM: 4096
+        GPU: false
+        disk: 20480
+    containers:
+        avail-light:
             image: availj/avail-light:v1.7.10
             arch: linux/amd64
             entrypoint: /home/avail/entrypoint.sh
@@ -126,17 +146,17 @@ light-client:
                 - <- `${monk-volume-path}/avail-lc/config:/home/avail/config`
     files:
         config-file:
-            container: avail-light-client
+            container: avail-light
             path: <- `${config-path}`
             contents: <<< files/light/config.toml
             mode: 0755
         identity-file:
-            container: avail-light-client
+            container: avail-light
             path: <- `${identity-path}`
             contents: <<< files/light/identity.toml
             mode: 0755
         entrypoint:
-            container: avail-light-client
+            container: avail-light
             path: /home/avail/entrypoint.sh
             contents: |
                 #!/bin/bash
@@ -146,7 +166,6 @@ light-client:
                 # Add conditional parameters
                 [[ -n "{{ v "network" }}" ]] && cmd+=" --network {{ v "network" }}"
                 [[ -n "{{ v "port" }}" ]] && cmd+=" --port {{ v "port" }}"
-                [[ -n "{{ v "avail-passphrase" }}" ]] && cmd+=" --avail-passphrase {{ v "avail-passphrase" }}"
                 [[ -n "{{ v "seed" }}" ]] && cmd+=" --seed {{ v "seed" }}"
                 [[ -n "{{ v "secret-key" }}" ]] && cmd+=" --secret-key {{ v "secret-key" }}"
                 [[ "{{ v "finality-sync-enable" }}" == "true" ]] && cmd+=" --finality-sync-enable"
@@ -173,10 +192,6 @@ light-client:
             description: "LibP2P listener port (overrides port from config file)."
             type: string
             value: ""
-        avail-passphrase:
-            description: "Avail secret seed phrase password, optional, overrides password from identity file."
-            type: string
-            value: ""
         seed:
             description: "Seed string for libp2p keypair generation."
             type: string
@@ -189,17 +204,15 @@ light-client:
             description: "Enable finality sync."
             type: bool
             value: false
-
-
     services:
         http-service:
-            container: avail-light-client
+            container: avail-light
             port: 7001
             protocol: tcp
             host-port: 7001
             publish: true
         tcp-service:
-            container: avail-light-client
+            container: avail-light
             port: 37000
             protocol: tcp
             host-port: 37000
@@ -208,9 +221,9 @@ light-client:
 #    VALIDATOR NODES
 # ---------------------- #
 validator-base:
-    inherits: ./full-node
+    inherits: ./avail
     metadata:
-        name: avail-validator
+        name: Avail Validator
         description: |
             Avail validator node
     containers:
@@ -219,7 +232,9 @@ validator-base:
             arch: linux/amd64
             cmd: ""
             paths:
-                - <- `${monk-volume-path}/avail-validator/node-data:/da/node-data`
+                - <- `${monk-volume-path}/avail-validator-${chain}/node-data:/da/node-data`
+            ports:
+                - 9944:9944
     variables:
         version:
             type: string
@@ -228,7 +243,7 @@ validator-base:
             type: string
         name:
             type: string
-            value: "MonkAvailValidator"
+            value: "SonaricAvailValidator"
     files:
         start:
             container: node
@@ -257,35 +272,34 @@ validator-base:
             contents: <<< files/scripts/rotate-keys.sh
             mode: 0755
     actions:
-        generate-session-keys:
+        keys-rotate:
             description: "Generate new session keys."
             code: exec("node", "/usr/local/bin/rotate-keys.sh")
+    requirements:
+        defines: requirements
+        CPU: "4 Cores"
+        RAM: 8192
+        GPU: false
+        disk: 40960
+    services:
+        rpc-service:
+            container: node
+            port: 9944
+            protocol: tcp
+            host-port: 9944
+            publish: true
 
-
-validator-turing:
+validator:
     defines: runnable
     inherits: ./validator-base
     metadata:
-        name: avail-validator-turing
-        description: |
-            Avail validator node for Turing network
-            The Turing Testnet is the latest test network of the Avail Project.
-    variables:
-        chain: "turing"
-        name: "MonkAvailValidatorTuring"
-
-validator-goldberg:
-    defines: runnable
-    inherits: ./validator-base
-    metadata:
-        name: avail-validator-goldberg
+        name: Avail Validator
         description: |
             Avail validator node for Goldberg network
-            The Goldberg Testnet is the first test network of the Avail Project.
-            Deprecated.
+            Goldberg is deprecated and will be decomissioned soon, but it is still available for testing purposes.
     variables:
         chain: "goldberg"
-        name: "MonkAvailValidatorGoldberg"
+        name: "SonaricAvailValidatorGoldberg"
         version: "v1.11.0.0"
     files:
         start:
@@ -296,11 +310,23 @@ validator-goldberg:
                 exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
             mode: 0755
 
+validator-turing:
+    defines: runnable
+    inherits: ./validator-base
+    metadata:
+        name: Avail Validator Turing
+        description: |
+            Avail validator node for Turing network
+            The Turing Testnet is the latest test network of the Avail Project.
+    variables:
+        chain: "turing"
+        name: "SonaricAvailValidatorTuring"
+
 validator-dev:
     defines: runnable
     inherits: ./validator-base
     metadata:
-        name: avail-validator-dev
+        name: Avail Validator Dev
         description: |
             Avail validator node for development
             Running with --dev flag. This flag combines the following flags into one: --chain=dev, --force-authoring, --alice, --tmp, and --rpc-cors=all
@@ -315,5 +341,5 @@ validator-dev:
             mode: 0755
     variables:
         chain: ""
-        name: "MonkAvailValidatorDev"
+        name: "SonaricAvailValidatorDev"
 

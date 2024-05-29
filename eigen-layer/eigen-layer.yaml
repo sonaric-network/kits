@@ -7,7 +7,7 @@ eigen-layer-common:
     description: |
       Integrated services with a reverse proxy and a backend node for data handling and API serving.
     website: https://docs.eigenlayer.xyz/
-    publisher: monk.io
+    publisher: sonaric
     icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
     version: 1.0
     source: https://github.com/Layr-Labs

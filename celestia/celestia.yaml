@@ -7,7 +7,7 @@ base:
         description: |
             Celestia is a modular data availability network that securely scales with the number of users, making it easy for anyone to launch their own blockchain.
         website: https://minaprotocol.com/
-        publisher: "monk.io"
+        publisher: sonaric
         source: https://github.com/celestiaorg/celestia-app
         tags: blockchain
         private: false
