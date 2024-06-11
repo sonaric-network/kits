@@ -1,7 +1,6 @@
 namespace: ethereum
 
 base:
-  defines: runnable
   metadata:
     tags: blockchain, evm
     icon: https://avatars.githubusercontent.com/u/6250754?s=200&v=4
@@ -15,8 +14,12 @@ base:
   containers:
     erigon:
       image: "thorax/erigon"
-      image-tag: v2.58.2
-      entrypoint: <- `erigon --chain=${chain} --internalcl --torrent.download.rate=512mb --http.addr=0.0.0.0 --http.api=eth,web3,net,debug,trace,txpool ${options}`
+      image-tag: v2.60.0
+      paths:
+        - <- `${monk-volume-path}/ethereum:${data-dir}`
+        - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore`
+
+      entrypoint: <- `erigon --chain=${chain} --internalcl --torrent.download.rate=512mb --http.addr=0.0.0.0 --http.api=eth,web3,net,debug,trace,txpool --datadir=${data-dir} ${options}`
   services:
     grpc-server:
       container: erigon
@@ -89,10 +92,46 @@ base:
     options:
       type: string
       value: ""
-
+    data-dir:
+      type: string
+      value: "/home/erigon/.local/share/erigon"
+  actions:
+    import-key:
+      description: "Import key into the wallet."
+      arguments:
+        keystore-dir:
+          type: string
+          description: "Path to the keystore directory."
+          default: <- `${monk-volume-path}/ethereum/keystore`
+        password:
+          type: string
+          description: "Password to import the key. If empty, a new key will be generated."
+          default: ""
+        private-key:
+          type: string
+          description: "Private key to import. If empty, a new key will be generated."
+          default: ""
+      code: |
+        wallet-import-key($args["keystore-dir"], $args["private-key"], $args["password"])
+    export-key:
+      description: "Export key from the wallet."
+      arguments:
+        keystore-dir:
+          type: string
+          description: "Path to the keystore directory."
+          default: <- `${monk-volume-path}/ethereum/keystore`
+        password:
+          type: string
+          description: "Password to export the key. Default is empty."
+          default: ""
+        address:
+          type: string
+          description: "Address to export."
+      code: |
+        wallet-export-key($args["keystore-dir"], $args["address"], $args["password"])
 mainnet:
   defines: runnable
-  inherits: ethereum/base
+  inherits: ./base
   metadata:
     name: "Ethereum Mainnet Archive Node"
     description: "An Ethereum mainnet archive node, requires 3.5TB of storage"
@@ -101,7 +140,7 @@ mainnet:
 
 mainnet-pruned:
   defines: runnable
-  inherits: ethereum/mainnet
+  inherits: ./mainnet
   metadata:
     name: "Ethereum Mainnet Pruned Node"
     description: "An Ethereum mainnet pruned node, requires 2TB of storage"
@@ -111,7 +150,7 @@ mainnet-pruned:
 
 goerli:
   defines: runnable
-  inherits: ethereum/base
+  inherits: ./base
   metadata:
     name: "Ethereum Goerli Testnet Archive Node"
     description: "An Ethereum Goerli testnet archive node, requires 1TB of storage"
@@ -122,7 +161,7 @@ goerli:
 
 goerli-pruned:
   defines: runnable
-  inherits: ethereum/goerli
+  inherits: ./goerli
   metadata:
     name: "Ethereum Goerli Testnet Pruned Node"
     description: "An Ethereum Goerli testnet pruned node, requires 500GB of storage"
@@ -132,7 +171,7 @@ goerli-pruned:
 
 sepolia:
   defines: runnable
-  inherits: ethereum/base
+  inherits: ./base
   metadata:
     name: "Ethereum Sepolia Testnet Archive Node"
     description: "An Ethereum Sepolia testnet archive node, requires 1TB of storage"
@@ -143,7 +182,7 @@ sepolia:
 
 sepolia-pruned:
   defines: runnable
-  inherits: ethereum/sepolia
+  inherits: ./sepolia
   metadata:
     name: "Ethereum Sepolia Testnet Pruned Node"
     description: "An Ethereum Sepolia testnet pruned node, requires 500GB of storage"
@@ -153,7 +192,7 @@ sepolia-pruned:
 
 holesky:
   defines: runnable
-  inherits: ethereum/base
+  inherits: ./base
   metadata:
     name: "Ethereum Holesky Testnet Archive Node"
     description: "An Ethereum Holesky testnet archive node, requires 1TB of storage"
@@ -164,7 +203,7 @@ holesky:
 
 holesky-pruned:
   defines: runnable
-  inherits: ethereum/holesky
+  inherits: ./holesky
   metadata:
     name: "Ethereum Holesky Testnet Pruned Node"
     description: "An Ethereum Holesky testnet pruned node, requires 500GB of storage"
