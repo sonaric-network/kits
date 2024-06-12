@@ -34,7 +34,7 @@ Output:
        └─📦 local-379ad959e288cd1494436edd52-ritual-ritual-node-node running
           ├─🧩 ritualnetwork/infernet-node:latest
           ├─💾 nil -> /var/run/docker.sock
-          ├─💾 /Users/alexnelepa/.monk/volumes/node-logs -> /logs
+          ├─💾 /Users/alexnelepa/.sonaric/volumes/node-logs -> /logs
           └─🔌 open 188.146.114.165:4000 -> 4000
 ```
 
