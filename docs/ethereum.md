@@ -35,13 +35,13 @@ Requirements for Ethereum networks:
 
 | Node            | Components | Recommended                                                                          |
 |-----------------|------------|--------------------------------------------------------------------------------------|
-| Mainnet archive | Storage    | 3.5TB+                                                                               |
-| Mainnet full    | Storage    | 1.5TiB+                                                                              |
-| Goerli full     | Storage    | 200 GB                                                                               |
-| Gnosis archive  | Storage    | 1.7TiB                                                                               |
-| Gnosis full     | Storage    | 530GiB                                                                               |
-| Polygon archive | Storage    | 8.5TiB                                                                               |
-| Polygon full    | Storage    | 5.1TiB                                                                               |
+| Mainnet archive | Storage    | SSD 3.5TB+                                                                           |
+| Mainnet full    | Storage    | SSD 1.5TiB+                                                                          |
+| Goerli full     | Storage    | SSD 200 GB                                                                           |
+| Gnosis archive  | Storage    | SSD 1.7TiB                                                                           |
+| Gnosis full     | Storage    | SSD 530GiB                                                                           |
+| Polygon archive | Storage    | SSD 8.5TiB                                                                           |
+| Polygon full    | Storage    | SSD 5.1TiB                                                                           |
 | -               | CPU        | 64-bit architecture <br/> (core and threads number doesn't really matter for Erigon) |
 | -               | RAM        | ≥ 16GB                                                                               |
 
@@ -167,10 +167,29 @@ Example output:
 ```
 
 ### List Keys
-TODO
+List addresses of all keys in the node's key store.  
+```bash
+sonaric do templates/local/ethereum/mainnet-pruned/list-keys
+```
+
+Example output:
+```
+✔ Running action: 
+ad0433c825f00298b7a2646b093a010aeb75efc6
+d936278cb36ac41563c369bd7c665e10ca416220
+7ce17814a929693c3fee3d3953657631250ca649
+```
 
 ### Sync Status
-TODO 
+Get the current sync status of the node.  
+```bash
+sonaric do templates/local/ethereum/mainnet-pruned/sync-status
+```
+Example output:
+```
+✔ Running action: 
+{"jsonrpc":"2.0","id":1,"result":{"currentBlock":"0x0","highestBlock":"0x0","stages":[{"stage_name":"Snapshots","block_number":"0x0"},{"stage_name":"Headers","block_number":"0x0"},{"stage_name":"BorHeimdall","block_number":"0x0"},{"stage_name":"BlockHashes","block_number":"0x0"},{"stage_name":"Bodies","block_number":"0x0"},{"stage_name":"Senders","block_number":"0x0"},{"stage_name":"Execution","block_number":"0x0"},{"stage_name":"Translation","block_number":"0x0"},{"stage_name":"HashState","block_number":"0x0"},{"stage_name":"IntermediateHashes","block_number":"0x0"},{"stage_name":"AccountHistoryIndex","block_number":"0x0"},{"stage_name":"StorageHistoryIndex","block_number":"0x0"},{"stage_name":"LogIndex","block_number":"0x0"},{"stage_name":"CallTraces","block_number":"0x0"},{"stage_name":"TxLookup","block_number":"0x0"},{"stage_name":"Finish","block_number":"0x0"}]}}
+```
 
 
 

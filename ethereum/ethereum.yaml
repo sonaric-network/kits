@@ -7,7 +7,7 @@ base:
     version: 1.0.0
   requirements:
     defines: requirements
-    CPU: "Multi-core processor"
+    CPU: 4
     RAM: 32768
     GPU: false
     disk: 3670016
@@ -17,8 +17,7 @@ base:
       image-tag: v2.60.0
       paths:
         - <- `${monk-volume-path}/ethereum:${data-dir}`
-        - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore`
-
+        - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore` # needed this for the wallet import/export
       entrypoint: <- `erigon --chain=${chain} --internalcl --torrent.download.rate=512mb --http.addr=0.0.0.0 --http.api=eth,web3,net,debug,trace,txpool --datadir=${data-dir} ${options}`
   services:
     grpc-server:
@@ -129,6 +128,28 @@ base:
           description: "Address to export."
       code: |
         wallet-export-key($args["keystore-dir"], $args["address"], $args["password"])
+    list-keys:
+        description: "List addresses of all keys in the wallet."
+        code: exec("erigon", "/home/erigon/scripts/list-keys.sh")
+    sync-status:
+        description: "Get the sync status of the node."
+        code: exec("erigon", "/home/erigon/scripts/sync-status.sh")
+  files:
+    list-keys:
+      container: erigon
+      path: /home/erigon/scripts/list-keys.sh
+      contents: |
+          #!/bin/sh
+          ls {{ v "data-dir" }}/keystore
+      mode: 0755
+    sync-status:
+      container: erigon
+      path: /home/erigon/scripts/sync-status.sh
+      contents: |
+          #!/bin/sh
+          curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://127.0.0.1:8545
+      mode: 0755
+
 mainnet:
   defines: runnable
   inherits: ./base
