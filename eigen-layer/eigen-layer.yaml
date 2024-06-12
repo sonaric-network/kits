@@ -9,7 +9,7 @@ eigen-layer-common:
     website: https://docs.eigenlayer.xyz/
     publisher: sonaric
     icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
-    version: 1.0
+    version: 1.0.0
     source: https://github.com/Layr-Labs
     tags: web, api
     private: true

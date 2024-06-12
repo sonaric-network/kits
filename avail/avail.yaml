@@ -7,7 +7,7 @@ common:
         website: https://docs.availproject.org/
         publisher: sonaric
         icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
-        version: 1.0
+        version: 1.0.0
         source: https://github.com/availproject
         tags: blockchain
         private: false

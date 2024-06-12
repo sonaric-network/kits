@@ -8,6 +8,8 @@ mainnet:
     description: Gnosis Mainnet archive node, requires 600GB of storage
     network-name: mainnet
     node-type: archive
+    icon: https://avatars.githubusercontent.com/u/92709226?s=200&v=4
+    version: 1.0.0
   requirements:
     disk: 614400
   variables:
