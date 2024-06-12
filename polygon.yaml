@@ -8,6 +8,8 @@ mainnet:
     description: Polygon Mainnet archive node, requires 8.5TB of storage
     network-name: mainnet
     node-type: archive
+    icon: https://avatars.githubusercontent.com/u/30753617?s=200&v=4
+    version: 1.0.0
   requirements:
     disk: 8912896
   variables:

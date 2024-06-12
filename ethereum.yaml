@@ -4,6 +4,8 @@ base:
   defines: runnable
   metadata:
     tags: blockchain, evm
+    icon: https://avatars.githubusercontent.com/u/6250754?s=200&v=4
+    version: 1.0.0
   requirements:
     defines: requirements
     CPU: "Multi-core processor"
