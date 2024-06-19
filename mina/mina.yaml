@@ -9,23 +9,29 @@ base:
         website: https://minaprotocol.com/
         publisher: sonaric
         icon: https://avatars.githubusercontent.com/u/39103922?s=48&v=4
-        version: 1.0.0
+        version: 1.0.1
         source: https://github.com/MinaProtocol/mina
         tags: blockchain
         private: false
     requirements:
         defines: requirements
         CPU: "8 Cores"
-        RAM: 16384
+        RAM: 32768
         GPU: false
-        disk: 0
+        disk: 65536
+
     containers:
         mina:
             image: minaprotocol/mina-daemon
+            arch: linux/amd64
+            entrypoint: /sonaric/entrypoint.sh
             image-tag: <- `${version}`
             ports:
                 - 3085:3085
                 - 8302:8302
+            paths:
+                - <- `${monk-volume-path}/mina/keys:/keys`
+                - <- `${monk-volume-path}/mina/.mina-config:/root/.mina-config`
             restart: unless-stopped
             environment:
                 - <- `MINA_PRIVKEY_PASS=${private-key-password}`
@@ -35,28 +41,37 @@ base:
                 - <- `LOG_LEVEL=${log-level}`
                 - <- `FILE_LOG_LEVEL=${file-log-level}`
     files:
-        keys-check-generate:
+        entrypoint:
             container: mina
-            path: /monk/keys-check-generate.sh
-            contents: <<< files/keys-check-generate.sh
+            path: /sonaric/entrypoint.sh
+            contents: <<< files/entrypoint.sh
             mode: 0755
+        sync-status:
+            container: mina
+            path: /sonaric/scripts/sync-status.sh
+            mode: 0755
+            contents: |
+                #!/bin/bash
+                curl -X POST -H "Content-Type: application/json" --data '{ "query": "{ daemonStatus { syncStatus blockchainLength highestBlockLengthReceived } }" }' http://127.0.0.1:3085/graphql
+        export-key:
+            container: mina
+            path: /sonaric/scripts/export-account.sh
+            mode: 0755
+            contents: <<< files/export-account.sh
     variables:
         private-key-password:
             description: "Password for the private key."
             type: string
-            value: ""
+            value: "My_V3ry_S3cure_Privat3K3yPassw0rd"
         libp2p-password:
             description: "Password for the libp2p key."
             type: string
-            value: ""
         version:
             description: "Version of the Mina daemon to deploy."
-            type: string
-            value: "1.4.0-c980ba8-bullseye-mainnet"
         peer-list-url:
             description: "URL to fetch the peer list from."
             type: string
-            value: "https://storage.googleapis.com/o1labs-gitops-infrastructure/mainnet/seed-list.txt"
+            value: "https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt"
         extra-flags:
             description: "Extra flags to pass to the Mina daemon. Example: --block-producer-key <BLOCK_PRODUCER_KEY_PATH>"
             type: string
@@ -83,82 +98,49 @@ base:
             protocol: tcp
             host-port: 8302
             publish: true
+
     actions:
-        status:
-            description: "Get the status of the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", "mina client status")
-        get-public-key:
-            description: "Get the public key of the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-key.pub")
         get-peer-id:
             description: "Get the peer ID of the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-libp2p-key.peerid")
-        get-private-key:
-            description: "Get the the encrypted private key of the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", "cat /keys/monk-mina-key")
-
-
-sandbox:
-    defines: runnable
-    metadata:
-        name: "Mina Sandbox"
-        shortname: "Mina Sandbox"
-        description: |
-            The Mina Sandbox Node enables you to test and get familiar with core features of the protocol and build tooling in a stable environment -- it's a single-node private network that uses the same configuration as the live testnet. 
-            The sandbox does NOT connect you to a live network.
-        network-name: "sandbox"
-    inherits: mina/base
-    containers:
-        mina:
-            image-tag: <- `${version}`
-            ports:
-                - 3085:3085
-            restart: unless-stopped
-            environment:
-                - <- `RUN_DEMO=true`
-                - <- `MINA_PRIVKEY_PASS=${private-key-password}`
-    variables:
-        private-key-password: ""
-        version: "1.3.0-9b0369c-bullseye-devnet"
-        peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
-    services:
-        graphql-service:
-            container: mina
-            port: 3085
-            protocol: tcp
-            host-port: 3085
-            publish: true
+            code: exec("mina", "/bin/bash", "-c", "cat /keys/sonaric-mina-libp2p-key.peerid")
+        sync-status:
+            description: "Get the sync status of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "/sonaric/scripts/sync-status.sh")
+        status:
+            description: "Get detailed status of the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "mina client status")
+        list-keys:
+            description: "List all owned accounts in the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "mina accounts list")
+        import-key:
+            arguments:
+                privkey:
+                    description: "JSON object containing the private key to import."
+                    type: string
+                    required: true
+            description: "Import a private key into the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", `echo '${args["privkey"]}' > /keys/sonaric-mina-imported-key && echo "imported" && chmod 600 /keys/sonaric-mina-imported-key && echo "chmod" && mina accounts import --privkey-path /keys/sonaric-mina-imported-key`)
+#            code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/import-account.sh '${args["privkey"]}'`)
+        export-key:
+            description: "Export a private key from the Mina daemon."
+            arguments:
+                pubkey:
+                    description: "Public key of the account to export."
+                    type: string
+                    required: true
+            code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/export-account.sh ${args["pubkey"]}`)
 
 devnet:
     defines: runnable
     metadata:
         name: "Mina Devnet"
         description: |
-            The Devnet network is designed for testing and experimentation. Devnet is a dedicated network for developers who are building on top of the Mina protocol.
+            The Devnet network is designed for testing and experimentation.
             On the Devnet network, MINA holds no real value.
     inherits: mina/base
-    containers:
-        mina:
-            entrypoint: /monk/entrypoint.sh
-            ports:
-                - 3085:3085
-                - 8302:8302
-                - 80:80
-            restart: unless-stopped
-            paths:
-                - <- `${monk-volume-path}/mina/keys:/keys`
-                - <- `${monk-volume-path}/mina/.mina-config:/root/.mina-config`
     variables:
         version: "3.0.0-dc6bf78-focal-devnet"
-        private-key-password: "My_V3ry_S3cure_Privat3K3yPassw0rd"
-        libp2p-password: "My_V3ry_S3cure_LiBp2pPassword"
         peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
-    files:
-        entrypoint:
-            container: mina
-            path: /monk/entrypoint.sh
-            contents: <<< files/entrypoint-dev.sh
-            mode: 0755
 
 mainnet:
     defines: runnable
@@ -167,27 +149,16 @@ mainnet:
         description: |
             The Mina Mainnet is the main network for the Mina protocol. It is a decentralized network that is secured by a large number of independent validators.
     inherits: mina/base
-    containers:
-        mina:
-            entrypoint: /monk/entrypoint.sh
-            ports:
-                - 3085:3085
-                - 8302:8302
-            restart: unless-stopped
-            paths:
-                - <- `${monk-volume-path}/mina/keys:/keys`
-                - <- `${monk-volume-path}/mina/.mina-config:/root/.mina-config`
     variables:
-        version: "1.4.0-c980ba8-bullseye-mainnet"
-        private-key-password: "My_V3ry_S3cure_Privat3K3yPassw0rd"
-        libp2p-password: ""
+        version: "3.0.0-93e0279-bullseye-mainnet"
         peer-list-url: "https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt"
-    files:
-        entrypoint:
-            container: mina
-            path: /monk/entrypoint.sh
-            contents: <<< files/entrypoint.sh
-            mode: 0755
 
-
-
+block-producer:
+    defines: runnable
+    metadata:
+        name: "Mina Mainnet Producer"
+        description: |
+            Mainnet Mina daemon with block producing enabled.
+    inherits: mina/mainnet
+    variables:
+        extra-flags: "--block-producer-key /keys/sonaric-mina-key"
