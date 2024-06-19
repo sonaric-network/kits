@@ -16,27 +16,50 @@ fi
 chmod 700 /keys
 
 # Check if private key exists
-if [ -f "/keys/monk-mina-key" ]; then
+if [ -f "/keys/sonaric-mina-key" ]; then
     echo "private key exists"
 else
     echo "creating private key"
-    mina advanced generate-keypair --privkey-path /keys/monk-mina-key
+    mina-generate-keypair --privkey-path /keys/sonaric-mina-key
     echo "private key created"
+    chmod 600 /keys/sonaric-mina-key
 fi
 
-mina advanced validate-keypair --privkey-path /keys/monk-mina-key
-
 # Check if libp2p key exists
-if [ -f "/keys/monk-mina-libp2p-key" ]; then
+if [ -f "/keys/sonaric-mina-libp2p-key" ]; then
     echo "libp2p key found"
 else
     echo "creating libp2p key"
-    mina advanced generate-libp2p-keypair --privkey-path /keys/monk-mina-libp2p-key
+    mina libp2p generate-keypair --privkey-path /keys/sonaric-mina-libp2p-key
     echo "libp2p key created"
+    chmod 600 /keys/sonaric-mina-libp2p-key
+fi
+
+
+check_existing_accounts() {
+    local accounts
+    accounts=$(mina accounts list 2>&1)
+    if [[ "$accounts" == *"You have no tracked accounts!"* ]]; then
+        echo "no"
+    else
+        echo "yes"
+    fi
+}
+
+# Check if there are existing accounts
+existing_accounts=$(check_existing_accounts)
+if [ "$existing_accounts" == "no" ]; then
+    echo "No existing accounts found. Importing default key."
+    mina accounts import --privkey-path /keys/sonaric-mina-key
+    echo "Default key imported."
+else
+    echo "Existing accounts found. No need to import the default key."
 fi
 
 # start mina daemon
-mina daemon -peer-list-url $PEER_LIST_URL \
-    --block-producer-key /keys/monk-mina-key \
-    --log-level ${LOG_LEVEL} \
-    --file-log-level ${FILE_LOG_LEVEL}
+
+# print mina daemon start command
+exec mina daemon --peer-list-url $PEER_LIST_URL \
+            --libp2p-keypair /keys/sonaric-mina-libp2p-key \
+            --log-level ${LOG_LEVEL} \
+            --file-log-level ${FILE_LOG_LEVEL} ${EXTRA_FLAGS}
