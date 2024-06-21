@@ -372,7 +372,7 @@ You can, however, use the RPC methods for debugging purposes if you connect to c
 You can use `sonaric shell` to connect to the container's shell.
 
 ```bash
- monk shell templates/local/avail/validator-turing
+ sonaric shell templates/local/avail/validator-turing
  ```
 ```
 # curl -H 'Content-Type: application/json' -d '{"id":1, "jsonrpc":"2.0", "method": "author_rotateKeys", "params":[]}' http://127.0.0.1:9944
