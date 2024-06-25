@@ -13,6 +13,7 @@ eigen-layer-common:
     source: https://github.com/Layr-Labs
     tags: web, api
     private: true
+    currency: ETH
   requirements:
     defines: requirements
     CPU: "2 Cores"

@@ -13,6 +13,7 @@ base:
         source: https://github.com/MinaProtocol/mina
         tags: blockchain
         private: false
+        currency: MINA
     requirements:
         defines: requirements
         CPU: "8 Cores"
