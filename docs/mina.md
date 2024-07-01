@@ -16,6 +16,8 @@
   - [List keys](#list-keys)
   - [Export keys](#export-keys)
   - [Import key](#import-key)
+  - [Get balance](#get-balance)
+  - [Get address](#get-address)
 - [Documentation and API References](#documentation-and-api-references)
 
 ## Overview
@@ -70,15 +72,15 @@ Currently, the following versions are available:
 
 Template variables can be set to customize the node's behavior. The following variables can be configured:
 
-| Name                   | Type   | Description                                                   | Default Value                                                                                                                                                                                                  |
-|------------------------|--------|---------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `private-key-password` | string | Password for the private key.                                 | `"My_V3ry_S3cure_Privat3K3yPassw0rd"`                                                                                                                                                                          |
-| `libp2p-password`      | string | Password for the libp2p key.                                  | `""`                                                                                                                                                                                                           |
-| `version`              | string | Version of the Mina daemon to deploy.                         | `3.0.0-93e0279-bullseye-mainnet` for mainnet  <br/> `3.0.0-dc6bf78-focal-devnet` for devnet   <br/>(in `1.0.1` version of mina template)                                                                       |
-| `peer-list-url`        | string | URL to fetch the peer list from.                              | `https://storage.googleapis.com/o1labs-gitops-infrastructure/mainnet/seed-list.txt` for mainnet <br/>     `https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt` for devnet |
-| `extra-flags`          | string | Extra flags to pass to the Mina daemon. (like `--external-ip` | `""`                                                                                                                                                                                                           |     
-| `log-level`            | string | Log level for the Mina daemon.                                | `Info`                                                                                                                                                                                                         |
-| `file-log-level`       | string | File log level for the Mina daemon.                           | `Debug`                                                                                                                                                                                                        |
+| Name                   | Type   | Description                                                   | Default Value                                                                                                                            |
+|------------------------|--------|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `private-key-password` | string | Password for the private key.                                 | `"My_V3ry_S3cure_Privat3K3yPassw0rd"`                                                                                                    |
+| `libp2p-password`      | string | Password for the libp2p key.                                  | `""`                                                                                                                                     |
+| `version`              | string | Version of the Mina daemon to deploy.                         | `3.0.0-93e0279-bullseye-mainnet` for mainnet  <br/> `3.0.0-dc6bf78-focal-devnet` for devnet   <br/>(in `1.0.1` version of mina template) |
+| `peer-list-url`        | string | URL to fetch the peer list from.                              | `https://bootnodes.minaprotocol.com/networks/[network].txt` (network devnet/mainnet)                                                     |
+| `extra-flags`          | string | Extra flags to pass to the Mina daemon. (like `--external-ip` | `""`                                                                                                                                     |     
+| `log-level`            | string | Log level for the Mina daemon.                                | `Info`                                                                                                                                   |
+| `file-log-level`       | string | File log level for the Mina daemon.                           | `Debug`                                                                                                                                  |
 
 ### Run mina daemon
 
@@ -327,6 +329,23 @@ Public key: B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C
 Balance: 0
 Locked: true
 ```
+
+### Get balance
+Requires `pubkey` as input.  
+```bash
+sonaric do templates/local/mina/mainnet/get-balance pubkey=B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C
+```
+
+Example output:
+```bash
+✔ Running action:
+There are no funds in this account
+✨ Took: 1s
+```
+
+### Get address
+Returns public key (list of keys) in the same format as `list-keys` action.  
+So it's an alias for `list-keys` [action](#list-keys).
 
 
 ## Documentation and API References

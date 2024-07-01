@@ -113,6 +113,17 @@ base:
         list-keys:
             description: "List all owned accounts in the Mina daemon."
             code: exec("mina", "/bin/bash", "-c", "mina accounts list")
+        get-balance:
+            description: "Get the balance of an account in the Mina daemon."
+            arguments:
+                pubkey:
+                    description: "Public key of the account to get the balance of."
+                    type: string
+                    required: true
+            code: exec("mina", "/bin/bash", "-c", `mina client get-balance --public-key ${args["pubkey"]}`)
+        get-address:
+            description: "Get the address(es) (public keys) of an account in the Mina daemon."
+            code: exec("mina", "/bin/bash", "-c", "mina accounts list")
         import-key:
             arguments:
                 privkey:
@@ -120,8 +131,7 @@ base:
                     type: string
                     required: true
             description: "Import a private key into the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", `echo '${args["privkey"]}' > /keys/sonaric-mina-imported-key && echo "imported" && chmod 600 /keys/sonaric-mina-imported-key && echo "chmod" && mina accounts import --privkey-path /keys/sonaric-mina-imported-key`)
-#            code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/import-account.sh '${args["privkey"]}'`)
+            code: exec("mina", "/bin/bash", "-c", `echo '${args["privkey"]}' > /keys/sonaric-mina-imported-key && chmod 600 /keys/sonaric-mina-imported-key && mina accounts import --privkey-path /keys/sonaric-mina-imported-key`)
         export-key:
             description: "Export a private key from the Mina daemon."
             arguments:
@@ -141,7 +151,7 @@ devnet:
     inherits: mina/base
     variables:
         version: "3.0.0-dc6bf78-focal-devnet"
-        peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
+        peer-list-url: "https://bootnodes.minaprotocol.com/networks/devnet.txt"
 
 mainnet:
     defines: runnable
@@ -152,7 +162,7 @@ mainnet:
     inherits: mina/base
     variables:
         version: "3.0.0-93e0279-bullseye-mainnet"
-        peer-list-url: "https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt"
+        peer-list-url: "https://bootnodes.minaprotocol.com/networks/mainnet.txt"
 
 block-producer:
     defines: runnable
