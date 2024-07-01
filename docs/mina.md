@@ -16,6 +16,8 @@
   - [List keys](#list-keys)
   - [Export keys](#export-keys)
   - [Import key](#import-key)
+  - [Get balance](#get-balance)
+  - [Get address](#get-address)
 - [Documentation and API References](#documentation-and-api-references)
 
 ## Overview
@@ -327,6 +329,23 @@ Public key: B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C
 Balance: 0
 Locked: true
 ```
+
+### Get balance
+Requires `pubkey` as input.  
+```bash
+sonaric do templates/local/mina/mainnet/get-balance pubkey=B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C
+```
+
+Example output:
+```bash
+✔ Running action:
+There are no funds in this account
+✨ Took: 1s
+```
+
+### Get address
+Returns public key (list of keys) in the same format as `list-keys` action.  
+So it's an alias for `list-keys` [action](#list-keys).
 
 
 ## Documentation and API References
