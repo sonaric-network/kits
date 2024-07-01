@@ -140,7 +140,7 @@ devnet:
     inherits: mina/base
     variables:
         version: "3.0.0-dc6bf78-focal-devnet"
-        peer-list-url: "https://storage.googleapis.com/o1labs-gitops-infrastructure/devnet/seed-list-devnet.txt"
+        peer-list-url: "https://bootnodes.minaprotocol.com/networks/devnet.txt"
 
 mainnet:
     defines: runnable
@@ -151,7 +151,7 @@ mainnet:
     inherits: mina/base
     variables:
         version: "3.0.0-93e0279-bullseye-mainnet"
-        peer-list-url: "https://storage.googleapis.com/mina-seed-lists/mainnet_seeds.txt"
+        peer-list-url: "https://bootnodes.minaprotocol.com/networks/mainnet.txt"
 
 block-producer:
     defines: runnable
