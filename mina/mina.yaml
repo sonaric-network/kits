@@ -66,10 +66,11 @@ base:
             contents: |
                 #!/bin/bash
                 # Get the balance using the mina client command
-                output=$(mina client get-balance --public-key "$1")
-
+                output=$(mina client get-balance --public-key "$1" 2>&1)  # Redirect stderr to stdout
+            
                 # Process the output with awk
                 echo "$output" | awk '
+                /Error: Unable to connect to Mina daemon/ {print "{\"error\": \"Unable to connect to Mina daemon\"}"; exit}
                 /There are no funds in this account/ {print "{\"amount\": 0}"; exit}
                 /Balance:/ {gsub("Balance: ", ""); print "{\"amount\": " $1 "}"; exit}
                 '
@@ -80,15 +81,15 @@ base:
             contents: |
                 #!/bin/bash
                 # Get the account list using the mina client command
-                output=$(mina accounts list)
+                output=$(mina accounts list 2>&1)  # Redirect stderr to stdout
                 
                 # Process the output with awk to parse the public key of the last account
                 echo "$output" | awk '
+                /^Warning/ {next}                 # Skip lines that start with "Warning"
+                /^Listing/ {next}                 # Skip lines that start with "Listing"
                 /^Account \./ {account=1; pk=""; next}
                 account && /Public key:/ {pk=$3}
-                END {if (account) printf("{\"public_key\": \"%s\"}\n", pk)}'
-
-
+                END {if (account) printf("{\"address\": \"%s\"}\n", pk)}'
     variables:
         private-key-password:
             description: "Password for the private key."
