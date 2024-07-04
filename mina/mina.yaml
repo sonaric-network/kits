@@ -59,6 +59,36 @@ base:
             path: /sonaric/scripts/export-account.sh
             mode: 0755
             contents: <<< files/export-account.sh
+        get-balance:
+            container: mina
+            path: /sonaric/scripts/get-balance.sh
+            mode: 0755
+            contents: |
+                #!/bin/bash
+                # Get the balance using the mina client command
+                output=$(mina client get-balance --public-key "$1")
+
+                # Process the output with awk
+                echo "$output" | awk '
+                /There are no funds in this account/ {print "{\"amount\": 0}"; exit}
+                /Balance:/ {gsub("Balance: ", ""); print "{\"amount\": " $1 "}"; exit}
+                '
+        get-address:
+            container: mina
+            path: /sonaric/scripts/get-address.sh
+            mode: 0755
+            contents: |
+                #!/bin/bash
+                # Get the account list using the mina client command
+                output=$(mina accounts list)
+                
+                # Process the output with awk to parse the public key of the last account
+                echo "$output" | awk '
+                /^Account \./ {account=1; pk=""; next}
+                account && /Public key:/ {pk=$3}
+                END {if (account) printf("{\"public_key\": \"%s\"}\n", pk)}'
+
+
     variables:
         private-key-password:
             description: "Password for the private key."
@@ -113,17 +143,22 @@ base:
         list-keys:
             description: "List all owned accounts in the Mina daemon."
             code: exec("mina", "/bin/bash", "-c", "mina accounts list")
-        get-balance:
-            description: "Get the balance of an account in the Mina daemon."
+        account-unlock:
+            description: "Unlock an account in the Mina daemon."
             arguments:
                 pubkey:
-                    description: "Public key of the account to get the balance of."
+                    description: "Public key of the account to unlock."
                     type: string
                     required: true
-            code: exec("mina", "/bin/bash", "-c", `mina client get-balance --public-key ${args["pubkey"]}`)
-        get-address:
-            description: "Get the address(es) (public keys) of an account in the Mina daemon."
-            code: exec("mina", "/bin/bash", "-c", "mina accounts list")
+            code: exec("mina", "/bin/bash", "-c", `mina accounts unlock --public-key ${args["pubkey"]}`)
+        account-lock:
+            description: "Lock an account in the Mina daemon."
+            arguments:
+                pubkey:
+                    description: "Public key of the account to lock."
+                    type: string
+                    required: true
+            code: exec("mina", "/bin/bash", "-c", `mina accounts lock --public-key ${args["pubkey"]}`)
         import-key:
             arguments:
                 privkey:
@@ -140,6 +175,22 @@ base:
                     type: string
                     required: true
             code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/export-account.sh ${args["pubkey"]}`)
+        get-balance:
+            description: "Get the balance of the Sonaric account in the Mina daemon."
+            arguments:
+                pubkey:
+                    description: "Public key of the account to get the balance of."
+                    type: string
+                    required: true
+            code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/get-balance.sh ${args["pubkey"]}`)
+        get-address:
+            description: "Get the address of the Sonaric account in the Mina daemon."
+            arguments:
+                pubkey:
+                    description: "Public key of the account to get the address of."
+                    type: string
+                    required: true
+            code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/get-address.sh`)
 
 devnet:
     defines: runnable

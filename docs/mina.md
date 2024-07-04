@@ -344,9 +344,39 @@ There are no funds in this account
 ```
 
 ### Get address
-Returns public key (list of keys) in the same format as `list-keys` action.  
-So it's an alias for `list-keys` [action](#list-keys).
+Returns address (mina public key) in json format.
+```bash
+sonaric do templates/local/mina/mainnet/get-address
+```
 
+Example output:
+```bash
+✔ Running action:
+{"address":"B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C"}
+✨ Took: 1s
+```
+
+If you see warning like this before output:
+```bash
+Warning: Could not connect to a running daemon.
+Listing from local directory /root/.mina-config
+{"address":"B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C"}
+```
+just wait a few minutes and try again.  
+That means the daemon is not ready yet. And that is normal behavior.
+
+### Get balance
+Requires `pubkey` as input.  
+```bash
+sonaric do templates/local/mina/mainnet/get-balance pubkey=B62qkUyePK48iNndRnKqzrwy4RDn4buYdh3HfrL6RWSTRaF5B3FNW3C
+```
+
+Example output:
+```bash
+✔ Running action:
+{"amount": 299}
+✨ Took: 1s
+```
 
 ## Documentation and API References
 Access detailed API documentation and examples:
