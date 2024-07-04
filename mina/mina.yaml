@@ -185,11 +185,6 @@ base:
             code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/get-balance.sh ${args["pubkey"]}`)
         get-address:
             description: "Get the address of the Sonaric account in the Mina daemon."
-            arguments:
-                pubkey:
-                    description: "Public key of the account to get the address of."
-                    type: string
-                    required: true
             code: exec("mina", "/bin/bash", "-c", `/sonaric/scripts/get-address.sh`)
 
 devnet:
