@@ -102,7 +102,7 @@ base:
             code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
         list-keys:
             description: "List all owned accounts in the Celestia daemon."
-            code: exec("celestia", "/bin/bash", "-c", "cel-key list --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK")
+            code: exec("celestia", "/bin/bash", "-c", "cel-key list --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK | tail -n +2")
         import-key:
             arguments:
                 privkey:
@@ -114,7 +114,7 @@ base:
                     type: string
                     required: true
             description: "Import a private key into the Celestia daemon."
-            code: exec( "celestia", "/bin/bash", "-c", `echo '${args["privkey"]}' > sonaric-mina-imported-key.txt && chmod 600 sonaric-mina-imported-key.txt && echo '${args["password"]}' | cel-key import sonaric-celestia-key2 sonaric-mina-imported-key.txt --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK && rm sonaric-mina-imported-key.txt`)
+            code: exec( "celestia", "/bin/bash", "-c", `echo '${args["privkey"]}' > sonaric-mina-imported-key.txt && chmod 600 sonaric-mina-imported-key.txt && echo '${args["password"]}' | cel-key import sonaric-celestia-key2 sonaric-mina-imported-key.txt --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK > /dev/null 2>&1 && rm sonaric-mina-imported-key.txt`)
         export-key:
             arguments:
                 password:
@@ -122,7 +122,7 @@ base:
                     type: string
                     required: true
             description: "Export a private key from the Celestia daemon."
-            code: exec("celestia", "/bin/bash", "-c", "yes y | echo '${args[\"password\"]}' | cel-key export sonaric-celestia-key --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK")
+            code: exec("celestia", "/bin/bash", "-c", "yes y | echo '${args[\"password\"]}' | cel-key export sonaric-celestia-key --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK | tail -n +2")
 
 # -------------------------
 # LIGHT NODES
