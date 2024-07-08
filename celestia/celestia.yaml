@@ -61,9 +61,15 @@ base:
             path: /home/start.sh
             contents: |
                 #!/bin/bash
+                if find /home/celestia/.celestia-$NODE_TYPE-$P2P_NETWORK*/keys/keyring-test -name "sonaric-celestia-key.info" -print -quit > /dev/null 2>&1; then
+                    echo "private key exists"
+                else
+                    cel-key add sonaric-celestia-key --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK
+                    echo "sonaric private key created"
+                fi
                 celestia $NODE_TYPE init --p2p.network $P2P_NETWORK --core.ip $RPC_URL
                 find /home/celestia/.celestia-*/keys -type f -exec chmod 600 {} \;
-                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL
+                celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL --keyring.accname sonaric-celestia-key
             mode: 0755
     services:
         tcp:
@@ -94,6 +100,30 @@ base:
         get-auth-token:
             description: "Get the auth token for the Celestia Light node."
             code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
+        list-keys:
+            description: "List all owned accounts in the Celestia daemon."
+            code: exec("celestia", "/bin/bash", "-c", "cel-key list --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK")
+        import-key:
+            arguments:
+                privkey:
+                    description: "key file."
+                    type: string
+                    required: true
+                password:
+                    description: "password."
+                    type: string
+                    required: true
+            description: "Import a private key into the Celestia daemon."
+            code: exec( "celestia", "/bin/bash", "-c", `echo '${args["privkey"]}' > sonaric-mina-imported-key.txt && chmod 600 sonaric-mina-imported-key.txt && echo '${args["password"]}' | cel-key import sonaric-celestia-key2 sonaric-mina-imported-key.txt --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK && rm sonaric-mina-imported-key.txt`)
+        export-key:
+            arguments:
+                password:
+                    description: "password."
+                    type: string
+                    required: true
+            description: "Export a private key from the Celestia daemon."
+            code: exec("celestia", "/bin/bash", "-c", "yes y | echo '${args[\"password\"]}' | cel-key export sonaric-celestia-key --keyring-backend test --node.type $NODE_TYPE --p2p.network $P2P_NETWORK")
+
 # -------------------------
 # LIGHT NODES
 # -------------------------
