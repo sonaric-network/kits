@@ -1,0 +1,3 @@
+REPO aleo
+RESOURCES files/entrypoint.sh
+LOAD aleo.yaml

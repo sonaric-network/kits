@@ -1,0 +1,110 @@
+namespace: aleo
+
+common:
+    metadata:
+        name: Aleo
+        shortname: Aleo
+        website: https://aleo.org/
+        publisher: sonaric
+        icon: https://avatars.githubusercontent.com/u/156484414?s=200&v=4
+        version: 1.0.0
+        currency: '-'
+        source: https://github.com/AleoNet/snarkOS
+        tags: blockchain
+        description: |
+            snarkOS is a decentralized operating system for zero-knowledge applications.
+        private: false
+    requirements:
+        defines: requirements
+        CPU: "32 Cores"
+        RAM: 32768
+
+
+aleo:
+    inherits: ./common
+    containers:
+        node:
+            image: aleohq/snarkos:latest
+            arch: linux/amd64
+            entrypoint: /aleo/entrypoint.sh
+            ports:
+                - 4130:4130
+                - 3033:3033
+            paths:
+                - <- `${monk-volume-path}/aleo-${node-type}/data:/aleo/data`
+            restart: unless-stopped
+            environment:
+                - <- `FUNC=${node-type}`
+                - <- `LOGLEVEL=${verbosity}`
+    variables:
+        node-type:
+            description: "Node type to run."
+            type: string
+            value: ""
+        verbosity:
+            description: "Verbosity level."
+            type: int
+            value: 3
+        extra-args:
+            description: "Extra arguments to pass to the node."
+            type: string
+            value: ""
+    services:
+        tcp-1:
+            container: node
+            port: 4130
+            protocol: tcp
+            host-port: 4130
+            publish: true
+        tcp-2:
+            container: node
+            port: 3033
+            protocol: tcp
+            host-port: 3033
+            publish: true
+    files:
+        entrypoint:
+            container: node
+            path: /aleo/entrypoint.sh
+            contents: <<< files/entrypoint.sh
+            mode: 0755
+
+client:
+    defines: runnable
+    inherits: ./aleo
+    metadata:
+        name: Aleo Client
+        description: "Aleo client node."
+    variables:
+        node-type: "client"
+    requirements:
+        RAM: 32768
+        disk: 300
+        network: 100Mbps
+
+prover:
+    defines: runnable
+    inherits: ./aleo
+    metadata:
+        name: Aleo Prover
+        description: "Aleo prover node."
+    variables:
+        node-type: "prover"
+    requirements:
+        RAM: 32768
+        disk: 32
+        network: 500Mbps
+
+validator:
+    defines: runnable
+    inherits: ./aleo
+    metadata:
+        name: Aleo Validator
+        description: "Aleo validator node."
+    variables:
+        node-type: "validator"
+    requirements:
+        RAM: 65536
+        disk: 2048
+        network: 1000Mbps
+
