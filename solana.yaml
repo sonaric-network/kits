@@ -227,6 +227,18 @@ common:
     host:
       type: string
       value: 0.0.0.0
+  actions:
+    export-key:
+      description: "Export a private key from the Solana daemon."
+      code: exec("solana-node", "/bin/bash", "-c", "cat ~/.config/solana/id.json")
+    import-key:
+      arguments:
+        privkey:
+          type: string
+          description: "Private key to import."
+          required: true
+      description: "Import a private key into the Solana daemon."
+      code: exec( "solana-node", "/bin/bash", "-c", `echo '${args["privkey"]}' > ~/.config/solana/solana-imported-key.json && chmod 600 ~/.config/solana/solana-imported-key.json && solana-keygen new --force --no-bip39-passphrase --outfile ~/.config/solana/solana-imported-key.json && solana config set --keypair ~/.config/solana/solana-imported-key.json`)
 
 beta:
   defines: runnable
