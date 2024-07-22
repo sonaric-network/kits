@@ -12,6 +12,7 @@ common:
         source: https://github.com/availproject
         tags: blockchain
         private: false
+        wallet-support: keys-rotate
 # ---------------------- #
 # ---- FULL NODES ------ #
 # ---------------------- #
@@ -61,7 +62,7 @@ avail:
         CPU: "4 Cores"
         RAM: 8192
         GPU: false
-        disk: 40960
+        disk: 300
 
     actions:
         health:
@@ -132,7 +133,7 @@ light:
         CPU: "2 Cores"
         RAM: 4096
         GPU: false
-        disk: 20480
+        disk: 20
     containers:
         avail-light:
             image: availj/avail-light:v1.7.10
@@ -281,7 +282,7 @@ validator-base:
         CPU: "4 Cores"
         RAM: 8192
         GPU: false
-        disk: 40960
+        disk: 50
     services:
         rpc-service:
             container: node
