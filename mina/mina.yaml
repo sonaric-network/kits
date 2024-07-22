@@ -5,7 +5,7 @@ base:
         name: "Mina"
         shortname: Mina
         description: |
-            Mina is a layer-1 blockchain with a 22KB blockchain & zero knowledge smart contracts (“zkApps”) written in TypeScript.
+            Mina is a layer-1 blockchain with a 22KB blockchain and zero knowledge smart contracts (“zkApps”) written in TypeScript.
         website: https://minaprotocol.com/
         publisher: sonaric
         icon: https://avatars.githubusercontent.com/u/39103922?s=48&v=4
@@ -14,12 +14,13 @@ base:
         tags: blockchain
         private: false
         currency: MINA
+        wallet-support: import-key, export-key, list-keys
     requirements:
         defines: requirements
         CPU: "8 Cores"
         RAM: 32768
         GPU: false
-        disk: 65536
+        disk: 64
 
     containers:
         mina:
@@ -65,9 +66,9 @@ base:
             mode: 0755
             contents: |
                 #!/bin/bash
-                # Get the balance using the mina client command
+                # Get the balance using the Mina client command
                 output=$(mina client get-balance --public-key "$1" 2>&1)  # Redirect stderr to stdout
-            
+                
                 # Process the output with awk
                 echo "$output" | awk '
                 /Error: Unable to connect to Mina daemon/ {print "{\"error\": \"Unable to connect to Mina daemon\"}"; exit}
@@ -80,7 +81,7 @@ base:
             mode: 0755
             contents: |
                 #!/bin/bash
-                # Get the account list using the mina client command
+                # Get the account list using the Mina client command
                 output=$(mina accounts list 2>&1)  # Redirect stderr to stdout
                 
                 # Process the output with awk to parse the public key of the last account
@@ -205,7 +206,7 @@ mainnet:
     metadata:
         name: "Mina Mainnet"
         description: |
-            The Mina Mainnet is the main network for the Mina protocol. It is a decentralized network that is secured by a large number of independent validators.
+            The Mina Mainnet is the primary network for the Mina protocol. It is a decentralized network secured by a large number of independent validators.
     inherits: mina/base
     variables:
         version: "3.0.0-93e0279-bullseye-mainnet"
@@ -216,7 +217,7 @@ block-producer:
     metadata:
         name: "Mina Mainnet Producer"
         description: |
-            Mainnet Mina daemon with block producing enabled.
+            A Mina Mainnet daemon with block producing enabled.
     inherits: mina/mainnet
     variables:
         extra-flags: "--block-producer-key /keys/sonaric-mina-key"
