@@ -3,4 +3,5 @@ DIR avail
 DIR mina
 DIR celestia
 DIR ethereum
+DIR aleo
 LOAD gnosis.yaml polygon.yaml solana.yaml
