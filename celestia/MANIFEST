@@ -1,2 +1,4 @@
 REPO celestia
+RESOURCES files/start.sh files/export.sh files/import.sh
+
 LOAD celestia.yaml
