@@ -1,3 +1,10 @@
+## System Requirements
+- Single Core
+- 500 MB RAM
+- 100 GB SSD disk space
+- 56 Kbps Internet Connection
+
+More details can be found [here](https://docs.celestia.org/nodes/overview)
 
 ## Load Template
 
@@ -82,6 +89,63 @@ sonaric do templates/local/celestia/light-mocha/get-auth-token
 ✔ Running action: 
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJwdWJsaWMiLCJyZWFkIiwid3JpdGUiLCJhZG1pbiJdfQ.i-R99xPL9zG1jwxsOoHARBNdQ3cMyxAuwK5BplCX2LA
 ✨ Took: 0s
+```
+
+### Export keys
+Prints both public and private keys.  
+Requires `password` as input.  
+
+```bash
+sonaric do local/celestia/light-arabica/export-key password=12345678
+```
+Example output:
+```bash
+✔ Get templates/local/celestia/light-arabica actions list success
+✔ Got action parameters
+✔ Parse parameters success
+✔ Running the action... DONE
+✔ Running action:
+-----BEGIN TENDERMINT PRIVATE KEY-----
+kdf: bcrypt
+salt: 4A63D516BCD93CC17DD40B4B1539E13D
+type: secp256k1
+
+cbhTWBpkgME13w71HOmV1bV2Ii/hn5nVeHuxFI+gDUuLkSz7DhYxk6W/VFyuIyD/
+KoJHGAOHjc711Kl/gjeY2gLdxPhYGf/fXN4wfpQ=
+=o594
+-----END TENDERMINT PRIVATE KEY-----
+✨ Took: 1s
+```
+
+### Import key
+Imports a private key.  
+Requires `password` and `privkey` as input.
+```bash
+sonaric do local/celestia/light-arabica/import-key password=12345678 privkey=$SOME_VARIABLE
+```
+Example output:
+```bash
+✔ Get templates/local/celestia/light-arabica actions list success
+✔ Got action parameters
+✔ Parse parameters success
+✔ Running the action... DONE
+✔ Running action:
+✨ Took: 1s
+```
+
+### List-keys
+Imports a private key.
+```bash
+sonaric do local/celestia/light-arabica/list-keys
+```
+Example output:
+```bash
+✔ Get templates/local/celestia/light-arabica actions list success
+✔ Got action parameters
+✔ Parse parameters success
+✔ Running the action... DONE
+✔ Running action:
+✨ Took: 1s
 ```
 
 ### Core endpoints

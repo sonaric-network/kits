@@ -229,6 +229,12 @@ common:
       type: string
       value: 0.0.0.0
   actions:
+    get-address:
+      description: "Get the address of the Solana daemon."
+      code: exec("solana-node", "/bin/bash", "-c", "solana address")
+    get-balance:
+        description: "Get the balance of the Solana daemon."
+        code: exec("solana-node", "/bin/bash", "-c", "solana balance")
     export-key:
       description: "Export a private key from the Solana daemon."
       code: exec("solana-node", "/bin/bash", "-c", "cat ~/.config/solana/id.json")
