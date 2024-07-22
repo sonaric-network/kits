@@ -5,14 +5,14 @@ mainnet:
   inherits: ethereum/base
   metadata:
     name: Gnosis Mainnet
-    description: Gnosis Mainnet archive node, requires 600GB of storage
+    description: Gnosis Mainnet archive node
     network-name: mainnet
     node-type: archive
     icon: https://avatars.githubusercontent.com/u/92709226?s=200&v=4
     version: 1.0.0
     currency: GNO
   requirements:
-    disk: 614400
+    disk: 2000
   variables:
     chain: gnosis
 
@@ -21,10 +21,10 @@ mainnet-pruned:
   inherits: gnosis/mainnet
   metadata:
     name: Gnosis Mainnet (pruned)
-    description: Gnosis Mainnet archive node with pruned state, requires 350GB of storage
+    description: Gnosis Mainnet archive node with pruned state
     node-type: pruned
   requirements:
-    disk: 358400
+    disk: 600
   variables:
     options: "--prune=hrtc"
 
@@ -33,11 +33,11 @@ chiado:
   inherits: ethereum/base
   metadata:
     name: Gnosis Chiado
-    description: Gnosis Chiado testnet archive node, requires 2GB of storage
+    description: Gnosis Chiado testnet archive node
     network-name: chiado
     node-type: archive
   requirements:
-    disk: 2048
+    disk: 2
   variables:
     chain: chiado
 
@@ -49,6 +49,6 @@ chiado-pruned:
     description: Gnosis Chiado testnet archive node with pruned state, requires 1GB of storage
     node-type: pruned
   requirements:
-    disk: 1024
+    disk: 1
   variables:
     options: "--prune=hrtc"

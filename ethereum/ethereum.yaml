@@ -12,7 +12,6 @@ base:
     CPU: 4
     RAM: 32768
     GPU: false
-    disk: 3500
   containers:
     erigon:
       image: "thorax/erigon"
@@ -157,28 +156,34 @@ mainnet:
   inherits: ./base
   metadata:
     name: "Ethereum Mainnet Archive Node"
-    description: "An Ethereum mainnet archive node, requires 3.5TB of storage."
+    description: "An Ethereum mainnet archive node."
     network-name: "mainnet"
     node-type: archive
+  requirements:
+    disk: 3500
 
 mainnet-pruned:
   defines: runnable
   inherits: ./mainnet
   metadata:
     name: "Ethereum Mainnet Pruned Node"
-    description: "An Ethereum mainnet pruned node, requires 2TB of storage."
+    description: "An Ethereum mainnet pruned node."
     node-type: pruned
   variables:
     options: "--prune=hrtc"
+  requirements:
+    disk: 2000
 
 goerli:
   defines: runnable
   inherits: ./base
   metadata:
     name: "Ethereum Goerli Testnet Archive Node"
-    description: "An Ethereum Goerli testnet archive node, requires 1TB of storage."
+    description: "An Ethereum Goerli testnet archive node."
     network-name: "goerli"
     node-type: archive
+  requirements:
+    disk: 1000
   variables:
     chain: "goerli"
 
@@ -187,8 +192,10 @@ goerli-pruned:
   inherits: ./goerli
   metadata:
     name: "Ethereum Goerli Testnet Pruned Node"
-    description: "An Ethereum Goerli testnet pruned node, requires 500GB of storage."
+    description: "An Ethereum Goerli testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
 
@@ -197,9 +204,11 @@ sepolia:
   inherits: ./base
   metadata:
     name: "Ethereum Sepolia Testnet Archive Node"
-    description: "An Ethereum Sepolia testnet archive node, requires 1TB of storage."
+    description: "An Ethereum Sepolia testnet archive node."
     network-name: "sepolia"
     node-type: archive
+  requirements:
+    disk: 1000
   variables:
     chain: "sepolia"
 
@@ -208,8 +217,10 @@ sepolia-pruned:
   inherits: ./sepolia
   metadata:
     name: "Ethereum Sepolia Testnet Pruned Node"
-    description: "An Ethereum Sepolia testnet pruned node, requires 500GB of storage."
+    description: "An Ethereum Sepolia testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
 
@@ -218,9 +229,11 @@ holesky:
   inherits: ./base
   metadata:
     name: "Ethereum Holesky Testnet Archive Node"
-    description: "An Ethereum Holesky testnet archive node, requires 1TB of storage."
+    description: "An Ethereum Holesky testnet archive node."
     network-name: "holesky"
     node-type: archive
+  requirements:
+      disk: 1000
   variables:
     chain: "holesky"
 
@@ -229,7 +242,9 @@ holesky-pruned:
   inherits: ./holesky
   metadata:
     name: "Ethereum Holesky Testnet Pruned Node"
-    description: "An Ethereum Holesky testnet pruned node, requires 500GB of storage."
+    description: "An Ethereum Holesky testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
