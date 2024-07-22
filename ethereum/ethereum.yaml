@@ -6,19 +6,19 @@ base:
     icon: https://avatars.githubusercontent.com/u/6250754?s=200&v=4
     version: 1.0.0
     currency: ETH
+    wallet-support: import-key, export-key, list-keys
   requirements:
     defines: requirements
     CPU: 4
     RAM: 32768
     GPU: false
-    disk: 3670016
   containers:
     erigon:
       image: "thorax/erigon"
       image-tag: v2.60.0
       paths:
         - <- `${monk-volume-path}/ethereum:${data-dir}`
-        - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore` # needed this for the wallet import/export
+        - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore` # needed for the wallet import/export
       entrypoint: <- `erigon --chain=${chain} --internalcl --torrent.download.rate=512mb --http.addr=0.0.0.0 --http.api=eth,web3,net,debug,trace,txpool --datadir=${data-dir} ${options}`
   services:
     grpc-server:
@@ -97,7 +97,7 @@ base:
       value: "/home/erigon/.local/share/erigon"
   actions:
     import-key:
-      description: "Import key into the wallet."
+      description: "Import a key into the wallet."
       arguments:
         keystore-dir:
           type: string
@@ -114,7 +114,7 @@ base:
       code: |
         wallet-import-key($args["keystore-dir"], $args["private-key"], $args["password"])
     export-key:
-      description: "Export key from the wallet."
+      description: "Export a key from the wallet."
       arguments:
         keystore-dir:
           type: string
@@ -130,25 +130,25 @@ base:
       code: |
         wallet-export-key($args["keystore-dir"], $args["address"], $args["password"])
     list-keys:
-        description: "List addresses of all keys in the wallet."
-        code: exec("erigon", "/home/erigon/scripts/list-keys.sh")
+      description: "List addresses of all keys in the wallet."
+      code: exec("erigon", "/home/erigon/scripts/list-keys.sh")
     sync-status:
-        description: "Get the sync status of the node."
-        code: exec("erigon", "/home/erigon/scripts/sync-status.sh")
+      description: "Get the sync status of the node."
+      code: exec("erigon", "/home/erigon/scripts/sync-status.sh")
   files:
     list-keys:
       container: erigon
       path: /home/erigon/scripts/list-keys.sh
       contents: |
-          #!/bin/sh
-          ls {{ v "data-dir" }}/keystore
+        #!/bin/sh
+        ls {{ v "data-dir" }}/keystore
       mode: 0755
     sync-status:
       container: erigon
       path: /home/erigon/scripts/sync-status.sh
       contents: |
-          #!/bin/sh
-          curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://127.0.0.1:8545
+        #!/bin/sh
+        curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://127.0.0.1:8545
       mode: 0755
 
 mainnet:
@@ -156,28 +156,34 @@ mainnet:
   inherits: ./base
   metadata:
     name: "Ethereum Mainnet Archive Node"
-    description: "An Ethereum mainnet archive node, requires 3.5TB of storage"
+    description: "An Ethereum mainnet archive node."
     network-name: "mainnet"
     node-type: archive
+  requirements:
+    disk: 3500
 
 mainnet-pruned:
   defines: runnable
   inherits: ./mainnet
   metadata:
     name: "Ethereum Mainnet Pruned Node"
-    description: "An Ethereum mainnet pruned node, requires 2TB of storage"
+    description: "An Ethereum mainnet pruned node."
     node-type: pruned
   variables:
     options: "--prune=hrtc"
+  requirements:
+    disk: 2000
 
 goerli:
   defines: runnable
   inherits: ./base
   metadata:
     name: "Ethereum Goerli Testnet Archive Node"
-    description: "An Ethereum Goerli testnet archive node, requires 1TB of storage"
+    description: "An Ethereum Goerli testnet archive node."
     network-name: "goerli"
     node-type: archive
+  requirements:
+    disk: 1000
   variables:
     chain: "goerli"
 
@@ -186,8 +192,10 @@ goerli-pruned:
   inherits: ./goerli
   metadata:
     name: "Ethereum Goerli Testnet Pruned Node"
-    description: "An Ethereum Goerli testnet pruned node, requires 500GB of storage"
+    description: "An Ethereum Goerli testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
 
@@ -196,9 +204,11 @@ sepolia:
   inherits: ./base
   metadata:
     name: "Ethereum Sepolia Testnet Archive Node"
-    description: "An Ethereum Sepolia testnet archive node, requires 1TB of storage"
+    description: "An Ethereum Sepolia testnet archive node."
     network-name: "sepolia"
     node-type: archive
+  requirements:
+    disk: 1000
   variables:
     chain: "sepolia"
 
@@ -207,8 +217,10 @@ sepolia-pruned:
   inherits: ./sepolia
   metadata:
     name: "Ethereum Sepolia Testnet Pruned Node"
-    description: "An Ethereum Sepolia testnet pruned node, requires 500GB of storage"
+    description: "An Ethereum Sepolia testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
 
@@ -217,9 +229,11 @@ holesky:
   inherits: ./base
   metadata:
     name: "Ethereum Holesky Testnet Archive Node"
-    description: "An Ethereum Holesky testnet archive node, requires 1TB of storage"
+    description: "An Ethereum Holesky testnet archive node."
     network-name: "holesky"
     node-type: archive
+  requirements:
+      disk: 1000
   variables:
     chain: "holesky"
 
@@ -228,7 +242,9 @@ holesky-pruned:
   inherits: ./holesky
   metadata:
     name: "Ethereum Holesky Testnet Pruned Node"
-    description: "An Ethereum Holesky testnet pruned node, requires 500GB of storage"
+    description: "An Ethereum Holesky testnet pruned node."
     node-type: pruned
+  requirements:
+    disk: 500
   variables:
     options: "--prune=hrtc"
