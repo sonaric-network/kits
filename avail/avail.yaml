@@ -78,6 +78,16 @@ avail:
                 curl -H "Content-Type: application/json" -d '{"id":1, "jsonrpc":"2.0", "method": "system_health"}' http://localhost:9944
             mode: 0755
 
+avail-mainnet:
+    defines: runnable
+    inherits: ./avail
+    metadata:
+        name: Avail Mainnet
+        description: "Avail full node for Mainnet network"
+    variables:
+        chain: "mainnet"
+        value: "SonaricAvailMainnetNode"
+        version: "v2.2.4.2"
 
 avail-turing:
     defines: runnable
@@ -327,6 +337,19 @@ validator:
                 #!/bin/bash
                 exec data-avail --chain {{ v "chain" }} --name {{ v "name" }} -d /da/node-data --validator
             mode: 0755
+
+validator-mainnet:
+    defines: runnable
+    inherits: ./validator-base
+    metadata:
+        name: Avail Validator Mainnet
+        description: |
+            Avail validator node for Mainnet network
+    variables:
+        chain: "mainnet"
+        name: "SonaricAvailValidatorMainnet"
+        version: "v2.2.4.2"
+
 
 validator-turing:
     defines: runnable
