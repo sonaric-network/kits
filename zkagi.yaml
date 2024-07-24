@@ -1,0 +1,51 @@
+namespace: zkagi
+
+common:
+    metadata:
+        name: zkAgi Connect2Cluster
+        shortname: Connect2Cluster
+        website: https://zkagi.com/
+        publisher: zkAgi
+        icon: https://avatars.githubusercontent.com/u/139746799?s=200&v=4
+        version: 1.0.0
+        currency: '-'
+        source: https://github.com/ZkAGI
+        tags: blockchain, zero-knowledge, privacy
+        description: |
+            zkAgi's Connect2Cluster client for joining and interacting with the zkAgi blockchain network.
+        private: false
+
+connect:
+    defines: runnable
+    inherits: ./common
+    containers:
+        client:
+            image: docker.io/zkagi/connectpublic2cluster
+            arch: linux/amd64
+            restart: unless-stopped
+            privileged: true
+            environment:
+                - <- `walletAddress=${walletAddress}`
+            ports:
+                - 6379:6379
+    services:
+        tcp-1:
+            container: client
+            port: 6379
+            protocol: tcp
+            host-port: 6379
+            publish: true
+    variables:
+        walletAddress:
+            description: "wallet address"
+            type: string
+            value: "49W2pMuoBt58EDcipp6CtqASMGsxNuUEfC3zqo99eR9j"
+
+connect-gpu:
+    defines: runnable
+    inherits: ./connect
+    containers:
+        client:
+            resources:
+                requests:
+                    nvidia.com/gpu: 1
