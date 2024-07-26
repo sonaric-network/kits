@@ -20,26 +20,66 @@ connect:
     inherits: ./common
     containers:
         client:
-            image: docker.io/zkagi/connectpublic2cluster
+            image: docker.io/zkagi/connectcloud2cluster
+            image-tag: latest
             arch: linux/amd64
             restart: unless-stopped
             privileged: true
             environment:
                 - <- `walletAddress=${walletAddress}`
+                - <- `nodeIP=${nodeIP}`
             ports:
-                - 6379:6379
+                - 36001:36001
+                - 36002:36002
+                - 50555:50555
+                - 38296:38296
+                - 65526:65526
+                - 52365:52365
     services:
         tcp-1:
             container: client
-            port: 6379
+            port: 36001
             protocol: tcp
-            host-port: 6379
+            host-port: 36001
+            publish: true
+        tcp-2:
+            container: client
+            port: 36002
+            protocol: tcp
+            host-port: 36002
+            publish: true
+        tcp-3:
+            container: client
+            port: 50555
+            protocol: tcp
+            host-port: 50555
+            publish: true
+        tcp-4:
+            container: client
+            port: 38296
+            protocol: tcp
+            host-port: 38296
+            publish: true
+        tcp-5:
+            container: client
+            port: 65526
+            protocol: tcp
+            host-port: 65526
+            publish: true
+        tcp-6:
+            container: client
+            port: 52365
+            protocol: tcp
+            host-port: 52365
             publish: true
     variables:
         walletAddress:
             description: "wallet address"
             type: string
             value: "49W2pMuoBt58EDcipp6CtqASMGsxNuUEfC3zqo99eR9j"
+        nodeIP:
+            type: string
+            value: <- ip-address-public
 
 connect-gpu:
     defines: runnable
