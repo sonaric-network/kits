@@ -25,6 +25,7 @@ connect:
             arch: linux/amd64
             restart: unless-stopped
             privileged: true
+            shm-size: 2147483648
             environment:
                 - <- `walletAddress=${walletAddress}`
                 - <- `nodeIP=${nodeIP}`
