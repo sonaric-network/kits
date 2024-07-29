@@ -77,7 +77,8 @@ connect:
         walletAddress:
             description: "wallet address"
             type: string
-            value: "49W2pMuoBt58EDcipp6CtqASMGsxNuUEfC3zqo99eR9j"
+            required: true
+            value: ""
         nodeIP:
             type: string
             value: <- ip-address-public
