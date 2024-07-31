@@ -1,58 +1,59 @@
 #!/bin/bash
-# running the Aleo MAINNET snarkOS in a container
 
-# check if environment variables are set
-if [[ -z ${RUST_LOG+a} ]]; then
-  RUST_LOG=debug
-fi
+# Declare the ALEO_PID variable at the global scope
+ALEO_PID=""
 
-# if no ip and port to bind were provided, bond to all on default port
-if [[ -z ${SNARKOS_PORT+a} ]]; then
-  SNARKOS_PORT="0.0.0.0:4130"
-fi
+# Function to start the Aleo process
+start_aleo() {
+    echo "Starting Aleo node..."
+    /sonaric/scripts/start.sh &
+    ALEO_PID=$!
+}
 
-# if no rest api port was provided
-if [[ -z ${RPC_PORT+a} ]]; then
-  RPC_PORT="0.0.0.0:3030"
-fi
+# Function to stop the Aleo process
+stop_aleo() {
+    echo "Stopping Aleo node..."
+    if [ -n "$ALEO_PID" ] && kill -0 $ALEO_PID 2>/dev/null; then
+        pkill -TERM -P $ALEO_PID
+        sleep 20  # Wait for termination
+        if kill -0 $ALEO_PID 2>/dev/null; then
+            echo "Forcefully stopping remaining Aleo processes..."
+            pkill -KILL -P $ALEO_PID
+        fi
+        while kill -0 $ALEO_PID 2>/dev/null; do
+            sleep 1
+        done
+        echo "Aleo node stopped."
+    else
+        echo "No Aleo node process found to stop."
+    fi
+}
 
-# if no log level was provided, use the default
-if [[ -z ${LOGLEVEL+a} ]]; then
-  LOGLEVEL="1"
-fi
 
-# if no function was provided
-if [[ -z ${FUNC+a} ]]; then
-  FUNC="client"
-fi
+# Function to restart the Aleo process
+restart_aleo() {
+    echo "Restarting Aleo node"
+    if stop_aleo; then
+        start_aleo
+    else
+        echo "Failed to stop the Aleo node properly; restart aborted."
+    fi
+}
 
-# if no Aleo address was provided
-if [[ -z ${ALEO_PRIVKEY+a} ]]; then
-  ALEO_PRIVKEY="$(/aleo/bin/snarkos account new | grep APrivateKey1 | awk '{ print $3; }')"
-fi
 
-# if peers not were provided
-if [[ -z ${PEERS+a} ]]; then
-  COMMON_PARAMS=" --nocdn --nodisplay --logfile /dev/null --node ${SNARKOS_PORT} --rest ${RPC_PORT} --verbosity ${LOGLEVEL} --private-key ${ALEO_PRIVKEY}"
-else
-  COMMON_PARAMS=" --nocdn --nodisplay --logfile /dev/null --node ${SNARKOS_PORT} --rest ${RPC_PORT} --verbosity ${LOGLEVEL} --private-key ${ALEO_PRIVKEY} --peers ${PEERS}"
-fi
+# Signal handler for SIGUSR1
+handle_usr1() {
+    echo "Signal SIGUSR1 received, restarting Aleo node..."
+    restart_aleo
+}
 
-case ${FUNC} in
+# Trap the SIGUSR1 signal and call handle_usr1 when received
+trap 'handle_usr1' SIGUSR1
 
-  validator)
-    /aleo/bin/snarkos start --bft ${BFT_PORT} --validators ${VALIDATORS} --validator ${COMMON_PARAMS}
-    ;;
+# Start the initial Aleo process
+start_aleo
 
-  prover)
-    /aleo/bin/snarkos start --allow-external-peers --prover ${COMMON_PARAMS}
-    ;;
-
-  client)
-    /aleo/bin/snarkos start --allow-external-peers --client ${COMMON_PARAMS}
-    ;;
-
-  *)
-    /aleo/bin/snarkos start --allow-external-peers --client ${COMMON_PARAMS}
-    ;;
-esac
+# Wait indefinitely to keep the script running and handle signals
+while true; do
+    sleep 1  # Sleep for a short duration to keep the loop responsive
+done
