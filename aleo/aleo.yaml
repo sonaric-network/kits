@@ -27,7 +27,7 @@ aleo:
         node:
             image: aleohq/snarkos:latest
             arch: linux/amd64
-            entrypoint: /aleo/entrypoint.sh
+            entrypoint: /sonaric/scripts/entrypoint.sh
             ports:
                 - 4130:4130
                 - 3033:3033
@@ -37,6 +37,7 @@ aleo:
             environment:
                 - <- `FUNC=${node-type}`
                 - <- `LOGLEVEL=${verbosity}`
+                - <- `ALEO_PRIVKEY=${private-key}`
     variables:
         node-type:
             description: "Node type to run."
@@ -48,6 +49,10 @@ aleo:
             value: 3
         extra-args:
             description: "Extra arguments to pass to the node."
+            type: string
+            value: ""
+        private-key:
+            description: "Private key to use."
             type: string
             value: ""
     services:
@@ -66,9 +71,31 @@ aleo:
     files:
         entrypoint:
             container: node
-            path: /aleo/entrypoint.sh
+            path: /sonaric/scripts/entrypoint.sh
             contents: <<< files/entrypoint.sh
             mode: 0755
+        start:
+            container: node
+            path: /sonaric/scripts/start.sh
+            contents: <<< files/start.sh
+            mode: 0755
+        import-key:
+            container: node
+            path: /sonaric/scripts/import-key.sh
+            contents: <<< files/import-key.sh
+            mode: 0755
+    actions:
+        export-key:
+            description: "Export the private key from Aleo node."
+            code: exec("node", "/bin/bash", "-c", "grep 'PrivateKey' /aleo/keys/aleo_keys.txt | awk '{print $2}'")
+        import-key:
+            description: "Import the private key to Aleo node."
+            arguments:
+                privkey:
+                    description: "Private key to import."
+                    type: string
+                    required: true
+            code: exec("node", "/bin/bash", "-c", `/sonaric/scripts/import-key.sh ${args["privkey"]}`)
 
 client:
     defines: runnable
