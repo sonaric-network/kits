@@ -144,6 +144,39 @@ common:
       protocol: udp
       host-port: <- `${tpu-vote-port}`
       publish: true
+  files:
+    get-address:
+      container: solana-node
+      path: /sonaric/scripts/get-address.sh
+      mode: 0755
+      contents: |
+        #!/bin/bash
+
+        # Get the account address using the Solana client command
+        output=$(solana address 2>&1)  # Redirect stderr to stdout
+
+        # Process the output with awk to parse the public key
+        echo "$output" | awk '
+        {
+          pk=$0  # Assume the entire output is the public key
+          printf("{\"address\": \"%s\"}\n", pk)
+        }'
+    get-balance:
+        container: solana-node
+        path: /sonaric/scripts/get-balance.sh
+        mode: 0755
+        contents: |
+            #!/bin/bash
+
+            # Get the account balance using the Solana client command
+            output=$(solana balance 2>&1)  # Redirect stderr to stdout
+
+            # Process the output with awk to parse the balance
+            echo "$output" | awk '
+            {
+              balance=$0  # Assume the entire output is the balance
+              printf("{\"balance\": \"%s\"}\n", balance)
+            }'
   variables:
     defines: variables
 
@@ -231,10 +264,10 @@ common:
   actions:
     get-address:
       description: "Get the address of the Solana daemon."
-      code: exec("solana-node", "/bin/bash", "-c", "solana address")
+      code: exec("solana-node", "/bin/bash", "-c", `/sonaric/scripts/get-address.sh`)
     get-balance:
         description: "Get the balance of the Solana daemon."
-        code: exec("solana-node", "/bin/bash", "-c", "solana balance")
+        code: exec("solana-node", "/bin/bash", "-c", `/sonaric/scripts/get-balance.sh`)
     export-key:
       description: "Export a private key from the Solana daemon."
       code: exec("solana-node", "/bin/bash", "-c", "cat ~/.config/solana/id.json")
