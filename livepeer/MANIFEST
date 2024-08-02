@@ -1,0 +1,3 @@
+REPO livepeer
+RESOURCES files/start.sh
+LOAD livepeer.yaml

@@ -1,0 +1,119 @@
+namespace: livepeer
+
+base:
+    metadata:
+        name: "Livepeer"
+        shortname: Livepeer
+        description: |
+            Livepeer is a decentralized video streaming network built on the Ethereum blockchain. It aims to provide an open and decentralized platform for live video broadcasting and transcoding.
+        website: https://livepeer.org/
+        publisher: sonaric
+        icon: https://avatars.githubusercontent.com/u/25355022?s=200&v=4
+        version: 1.0.1
+        source: https://github.com/livepeer/go-livepeer
+        tags: blockchain
+        private: false
+        currency: LPT
+        wallet-support: import-key, export-key, list-keys
+    requirements:
+        defines: requirements
+        CPU: "4 Cores"
+        RAM: 8192
+        GPU: false
+        disk: 256
+    containers:
+        livepeer:
+            image: livepeer/go-livepeer
+            arch: linux/amd64
+            image-tag: <- `${version}`
+            ports:
+                - 8935:8935
+                - 1935:1935
+                - 7935:7935
+            restart: unless-stopped
+            paths:
+                - <- `${monk-volume-path}/livepeer/state:/da/state`
+                - <- `${monk-volume-path}/livepeer/keystore:/root/.lpData/mainnet/keystore` # needed for the wallet import/export
+            entrypoint: /home/start.sh
+            environment:
+                - <- `PASSPHRASE=${passphrase}`
+                - <- `NODE_IP=${nodeIP}`
+    services:
+        tcp:
+            container: livepeer
+            port: 8935
+            protocol: tcp
+            host-port: 8935
+            publish: true
+        udp:
+            container: livepeer
+            port: 8935
+            protocol: udp
+            host-port: 8935
+            publish: true
+    variables:
+        version:
+            description: "Version of the Livepeer node."
+            type: string
+            value: "latest"
+        passphrase:
+            description: "passphrase"
+            type: string
+            value: ""
+        nodeIP:
+            type: string
+            value: <- ip-address-public
+    actions:
+        export-key:
+            description: "Export a key from the wallet."
+            arguments:
+                keystore-dir:
+                    type: string
+                    description: "Path to the keystore directory."
+                    default: <- `${monk-volume-path}/livepeer/keystore`
+                password:
+                    type: string
+                    description: "Password to export the key. Default is empty."
+                    default: ""
+                address:
+                    type: string
+                    description: "Address to export."
+            code: |
+                wallet-export-key($args["keystore-dir"], $args["address"], $args["password"])
+        import-key:
+            description: "Import a key into the wallet."
+            arguments:
+                keystore-dir:
+                    type: string
+                    description: "Path to the keystore directory."
+                    default: <- `${monk-volume-path}/livepeer/keystore`
+                password:
+                    type: string
+                    description: "Password to import the key. If empty, a new key will be generated."
+                    default: ""
+                private-key:
+                    type: string
+                    description: "Private key to import. If empty, a new key will be generated."
+                    default: ""
+            code: |
+                wallet-import-key($args["keystore-dir"], $args["private-key"], $args["password"])
+        list-keys:
+            description: "List addresses of all keys in the wallet."
+            code: exec("livepeer", "/home/livepeer/scripts/list-keys.sh")
+    files:
+        start:
+            container: livepeer
+            path: /home/start.sh
+            contents: <<< files/start.sh
+            mode: 0755
+        list-keys:
+            container: livepeer
+            path: /home/livepeer/scripts/list-keys.sh
+            contents: |
+                #!/bin/sh
+                ls /root/.lpData/mainnet/keystore
+            mode: 0755
+
+mainnet:
+    defines: runnable
+    inherits: livepeer/base

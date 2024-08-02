@@ -4,4 +4,5 @@ DIR mina
 DIR celestia
 DIR ethereum
 DIR aleo
+DIR livepeer
 LOAD gnosis.yaml polygon.yaml solana.yaml
