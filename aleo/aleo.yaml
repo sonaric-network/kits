@@ -14,6 +14,7 @@ common:
         description: |
             snarkOS is a decentralized operating system for zero-knowledge applications.
         private: false
+        wallet-support: import-key, export-key, list-keys
     requirements:
         defines: requirements
         CPU: "32 Cores"
