@@ -1,0 +1,237 @@
+namespace: eigen-layer
+
+eigen-layer-common:
+    metadata:
+        name: eigen-layer
+        shortname: Eigenlayer
+        description: |
+            Integrated services with a reverse proxy and a backend node for data handling and API serving.
+        website: https://docs.eigenlayer.xyz/
+        publisher: sonaric
+        icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
+        version: 1.0
+        source: https://github.com/Layr-Labs
+        tags: web, api
+        private: true
+        wallet-support: import-key, export-key, list-keys
+    requirements:
+        defines: requirements
+        CPU: "2 Cores"
+        RAM: 8192
+        GPU: false
+        disk: 100
+        network: 5 Mbps
+
+da-node-base:
+    inherits: ./eigen-layer-common
+    containers:
+        node:
+            image: "us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/eigenda-cli-node"
+            image-tag: <- `${version}`
+            entrypoint: /sonaric/scripts/entrypoint.sh
+            ports:
+                - 3030:3030
+                - 32005:32005
+                - 32004:32004
+                - 9092:9092
+                - 9091:9091
+            paths:
+                - <- `${monk-volume-path}/eigen-layer/${chain}/keys:/keys`
+                - <- `${monk-volume-path}/eigen-layer/${chain}/operator-keys:/root/.eigenlayer/operator_keys`
+                - <- `${monk-volume-path}/eigen-layer/${chain}/logs:/app/logs`
+                - <- `${monk-volume-path}/eigen-layer/${chain}/resources:/app/resources`
+                - <- `${monk-volume-path}/eigen-layer/${chain}/data:/data`
+            environment:
+                - <- `NODE_HOSTNAME=${node-ip}`
+                - <- `NODE_DISPERSAL_PORT=${dispersal-port}`
+                - <- `NODE_RETRIEVAL_PORT=${retrieval-port}`
+                - <- `NODE_ENABLE_METRICS=${enable-metrics}`
+                - <- `NODE_METRICS_PORT=${metrics-port}`
+                - <- `NODE_ENABLE_NODE_API=${enable-node-api}`
+                - <- `NODE_API_PORT=${api-port}`
+                - <- `NODE_BLS_KEY_PASSWORD=${bls-key-password}`
+                - <- `NODE_ECDSA_KEY_PASSWORD=${ecdsa-key-password}`
+                - <- `NODE_ENABLE_TEST_MODE=${test-mode}`
+                - <- `NODE_DATAAPI_URL=${dataapi-url}`
+                - <- `NODE_CHURNER_URL=${churner-url}`
+                - <- `NODE_NUM_WORKERS=${num-workers}`
+                - <- `NODE_VERBOSE=${verbose}`
+                - <- `NODE_LOG_LEVEL=${log-level}`
+                - <- `NODE_CHAIN_RPC=${chain-rpc}`
+                - <- `NODE_CHAIN_ID=${node-chain-id}`
+                # for smart contracts
+                - <- `NODE_EIGENDA_SERVICE_MANAGER=${service-manager}`
+                - <- `NODE_BLS_OPERATOR_STATE_RETRIVER=${bls-operator-state-retriver}`
+    variables:
+        chain:
+            description: "Chain to run the node on."
+            type: string
+            value: "mainnet"
+        version:
+            description: "Version of the node to run."
+            type: string
+            value: "latest"
+        node-ip:
+            description: "Public IP address of the node."
+            type: string
+            value: <- ip-address-public
+        dispersal-port:
+            description: "Port at which node registers to listen for dispersal calls"
+            type: int
+            value: 32005
+        retrieval-port:
+            description: "Port at which node listens for retrieval calls"
+            type: int
+            value: 32004
+        enable-metrics:
+            description: "enable prometheus to serve metrics collection"
+            type: bool
+            value: true
+        metrics-port:
+            description: "Port at which node listens for metrics calls"
+            type: int
+            value: 9092
+        enable-node-api:
+            description: "enable node-api to serve eigenlayer-cli node-api calls"
+            type: bool
+            value: true
+        api-port:
+            description: "Port at which node listens for node-api calls"
+            type: int
+            value: 9091
+        bls-key-password:
+            description: "bls private key password"
+            type: string
+            required: true
+            value: ""
+        ecdsa-key-password:
+            description: "ecdsa private key password"
+            type: string
+            required: true
+            value: ""
+        test-mode:
+            description: "Whether to run as test mode"
+            type: bool
+            value: false
+        dataapi-url:
+            description: "URL of dataapi"
+            type: string
+            value: ""
+            required: true
+        service-manager:
+            description: "Service manager contract address"
+            type: string
+            value: ""
+            required: true
+        bls-operator-state-retriver:
+            description: "BLS operator state retriver contract address"
+            type: string
+            value: ""
+            required: true
+        churner-url:
+            description: "URL of churner"
+            type: string
+            value: ""
+            required: true
+        num-workers:
+            description: "Number of workers to run"
+            type: int
+            value: 1
+        verbose:
+            description: "Enable to see verbose output for encoding/decoding"
+            type: bool
+            value: false
+        log-level:
+            description: "The lowest log level that will be output. Accepted options are 'debug', 'info', 'warn', 'error' (default: 'info')"
+            type: string
+            value: "info"
+        node-chain-id:
+            description: "Chain ID for the node."
+            type: int
+            value: 1
+        chain-rpc:
+            description: "Chain RPC URL."
+            type: string
+            value: ""
+    files:
+        env:
+            container: node
+            path: .env
+            contents: <<< files/config.env
+            mode: 0644
+        keys:
+            container: node
+            path: /sonaric/scripts/check-generate-keys.sh
+            contents: <<< files/scripts/check-generate-keys.sh
+            mode: 0755
+        entrypoint:
+            container: node
+            path: /sonaric/scripts/entrypoint.sh
+            contents: <<< files/scripts/entrypoint.sh
+            mode: 0755
+        srs-setup:
+            container: node
+            path: /sonaric/scripts/srs-setup.sh
+            contents: <<< files/scripts/srs-setup.sh
+            mode: 0755
+        srssha:
+            container: node
+            path: /sonaric/files/resources/srssha256sums.txt
+            contents: <<< files/resources/srssha256sums.txt
+            mode: 0644
+        import-key:
+            container: node
+            path: /sonaric/scripts/import-key.sh
+            contents: <<< files/scripts/import-key.sh
+            mode: 0755
+    actions:
+        list-keys:
+            description: "List the keys in the node."
+            code: exec("node", "/bin/bash", "-c", "eigenlayer keys list")
+        export-key:
+            description: "Export a key from the node."
+            arguments:
+                key-type:
+                    description: "Type of key to export. Accepted options are 'bls', 'ecdsa' (default)."
+                    type: string
+                    default: "ecdsa"
+                    required: true
+            code: exec("node", "/bin/bash", "-c", `cat /keys/${args["key-type"]}_key.json`)
+        import-key:
+            description: "Import a key into the node."
+            arguments:
+                key-type:
+                    description: "Type of key to import. Accepted options are 'bls', 'ecdsa' (default)."
+                    type: string
+                    default: "ecdsa"
+                    required: true
+                key:
+                    description: "Key to import. Must be a hex string."
+                    type: string
+                    required: true
+                password:
+                    description: "Password for the key."
+                    type: string
+                    default: ""
+            code: exec("node", "/bin/bash", "-c", `/sonaric/scripts/import-key.sh ${args["key-type"]} ${args["key"]} ${args["password"]}`)
+
+mainnet:
+    defines: runnable
+    inherits: ./da-node-base
+    variables:
+        dataapi-url: "https://dataapi.eigenda.xyz"
+        service-manager: "0x870679E138bCdf293b7Ff14dD44b70FC97e12fc0"
+        bls-operator-state-retriver: "0xD5D7fB4647cE79740E6e83819EFDf43fa74F8C31"
+        churner-url: "churner.eigenda.xyz:443"
+        chain-rpc: "https://endpoints.omniatech.io/v1/eth/mainnet/public"
+testnet:
+    defines: runnable
+    inherits: ./da-node-base
+    variables:
+        chain: "testnet"
+        dataapi-url: "https://dataapi-holesky.eigenda.xyz"
+        service-manager: "0xD4A7E1Bd8015057293f0D0A557088c286942e84b"
+        bls-operator-state-retriver: "0xB4baAfee917fb4449f5ec64804217bccE9f46C67"
+        churner-url: "churner-holesky.eigenda.xyz:443"
+        node-chain-id: 17000
+        chain-rpc: "https://endpoints.omniatech.io/v1/eth/holesky/public"

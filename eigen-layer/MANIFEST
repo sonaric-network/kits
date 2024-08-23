@@ -1,3 +1,9 @@
 REPO eigen-layer
-RESOURCES files/config.end
-LOAD eigen-layer.yaml
+RESOURCES files/config.env
+RESOURCES files/rate-limit-nginx.conf
+RESOURCES files/scripts/check-generate-keys.sh
+RESOURCES files/scripts/entrypoint.sh
+RESOURCES files/scripts/srs-setup.sh
+RESOURCES files/scripts/import-key.sh
+RESOURCES files/resources/srssha256sums.txt
+LOAD eigen.yaml
