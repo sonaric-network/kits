@@ -35,7 +35,6 @@ if [ -f "$imported_path" ]; then
     cp -p "$imported_path" "$default_filepath"
     cp -p "$imported_path" "/keys/${key_type}_key.json"
     rm "$imported_path"
-    echo "Key imported successfully."
 else
     echo "Key import failed."
     echo "$output"

@@ -5,5 +5,7 @@ RESOURCES files/scripts/check-generate-keys.sh
 RESOURCES files/scripts/entrypoint.sh
 RESOURCES files/scripts/srs-setup.sh
 RESOURCES files/scripts/import-key.sh
+RESOURCES files/scripts/op-create-config.sh
+RESOURCES files/scripts/op-register.sh
 RESOURCES files/resources/srssha256sums.txt
 LOAD eigen.yaml
