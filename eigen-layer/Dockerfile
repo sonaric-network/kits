@@ -30,7 +30,8 @@ COPY --from=builder /go/bin/eigenlayer /usr/local/bin/eigenlayer
 RUN apk add --no-cache \
     bash \
     curl \
-    openssl-dev
+    openssl-dev \
+    jq
 
 # Set the entrypoint
 ENTRYPOINT ["node"]
