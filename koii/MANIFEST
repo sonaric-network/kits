@@ -1,0 +1,3 @@
+REPO koii
+RESOURCES files/config.env files/start.sh files/keygen.sh
+LOAD koii.yaml
