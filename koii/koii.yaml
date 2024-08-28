@@ -39,11 +39,27 @@ task_node:
         - <- `SEED_PHRASE=${seed-phrase}`
   variables:
     private-key:
+      description: "Private key of the account."
       type: string
+      required: true
       value: ""
     seed-phrase:
+      description: "Seed phrase of the account."
       type: string
-      value: "globe announce urge friend include mystery sunny put state shoulder now casual"
+      required: true
+      value: ""
+    tasks:
+      description: "Tasks to be executed."
+      type: string
+      required: true
+      value: ""
+      env: TASKS
+    stakes:
+      description: "Stakes to be used."
+      type: string
+      required: true
+      value: ""
+      env: STAKES
   actions:
     balance:
       description: "Get the balance of the account."

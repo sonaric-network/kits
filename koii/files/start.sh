@@ -2,8 +2,17 @@
 
 source /home/config.env
 
-apt install expect curl -y
-sh -c "$(curl -sSfL https://raw.githubusercontent.com/koii-network/k2-release/master/k2-install-init.sh)"
+if ! command -v expect &> /dev/null || ! command -v curl &> /dev/null
+then
+    apt install expect curl -y
+else
+    echo "Expect and curl are already installed, skipping installation."
+fi
+
+if [ ! -f "/root/.local/share/koii/install/active_release/bin/koii" ]; then
+    sh -c "$(curl -sSfL https://raw.githubusercontent.com/koii-network/k2-release/master/k2-install-init.sh)"
+fi
+
 export PATH="/root/.local/share/koii/install/active_release/bin:$PATH"
 koii config set -k $WALLET_LOCATION
 
