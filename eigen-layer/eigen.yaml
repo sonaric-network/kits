@@ -11,7 +11,7 @@ eigen-layer-common:
         icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
         version: 1.0
         source: https://github.com/Layr-Labs
-        tags: web, api
+        tags: blockchain, evm
         private: true
         wallet-support: import-key, export-key, list-keys
     requirements:
@@ -41,6 +41,7 @@ da-node-base:
                 - <- `${monk-volume-path}/eigen-layer/${chain}/logs:/app/logs`
                 - <- `${monk-volume-path}/eigen-layer/${chain}/resources:/app/resources`
                 - <- `${monk-volume-path}/eigen-layer/${chain}/data:/data`
+                - <- `${monk-volume-path}/eigen-layer/${chain}/operator-config:/app/operator-config`
             environment:
                 - <- `NODE_HOSTNAME=${node-ip}`
                 - <- `NODE_DISPERSAL_PORT=${dispersal-port}`
@@ -92,7 +93,7 @@ da-node-base:
             type: int
             value: 9092
         enable-node-api:
-            description: "enable node-api to serve eigenlayer-cli node-api calls"
+            description: "enable node-api to serve eigenlayer node-api calls"
             type: bool
             value: true
         api-port:
@@ -184,6 +185,16 @@ da-node-base:
             path: /sonaric/scripts/import-key.sh
             contents: <<< files/scripts/import-key.sh
             mode: 0755
+        op-create-config:
+            container: node
+            path: /sonaric/scripts/op-create-config.sh
+            contents: <<< files/scripts/op-create-config.sh
+            mode: 0755
+        op-register:
+            container: node
+            path: /sonaric/scripts/op-register.sh
+            contents: <<< files/scripts/op-register.sh
+            mode: 0755
     actions:
         list-keys:
             description: "List the keys in the node."
@@ -214,6 +225,29 @@ da-node-base:
                     type: string
                     default: ""
             code: exec("node", "/bin/bash", "-c", `/sonaric/scripts/import-key.sh ${args["key-type"]} ${args["key"]} ${args["password"]}`)
+        operator-init:
+            arguments:
+                metadata-url:
+                    description: "Git URL of the metadata file."
+                    type: string
+                    required: true
+            description: "Creates or updates a config file for the operator. Config file location is /app/operator-config/config.json"
+            code: exec("node", "/bin/bash", "-c", `/sonaric/scripts/op-create-config.sh ${chain} ${args["metadata-url"]}`)
+        operator-register:
+            description: "Register the operator"
+            arguments:
+                password:
+                    description: "Password for the ecdsa key."
+                    type: string
+                    required: true
+                    default: ${ecdsa-key-password}
+            code: exec("node", "/bin/bash", "-c", `/sonaric/scripts/op-register.sh ${args["password"]}`)
+        operator-status:
+            description: "Get the status of the operator"
+            code: exec("node", "/bin/bash", "-c", "eigenlayer operator status /app/operator-config/operator.yaml")
+        operator-update:
+            description: "Update the operator after a change in the operator config"
+            code: exec("node", "/bin/bash", "-c", "echo ${ecdsa-key-password} |  eigenlayer operator update /app/operator-config/operator.yaml")
 
 mainnet:
     defines: runnable
