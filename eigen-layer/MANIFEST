@@ -1,6 +1,5 @@
 REPO eigen-layer
 RESOURCES files/config.env
-RESOURCES files/rate-limit-nginx.conf
 RESOURCES files/scripts/check-generate-keys.sh
 RESOURCES files/scripts/entrypoint.sh
 RESOURCES files/scripts/srs-setup.sh
