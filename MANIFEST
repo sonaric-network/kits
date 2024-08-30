@@ -5,4 +5,5 @@ DIR celestia
 DIR ethereum
 DIR aleo
 DIR livepeer
+DIR eigen-layer
 LOAD gnosis.yaml polygon.yaml solana.yaml
