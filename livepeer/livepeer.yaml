@@ -58,6 +58,7 @@ base:
             value: "latest"
         passphrase:
             description: "passphrase"
+            required: true
             type: string
             value: ""
         nodeIP:
