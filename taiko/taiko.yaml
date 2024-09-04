@@ -107,47 +107,47 @@ client-driver:
             paths:
                 - <- `${monk-volume-path}/taiko:/data/taiko-geth`
     variables:
-        L1_RPC:
+        l1_rpc:
             type: string
             required: true
             value: ""
             env: L1_RPC
-        L1_WS_RPC:
+        l1_ws_rpc:
             type: string
             required: true
             value: ""
             env: L1_WS_RPC
-        L1_BEACON_API:
+        l1_beacon_api:
             type: string
             required: true
             value: ""
             env: L1_BEACON_API
-        TAIKO_L1_ADDRESS:
+        taiko_l1_address:
             type: string
             required: true
-            value: ""
+            value: "0x06a9Ab27c7e2255df1815E6CC0168d7755Feb19a"
             env: TAIKO_L1_ADDRESS
-        TAIKO_L2_ADDRESS:
+        taiko_l2_address:
             type: string
             required: true
-            value: ""
+            value: "0x1670000000000000000000000000000000010001"
             env: TAIKO_L2_ADDRESS
-        P2P_SYNC_URL:
+        p2p_sync_url:
             type: string
             required: true
-            value: ""
+            value: "https://rpc.mainnet.taiko.xyz"
             env: P2P_SYNC_URL
-        TAIKO_TOKEN_L1_ADDRESS:
+        taiko_token_l1_address:
             type: string
             required: true
-            value: ""
+            value: "0x10dea67478c5F8C5E2D90e5E9B26dBe60c54d800"
             env: TAIKO_TOKEN_L1_ADDRESS
-        L1_PROPOSER_PRIVATE_KEY:
+        l1_proposer_private_key:
             type: string
             required: true
             value: ""
             env: L1_PROPOSER_PRIVATE_KEY
-        L2_SUGGESTED_FEE_RECIPIENT:
+        l2_suggested_fee_recipient:
             type: string
             required: true
             value: ""
