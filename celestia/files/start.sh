@@ -1,21 +1,20 @@
 #!/bin/bash
 
-extra_args="--rpc.addr 0.0.0.0 --keyring.accname sonaric-celestia-key"
+extra_args="--rpc.addr 0.0.0.0 --keyring.keyname sonaric-celestia-key"
 
 case $P2P_NETWORK in
   "arabica")
-    keypath="/home/celestia/.celestia-$NODE_TYPE-arabica-11/keys/keyring-test"
-   # TODO: rename keyring.accname to keyring.keyname when image version is updated
+    keypath="/home/celestia/.celestia-$NODE_TYPE-arabica-11/keys"
     ;;
   "mocha")
-    keypath="/home/celestia/.celestia-$NODE_TYPE-mocha-4/keys/keyring-test"
+    keypath="/home/celestia/.celestia-$NODE_TYPE-mocha-4/keys"
     ;;
   *)
-    keypath="/home/celestia/.celestia-$NODE_TYPE/keys/keyring-test"
+    keypath="/home/celestia/.celestia-$NODE_TYPE/keys"
     ;;
 esac
 
-if find $keypath -name "sonaric-celestia-key.info" -print -quit > /dev/null 2>&1; then
+if find "$keypath/keyring-test" -name "sonaric-celestia-key.info" -print -quit > /dev/null 2>&1; then
     echo "Private key exists"
 else
     echo "Creating Sonaric private key"
@@ -26,5 +25,5 @@ fi
 
 celestia $NODE_TYPE init --p2p.network $P2P_NETWORK
 find $keypath -type f -exec chmod 600 {} \;
-echo "celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL $extra_args"
+
 celestia $NODE_TYPE start --p2p.network $P2P_NETWORK --core.ip $RPC_URL $extra_args

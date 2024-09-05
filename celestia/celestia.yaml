@@ -44,7 +44,7 @@ base:
         version:
             description: "Version of the Celestia node."
             type: string
-            value: "v0.13.5"
+            value: "v0.16.0"
         node-type:
             description: "Type of the Celestia node."
             type: string
