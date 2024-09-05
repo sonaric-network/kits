@@ -1,0 +1,88 @@
+namespace: koii
+
+base:
+  metadata:
+    name: "koii"
+    shortname: koii
+    description: |
+        Koii is a decentralized content network built on the Solana blockchain. It aims to provide an open and decentralized platform for content creators to monetize their work.
+    website: https://koii.network/
+    publisher: sonaric
+    icon: https://avatars.githubusercontent.com/u/75863118?s=200&v=4
+    tags: blockchain
+    currency: KOII
+    wallet-support: export-key, address, balance
+    version: 1.0.0
+  requirements:
+    defines: requirements
+    CPU: "16 Cores"
+    RAM: 524288
+    GPU: false
+    disk: 500
+
+task_node:
+  defines: runnable
+  inherits: koii/base
+  containers:
+    task_node:
+      image: public.ecr.aws/koii-network/task_node:latest
+      entrypoint: /home/start.sh
+      ports:
+        - 30017:30017
+      paths:
+        - <- `${monk-volume-path}/koii/config:/app/config`
+        - <- `${monk-volume-path}/koii/data:/app/data`
+        - <- `${monk-volume-path}/koii/namespace:/app/namespace`
+        - <- `${monk-volume-path}/koii/dist:/app/executables`
+      environment:
+        - <- `PRIVATE_KEY=${private-key}`
+        - <- `SEED_PHRASE=${seed-phrase}`
+  variables:
+    private-key:
+      description: "Private key of the account."
+      type: string
+      required: true
+      value: ""
+    seed-phrase:
+      description: "Seed phrase of the account."
+      type: string
+      required: true
+      value: ""
+    tasks:
+      description: "Tasks to be executed."
+      type: string
+      required: true
+      value: ""
+      env: TASKS
+    stakes:
+      description: "Stakes to be used."
+      type: string
+      required: true
+      value: ""
+      env: STAKES
+  actions:
+    balance:
+      description: "Get the balance of the account."
+      code: exec("task_node", "/bin/bash", "-c", "/root/.local/share/koii/install/active_release/bin/koii balance")
+    address:
+      description: "Get the address of the account."
+      code: exec("task_node", "/bin/bash", "-c", "/root/.local/share/koii/install/active_release/bin/koii address")
+    export-key:
+      description: "Export the private key of the account."
+      code: exec("task_node", "/bin/bash", "-c", "cat /app/config/id.json")
+  files:
+    start:
+      container: task_node
+      path: /home/start.sh
+      contents: <<< files/start.sh
+      mode: 0755
+    config:
+      container: task_node
+      path: /home/config.env
+      contents: <<< files/config.env
+      mode: 0755
+    keygen:
+      container: task_node
+      path: /home/keygen.sh
+      contents: <<< files/keygen.sh
+      mode: 0755
