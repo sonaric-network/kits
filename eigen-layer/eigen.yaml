@@ -104,12 +104,10 @@ da-node-base:
             description: "bls private key password"
             type: string
             required: true
-            value: ""
         ecdsa-key-password:
             description: "ecdsa private key password"
             type: string
             required: true
-            value: ""
         test-mode:
             description: "Whether to run as test mode"
             type: bool
