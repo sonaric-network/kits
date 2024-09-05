@@ -39,7 +39,7 @@ base:
                 - <- `NODE_TYPE=${node-type}`
                 - <- `RPC_URL=${rpc-url}`
             paths:
-                - <- `${monk-volume-path}/celestia/store:/home/celestia`
+                - <- `${monk-volume-path}/celestia-${node-type}-${network}:/home/celestia`
     variables:
         version:
             description: "Version of the Celestia node."
