@@ -161,3 +161,14 @@ You can change the core endpoint by editing the template and running it again.
 | Arabica | validator-1.celestia-arabica-11.com | [Arabica](https://docs.celestia.org/nodes/arabica-devnet#rpc-endpoints) |
 
 Look for the `Direct endpoints with open ports` section in the table.
+
+## Testnet faucets
+You can get some test tokens from the faucet.
+- [Mocha Faucet](https://celestia-testnet.faucetme.pro/)
+
+
+## Documentation and API Reference
+- [Celestia Docs](https://docs.celestia.org)
+- [Celestia RPC API](https://docs.celestia.org/developers/node-api#rpc-api)
+- [Mocha Testnet](https://docs.celestia.org/nodes/mocha-testnet)
+- [Deploy on Celestia](https://rollkit.dev/tutorials/celestia-da)
