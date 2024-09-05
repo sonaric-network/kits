@@ -1,3 +1,23 @@
+# Celestia
+
+## Table of Contents
+- [System Requirements](#system-requirements)
+- [Load Template](#load-template)
+- [Managing Celestia keys](#managing-celestia-keys)
+  - [Light node](#light-node)
+  - [Managing keys](#managing-keys)
+  - [Create own key](#create-own-key)
+  - [Get Auth Token](#get-auth-token)
+  - [Export keys](#export-keys)
+  - [Import key](#import-key)
+  - [List-keys](#list-keys)
+  - [Get address](#get-address)
+  - [Get balance](#get-balance)
+- [Core endpoints](#core-endpoints)
+- [Testnet faucets](#testnet-faucets)
+- [Documentation and API Reference](#documentation-and-api-reference)
+
+
 ## System Requirements
 - Single Core
 - 500 MB RAM
@@ -148,16 +168,60 @@ Example output:
 ✨ Took: 1s
 ```
 
-### Core endpoints
+### Get address
+```bash
+sonaric do local/celestia/light-arabica/get-address
+```
+
+Example output:
+```bash
+✔ Get templates/local/celestia/light-arabica actions list success
+✔ Got action parameters
+✔ Parse parameters success
+✔ Running the action... DONE
+✔ Running action:
+{
+  "result": "celestia1vqt20l7sc2kfy3h5gxwx4nvcgew5lfkpsjjttx"
+}
+✨ Took: 1s
+```
+
+### Get balance
+```bash
+sonaric do local/celestia/light-arabica/get-balance
+```
+
+Example output:
+```bash
+{
+  "result": {
+    "denom": "utia",
+    "amount": "10000"
+  }
+}
+```
+
+## Core endpoints
 Connecting to a core endpoint with --core.ip string provides the light node with access to state queries (reading balances, submitting transactions, and other state-related queries).  
 Core endpoints are set via variable ${rpc-url} in the runnable template.  
 You can change the core endpoint by editing the template and running it again.
 
 ### List of available core endpoints:  
-| Network | Default Core Endpoint | List of Core Endpoints in Docs |
-| --- | --- | --- |
-| Mainnet Beta | consensus.lunaroasis.net | [Mainnet Beta](https://docs.celestia.org/nodes/mainnet#consensus-rpc-endpoints) |
-| Mocha | rpc-mocha.pops.one | [Mocha](https://docs.celestia.org/nodes/mocha-testnet#rpc-endpoints) |
-| Arabica | validator-1.celestia-arabica-11.com | [Arabica](https://docs.celestia.org/nodes/arabica-devnet#rpc-endpoints) |
+| Network      | Default Core Endpoint               | List of Core Endpoints in Docs                                                  |
+|--------------|-------------------------------------|---------------------------------------------------------------------------------|
+| Mainnet Beta | consensus.lunaroasis.net            | [Mainnet Beta](https://docs.celestia.org/nodes/mainnet#consensus-rpc-endpoints) |
+| Mocha        | rpc-mocha.pops.one                  | [Mocha](https://docs.celestia.org/nodes/mocha-testnet#rpc-endpoints)            |
+| Arabica      | validator-1.celestia-arabica-11.com | [Arabica](https://docs.celestia.org/nodes/arabica-devnet#rpc-endpoints)         |
 
 Look for the `Direct endpoints with open ports` section in the table.
+
+## Testnet faucets
+You can get some test tokens from the faucet.
+- [Mocha Faucet](https://celestia-testnet.faucetme.pro/)
+
+
+## Documentation and API Reference
+- [Celestia Docs](https://docs.celestia.org)
+- [Celestia RPC API](https://docs.celestia.org/developers/node-api#rpc-api)
+- [Mocha Testnet](https://docs.celestia.org/nodes/mocha-testnet)
+- [Deploy on Celestia](https://rollkit.dev/tutorials/celestia-da)
