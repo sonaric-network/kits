@@ -1,0 +1,115 @@
+namespace: rollkit
+
+gm:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - rollkit/local-da
+  containers:
+    gm:
+      image: ghcr.io/rollkit/gm:latest
+      bash: "rollkit start --rollkit.aggregator --rollkit.da_address http://$DA_HOST:$DA_PORT"
+      ports:
+        - 26657:26657 # JSON RPC
+        - 26656:26656 # P2P
+        - 1317:1317 # RPC HTTP
+        - 9090:9090 # GRPC
+  services:
+    json-rpc:
+      container: gm
+      protocol: TCP
+      port: 26657
+      host-port: 26657
+      publish: true
+    p2p:
+      container: gm
+      protocol: TCP
+      port: 26656
+      host-port: 26656
+      publish: true
+    rpc-http:
+      container: gm
+      protocol: TCP
+      port: 1317
+      host-port: 1317
+      publish: true # TODO: maybe it has to be closed?
+  variables:
+    da-host:
+      type: string
+      value: <- connection-hostname("da-conn")
+      env: DA_HOST
+    da-port:
+      type: string
+      value: <- connection-port("da-conn")
+      env: DA_PORT
+  connections:
+    da-conn:
+      runnable: rollkit/local-da
+      service: json-rpc
+
+local-da:
+  defines: runnable
+  containers:
+    local-da:
+      image: ghcr.io/rollkit/local-da:v0.2.1
+      ports:
+        - 7980:7980 # JSON RPS for the DA
+  services:
+    json-rpc:
+      container: local-da
+      protocol: TCP
+      port: 7980
+      host-port: 7980
+
+frontend:
+  defines: runnable
+  affinity:
+    defines: affinity
+    tag: local # we have to run on local
+  depends:
+    wait-for:
+      runnables:
+        - rollkit/gm
+  containers:
+    frontend:
+      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-frontend:latest # todo: make own image with params
+      ports:
+        - 3000:3000 # HTTP
+  variables:
+    defines: variables
+    gm-api-address:
+      type: string
+      # value: <- "http://" connection-hostname("gm-conn") ":" connection-port("gm-conn") concat-all
+      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-conn") concat-all
+      env: RPC_API_HOST
+    gm-rest-api-address:
+      type: string
+      # value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
+      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-rest-conn") concat-all
+      env: REST_API_HOST
+    http-port:
+      type: string
+      value: 1317
+      env: HTTP_RPC_PORT
+  connections:
+    gm-conn:
+      runnable: rollkit/gm
+      service: json-rpc
+    gm-rest-conn:
+      runnable: rollkit/gm
+      service: rpc-http
+  services:
+    http:
+      container: frontend
+      protocol: TCP
+      port: 3000
+      host-port: 3000
+      publish: true
+
+hello-world:
+  defines: process-group
+  runnable-list:
+    - rollkit/local-da
+    - rollkit/gm
+    - rollkit/frontend
