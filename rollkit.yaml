@@ -186,19 +186,20 @@ celestia-gm:
 celestia-frontend:
   defines: runnable
   inherits: rollkit/frontend
+  affinity[override]:
   depends[override]:
       wait-for:
-      runnables:
-          - rollkit/celestia-gm
+        runnables:
+            - rollkit/celestia-gm
   variables:
     gm-api-address:
       type: string
       env: RPC_API_HOST
       value: <- "http://" connection-hostname("gm-conn") ":" connection-port("gm-conn") concat-all
     gm-rest-api-address:
-        type: string
-        env: REST_API_HOST
-        value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
+      type: string
+      env: REST_API_HOST
+      value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
   connections[override]:
     gm-conn:
       runnable: rollkit/celestia-gm
