@@ -47,6 +47,18 @@ gm:
     da-conn:
       runnable: rollkit/local-da
       service: json-rpc
+  actions:
+    list-keys:
+        description: "List keys in the wallet."
+        code: exec("gm", "/bin/bash", "-c", "rollkit keys list --keyring-backend test")
+    get-balance:
+        description: "Get the balance of the GM account."
+        arguments:
+            address:
+                type: string
+                description: "Address to get the balance of."
+                required: true
+        code: exec("gm", "/bin/bash", "-c", `rollkit query bank balances ${args["address"]}`)
 
 local-da:
   defines: runnable
