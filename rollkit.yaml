@@ -164,13 +164,40 @@ hello-world:
 celestia-mocha-da:
   defines: runnable
   inherits: celestia/light-mocha
-  services:
-    rpc1:
+  containers[override]:
+    celestia:
+      image: ghcr.io/celestiaorg/celestia-node
+      image-tag: <- `${version}`
+      entrypoint: /home/start.sh
+      ports:
+        - 2121:2121
+        - 26658:26658
+        - 26659:26659
+      environment:
+        - <- `P2P_NETWORK=${network}`
+        - <- `NODE_TYPE=${node-type}`
+        - <- `RPC_URL=${rpc-url}`
+      paths:
+        - <- `${monk-volume-path}/celestia-${node-type}-${network}:/home/celestia`
+  services[override]:
+    rpc:
       container: celestia
-      port: 26657
-      host-port: 26657
+      port: 26658
+      host-port: 26658
       protocol: tcp
-      publish: false
+      publish: true
+    tcp:
+      container: celestia
+      port: 2121
+      host-port: 2121
+      protocol: tcp
+      publish: true
+    p2p:
+      container: celestia
+      port: 26659
+      host-port: 26659
+      protocol: tcp
+      publish: true
 
 celestia-gm:
   defines: runnable
@@ -258,5 +285,3 @@ hello-world-celestia:
       - rollkit/celestia-mocha-da
       - rollkit/celestia-gm
       - rollkit/celestia-frontend
-
-        
