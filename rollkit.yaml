@@ -2,6 +2,17 @@ namespace: rollkit
 
 gm:
   defines: runnable
+  metadata:
+    name: "Rollkit GM"
+    description: "Rollkit GM node."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/rollkit
+    tags: blockchain
+    private: false
+    wallet-support: list-keys, get-balance, fund-wallet
   depends:
     wait-for:
       runnables:
@@ -59,7 +70,28 @@ gm:
                 description: "Address to get the balance of."
                 required: true
         code: exec("gm", "/bin/bash", "-c", `rollkit query bank balances ${args["address"]}`)
-
+    fund-wallet:
+      description: "Send funds from the hardcoded source to the target address."
+      arguments:
+        from:
+          type: string
+          description: "Source address. Default is the genesis block of the rollup"
+          default: "gm1r2udsh4za7r7sxvzy496qfazvjp04j4zgytve3"
+          required: false
+        to:
+          type: string
+          description: "Recipient address (target)."
+          required: true
+        amount:
+          type: string
+          description: "Amount to send (e.g., '42069')."
+          required: true
+        fees:
+          type: string
+          description: "Fee to include in the transaction (default: '500stake')."
+          required: false
+          default: "5000stake"
+      code: exec("gm", "/bin/bash", "-c", `echo 'y' | rollkit tx bank send ${args["from"]} ${args["to"]} ${args["amount"]}stake --keyring-backend=test --chain-id gm --fees ${args["fees"]}`)
 local-da:
   defines: runnable
   containers:
