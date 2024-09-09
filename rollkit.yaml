@@ -80,13 +80,13 @@ frontend:
     defines: variables
     gm-api-address:
       type: string
-      # value: <- "http://" connection-hostname("gm-conn") ":" connection-port("gm-conn") concat-all
-      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-conn") concat-all
+      value: <- "http://" connection-hostname("gm-conn") ":" connection-port("gm-conn") concat-all
+#      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-conn") concat-all
       env: RPC_API_HOST
     gm-rest-api-address:
       type: string
-      # value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
-      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-rest-conn") concat-all
+      value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
+#      value: <- "http://" peer-ip-address("rollkit/gm") ":" connection-port("gm-rest-conn") concat-all
       env: REST_API_HOST
     http-port:
       type: string
@@ -113,3 +113,105 @@ hello-world:
     - rollkit/local-da
     - rollkit/gm
     - rollkit/frontend
+
+#------------------------------------------------------------
+# Celestia
+#------------------------------------------------------------
+celestia-mocha-da:
+  defines: runnable
+  inherits: celestia/light-mocha
+  services:
+    rpc1:
+      container: celestia
+      port: 26657
+      host-port: 26657
+      protocol: tcp
+      publish: false
+
+celestia-gm:
+  defines: runnable
+  inherits: rollkit/gm
+  depends[override]:
+    wait-for:
+      runnables:
+        - rollkit/celestia-mocha-da
+  containers:
+    gm:
+      image: ghcr.io/rollkit/gm:latest
+      entrypoint: /home/start.sh
+      bash: ""
+  files:
+    start:
+      container: gm
+      path: /home/start.sh
+      contents: |
+        #!/bin/bash
+        DA_BLOCK_HEIGHT=$(curl https://rpc-mocha.pops.one/block | jq -r '.result.block.header.height')
+        DA_ADDRESS="http://$DA_HOST:$DA_PORT"
+        rollkit start \
+        --rollkit.aggregator \
+        --rollkit.da_address $DA_ADDRESS \
+        --rollkit.da_auth_token $DA_AUTH_TOKEN \
+        --rollkit.da_namespace $DA_NAMESPACE \
+        --rollkit.da_start_height $DA_BLOCK_HEIGHT \
+        --minimum-gas-prices="$MINIMUM_GAS_PRICES"
+      mode: 0755
+  variables:
+    da-host:
+      type: string
+      value: <- connection-hostname("da-conn")
+      env: DA_HOST
+    da-port:
+      type: string
+      value: <- connection-port("da-conn")
+      env: DA_PORT
+    da-token:
+      type: string
+      value: <- act("rollkit/celestia-mocha-da/get-auth-token") trim
+      env: DA_AUTH_TOKEN
+    da-namespace:
+      type: string
+      value: "00000000000000000000000000000000000000000008e5f679bf7116cb"
+      env: DA_NAMESPACE
+    minumum-gas-prices:
+      type: string
+      value: "0.025stake"
+      env: MINIMUM_GAS_PRICES
+
+  connections[override]:
+    da-conn:
+      runnable: rollkit/celestia-mocha-da
+      service: rpc
+
+celestia-frontend:
+  defines: runnable
+  inherits: rollkit/frontend
+  depends[override]:
+      wait-for:
+      runnables:
+          - rollkit/celestia-gm
+  variables:
+    gm-api-address:
+      type: string
+      env: RPC_API_HOST
+      value: <- "http://" connection-hostname("gm-conn") ":" connection-port("gm-conn") concat-all
+    gm-rest-api-address:
+        type: string
+        env: REST_API_HOST
+        value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
+  connections[override]:
+    gm-conn:
+      runnable: rollkit/celestia-gm
+      service: json-rpc
+    gm-rest-conn:
+      runnable: rollkit/celestia-gm
+      service: rpc-http
+
+hello-world-celestia:
+  defines: process-group
+  runnable-list:
+      - rollkit/celestia-mocha-da
+      - rollkit/celestia-gm
+      - rollkit/celestia-frontend
+
+        
