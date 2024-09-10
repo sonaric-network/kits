@@ -217,8 +217,12 @@ celestia-gm:
       path: /home/start.sh
       contents: |
         #!/bin/bash
+        echo "Starting Rollkit GM, ENV: "
+        env
         DA_BLOCK_HEIGHT=$(curl https://rpc-mocha.pops.one/block | jq -r '.result.block.header.height')
         DA_ADDRESS="http://$DA_HOST:$DA_PORT"
+        echo "DA_ADDRESS: $DA_ADDRESS"
+        echo "DA_BLOCK_HEIGHT: $DA_BLOCK_HEIGHT"
         rollkit start \
         --rollkit.aggregator \
         --rollkit.da_address $DA_ADDRESS \
