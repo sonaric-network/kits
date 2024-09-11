@@ -81,7 +81,7 @@ gm:
           type: string
           description: "Amount to send (e.g., '42069')."
           required: true
-      code: exec("gm", "/bin/bash", "-c", `rollkit tx bank send gm1r2udsh4za7r7sxvzy496qfazvjp04j4zgytve3 ${args["recipient"]} ${args["amount"]}stake -y --keyring-backend=test --chain-id gm --fees 500stake`)
+      code: exec("gm", "/bin/bash", "-c", `rollkit tx bank send gm1r2udsh4za7r7sxvzy496qfazvjp04j4zgytve3 ${args["recipient"]} ${args["amount"]}stake -y --keyring-backend=test --chain-id gm --fees 5000stake`)
 
 local-da:
   defines: runnable
