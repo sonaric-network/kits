@@ -3,13 +3,13 @@ namespace: rollkit
 gm:
   defines: runnable
   metadata:
-    name: "Rollkit GM"
-    description: "Rollkit GM node."
+    name: "Rollkit GM Rollup Example"
+    description: "Rollkit GM Rollup node. This runs the GM chain."
     website: "https://rollkit.dev/"
     publisher: sonaric
     icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
     version: 1.0.0
-    source: https://github.com/rollkit/rollkit
+    source: https://github.com/rollkit/gm
     tags: blockchain
     private: false
     wallet-support: list-keys, get-balance, fund-wallet
@@ -60,10 +60,10 @@ gm:
       service: json-rpc
   actions:
     list-keys:
-      description: "List keys in the wallet."
+      description: "List accounts on the GM chain."
       code: exec("gm", "/bin/bash", "-c", "rollkit keys list --keyring-backend test")
     get-balance:
-      description: "Get the balance of the GM account."
+      description: "Get the balance of a GM account. Requires the 'address' argument."
       arguments:
         address:
           type: string
@@ -71,29 +71,30 @@ gm:
           required: true
       code: exec("gm", "/bin/bash", "-c", `rollkit query bank balances ${args["address"]}`)
     fund-wallet:
-      description: "Send funds from the hardcoded source to the target address."
+      description: "Fund recipient GM wallet with tokens on the GM chain."
       arguments:
-        from:
+        recipient:
           type: string
-          description: "Source address. Default is the genesis block of the rollup"
-          default: "gm1r2udsh4za7r7sxvzy496qfazvjp04j4zgytve3"
-          required: false
-        to:
-          type: string
-          description: "Recipient address (target)."
+          description: "Recipient address (target eg. gmXXX....)."
           required: true
         amount:
           type: string
           description: "Amount to send (e.g., '42069')."
           required: true
-        fees:
-          type: string
-          description: "Fee to include in the transaction (default: '500stake')."
-          required: false
-          default: "5000stake"
-      code: exec("gm", "/bin/bash", "-c", `echo 'y' | rollkit tx bank send ${args["from"]} ${args["to"]} ${args["amount"]}stake --keyring-backend=test --chain-id gm --fees ${args["fees"]}`)
+      code: exec("gm", "/bin/bash", "-c", `rollkit tx bank send gm1r2udsh4za7r7sxvzy496qfazvjp04j4zgytve3 ${args["recipient"]} ${args["amount"]}stake -y --keyring-backend=test --chain-id gm --fees 500stake`)
+
 local-da:
   defines: runnable
+  metadata:
+    name: "Rollkit Local DA"
+    description: "Rollkit Local DA Node."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/rollkit
+    tags: blockchain
+    private: false
   containers:
     local-da:
       image: ghcr.io/rollkit/local-da:v0.2.1
@@ -108,6 +109,16 @@ local-da:
 
 frontend:
   defines: runnable
+  metadata:
+    name: "Rollkit GM Rollup Example Web UI"
+    description: "Rollkit GM Rollup Web UI."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/gm
+    tags: blockchain
+    private: false
   affinity:
     defines: affinity
     tag: local # we have to run on local
@@ -153,6 +164,16 @@ frontend:
 
 hello-world:
   defines: process-group
+  metadata:
+    name: "Rollkit GM Rollup Example Deployment"
+    description: "Complete Rollkit GM rollup example with a local DA and a frontend."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/gm
+    tags: blockchain
+    private: false
   runnable-list:
     - rollkit/local-da
     - rollkit/gm
@@ -232,7 +253,7 @@ celestia-gm:
           exit 1
         fi
         echo "DA_AUTH_TOKEN: $DA_AUTH_TOKEN"
-        
+
         DA_BLOCK_HEIGHT=$(curl https://rpc-mocha.pops.one/block | jq -r '.result.block.header.height')
         DA_ADDRESS="http://$DA_HOST:$DA_PORT"
         echo "DA_ADDRESS: $DA_ADDRESS"
@@ -299,6 +320,16 @@ celestia-frontend:
 
 hello-world-celestia:
   defines: process-group
+  metadata:
+    name: "Rollkit GM Rollup Example Deployment with Celestia"
+    description: "Complete Rollkit GM rollup example with a Celestia DA and a frontend. After starting, call the 'rollkit/celestia-mocha-da/get-address' to find which wallet has to be funded with TIA in order to be able to transact."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/gm
+    tags: blockchain
+    private: false
   runnable-list:
     - rollkit/celestia-mocha-da
     - rollkit/celestia-gm
