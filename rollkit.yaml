@@ -12,7 +12,7 @@ gm:
     source: https://github.com/rollkit/gm
     tags: blockchain
     private: false
-    wallet-support: list-keys, get-balance, fund-wallet
+    wallet-support: list-accounts, get-balance, fund-wallet
   depends:
     wait-for:
       runnables:
@@ -59,7 +59,7 @@ gm:
       runnable: rollkit/local-da
       service: json-rpc
   actions:
-    list-keys:
+    list-accounts:
       description: "List accounts on the GM chain."
       code: exec("gm", "/bin/bash", "-c", "rollkit keys list --keyring-backend test")
     get-balance:
@@ -229,7 +229,7 @@ celestia-mocha-da:
       protocol: tcp
       publish: true
 
-celestia-gm:
+celestia-gm-chain:
   defines: runnable
   inherits: rollkit/gm
   depends[override]:
@@ -300,7 +300,7 @@ celestia-frontend:
   depends[override]:
     wait-for:
       runnables:
-        - rollkit/celestia-gm
+        - rollkit/celestia-gm-chain
   variables:
     gm-api-address:
       type: string
@@ -312,10 +312,10 @@ celestia-frontend:
       value: <- "http://" connection-hostname("gm-rest-conn") ":" connection-port("gm-rest-conn") concat-all
   connections[override]:
     gm-conn:
-      runnable: rollkit/celestia-gm
+      runnable: rollkit/celestia-gm-chain
       service: json-rpc
     gm-rest-conn:
-      runnable: rollkit/celestia-gm
+      runnable: rollkit/celestia-gm-chain
       service: rpc-http
 
 hello-world-celestia:
@@ -332,5 +332,5 @@ hello-world-celestia:
     private: false
   runnable-list:
     - rollkit/celestia-mocha-da
-    - rollkit/celestia-gm
+    - rollkit/celestia-gm-chain
     - rollkit/celestia-frontend
