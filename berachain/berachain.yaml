@@ -1,0 +1,84 @@
+namespace: berachain
+
+base:
+  metadata:
+    name: BeraChain
+    description: BeraChain archive node
+    network-name: mainnet
+    node-type: archive
+    icon: https://avatars.githubusercontent.com/u/92709226?s=200&v=4
+    version: 1.0.0
+    currency: BERA
+  requirements:
+    defines: requirements
+    CPU: "8 Cores"
+    RAM: 49152
+    GPU: false
+    disk: 1024
+
+beacon-kit:
+  defines: runnable
+  inherits: berachain/base
+  containers:
+    beacon-kit:
+      image: ghcr.io/berachain/beacon-kit
+      image-tag: latest
+      entrypoint: /home/entrypoint.sh
+      paths:
+        - <- `${monk-volume-path}/berachain/config:/bin/config/beacond`
+        - <- `${monk-volume-path}/berachain/config:/bin/config/reth`
+        - <- `${monk-volume-path}/berachain/snapshots:/snapshots/tmp/beacond`
+        - <- `${monk-volume-path}/berachain/snapshots:/snapshots/tmp/reth`
+  connections:
+    geth:
+      runnable: berachain/geth
+      service: rpc-service
+  variables:
+    moniker-name:
+      description: "Moniker name of the node."
+      type: string
+      required: true
+      value: "BingBongNode"
+      env: MONIKER_NAME
+    download-snapshots:
+      description: "Download snapshots."
+      type: bool
+      required: true
+      value: false
+      env: DOWNLOAD_SNAPSHOTS
+    host:
+      type: string
+      value: <- connection-hostname("geth")
+      env: GETH_HOST
+    port:
+      type: string
+      value: <- connection-port("geth")
+      env: GETH_PORT
+  files:
+    entrypoint:
+      container: beacon-kit
+      path: /home/entrypoint.sh
+      contents: <<< files/entrypoint.sh
+      mode: 0755
+
+geth:
+  defines: runnable
+  containers:
+    geth-container:
+      image: ethereum/client-go:latest
+      ports:
+        - 8551:8551
+      cmd: "--http --http.addr 0.0.0.0 --http.auth false --http.api eth,net --authrpc.addr 0.0.0.0 --authrpc.vhosts *"
+  services:
+    rpc-service:
+      container: geth-container
+      protocol: tcp
+      port: 8551
+      host-port: 8551
+      publish: true
+
+mainnet:
+  defines: process-group
+  runnable-list:
+    - beacon-kit
+    - geth
