@@ -8,8 +8,8 @@
 
   sed -i "s|^moniker = \".*\"|moniker = \"$MONIKER_NAME\"|" "/bin/config/beacond/config/config.toml"
   sed -i "s|^rpc-dial-url = \".*\"|rpc-dial-url = \"http://$GETH_HOST:$GETH_PORT\"|" "/bin/config/beacond/config/app.toml"
-
-  sed -i "s|^jwt-secret-path = \".*\"|jwt-secret-path = \"/bin/config/beacond/jwt.hex\"|" "/bin/config/beacond/config/app.toml"
+  echo $JWT_TOKEN > /bin/config/beacond/jwt-token
+  sed -i "s|^jwt-secret-path = \".*\"|jwt-secret-path = \"/bin/config/beacond/jwt-token\"|" "/bin/config/beacond/config/app.toml"
   sed -i "s|^trusted-setup-path = \".*\"|trusted-setup-path = \"/bin/config/beacond/kzg-trusted-setup.json\"|" "/bin/config/beacond/config/app.toml"
 
   seeds_url="https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/cl-seeds.txt"
@@ -17,8 +17,6 @@
   sed -i "s/^seeds = \".*\"/seeds = \"$seeds\"/" "/bin/config/beacond/config/config.toml"
 
   sed -i "s/^persistent_peers = \".*\"/persistent_peers = \"$seeds\"/" "/bin/config/beacond/config/config.toml"
-
-  beacond jwt generate -o /bin/config/beacond/jwt.hex;
 
   if [ "$DOWNLOAD_SNAPSHOTS" = true ]; then
     wget -O berachain_v2_testnet_4745496.tar.lz4 https://support.synergynodes.com/snapshots/berachain_v2_testnet/berachain_v2_testnet_4745496.tar.lz4

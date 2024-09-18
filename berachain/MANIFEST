@@ -1,0 +1,3 @@
+REPO berachain
+RESOURCES files/entrypoint.sh
+LOAD berachain.yaml
