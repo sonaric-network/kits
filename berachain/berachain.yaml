@@ -30,12 +30,13 @@ beacon-kit:
       entrypoint: /home/entrypoint.sh
       ports:
         - 26656:26656
+        - 26656:26656/udp
         - 26657:26657
       paths:
-        - <- `${monk-volume-path}/berachain/config:/bin/config/beacond`
-        - <- `${monk-volume-path}/berachain/config:/bin/config/reth`
-        - <- `${monk-volume-path}/berachain/snapshots:/snapshots/tmp/beacond`
-        - <- `${monk-volume-path}/berachain/snapshots:/snapshots/tmp/reth`
+        - <- `${monk-volume-path}/berachain/config/beacond:/bin/config/beacond`
+        - <- `${monk-volume-path}/berachain/config/reth:/bin/config/reth`
+        - <- `${monk-volume-path}/berachain/snapshots/beacond:/snapshots/tmp/beacond`
+        - <- `${monk-volume-path}/berachain/snapshots/reth:/snapshots/tmp/reth`
   services:
     beacon-service:
       container: beacon-kit
@@ -101,6 +102,7 @@ geth:
       ports:
         - 8551:8551
         - 30303:30303
+        - 30303:30303/udp
       paths:
         - <- `${monk-volume-path}/geth:/geth`
   actions:
@@ -117,6 +119,12 @@ geth:
     p2p-service:
       container: geth-container
       protocol: tcp
+      port: 30303
+      host-port: 30303
+      publish: true
+    udp-service:
+      container: geth-container
+      protocol: udp
       port: 30303
       host-port: 30303
       publish: true
