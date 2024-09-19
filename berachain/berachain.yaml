@@ -1,0 +1,152 @@
+namespace: berachain
+
+base:
+  metadata:
+    name: BeraChain
+    description: BeraChain archive node
+    network-name: mainnet
+    node-type: archive
+    icon: https://avatars.githubusercontent.com/u/92709226?s=200&v=4
+    version: 1.0.0
+    currency: BERA
+  requirements:
+    defines: requirements
+    CPU: "8 Cores"
+    RAM: 49152
+    GPU: false
+    disk: 1024
+
+beacon-kit:
+  defines: runnable
+  inherits: berachain/base
+  depends:
+    wait-for:
+      runnables:
+        - berachain/geth
+  containers:
+    beacon-kit:
+      image: ghcr.io/berachain/beacon-kit
+      image-tag: latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 26656:26656
+        - 26656:26656/udp
+        - 26657:26657
+      paths:
+        - <- `${monk-volume-path}/berachain/config/beacond:/bin/config/beacond`
+        - <- `${monk-volume-path}/berachain/config/reth:/bin/config/reth`
+        - <- `${monk-volume-path}/berachain/snapshots/beacond:/snapshots/tmp/beacond`
+        - <- `${monk-volume-path}/berachain/snapshots/reth:/snapshots/tmp/reth`
+  services:
+    beacon-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 26656
+      host-port: 26656
+      publish: true
+    udp-service:
+      container: beacon-kit
+      protocol: udp
+      port: 26656
+      host-port: 26656
+      publish: true
+    p2p-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 26657
+      host-port: 26657
+      publish: true
+  connections:
+    geth:
+      runnable: berachain/geth
+      service: rpc-service
+  variables:
+    jwt-token:
+      type: string
+      value: <- act("berachain/geth/export-jwt") trim
+      env: JWT_TOKEN
+    moniker-name:
+      description: "Moniker name of the node."
+      type: string
+      required: true
+      value: "BingBongNode"
+      env: MONIKER_NAME
+    download-snapshots:
+      description: "Download snapshots."
+      type: bool
+      required: true
+      value: false
+      env: DOWNLOAD_SNAPSHOTS
+    host:
+      type: string
+      value: <- connection-hostname("geth")
+      env: GETH_HOST
+    port:
+      type: string
+      value: <- connection-port("geth")
+      env: GETH_PORT
+  files:
+    entrypoint:
+      container: beacon-kit
+      path: /home/entrypoint.sh
+      contents: <<< files/entrypoint.sh
+      mode: 0755
+
+
+geth:
+  defines: runnable
+  containers:
+    geth-container:
+      image: ethereum/client-go:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 8551:8551
+        - 30303:30303
+        - 30303:30303/udp
+      paths:
+        - <- `${monk-volume-path}/geth:/geth`
+  actions:
+    export-jwt:
+      description: "Export the JWT secret."
+      code: exec("geth-container", "bin/sh", "-c", "cat /geth/jwtsecret")
+  services:
+    rpc-service:
+      container: geth-container
+      protocol: tcp
+      port: 8551
+      host-port: 8551
+      publish: true
+    p2p-service:
+      container: geth-container
+      protocol: tcp
+      port: 30303
+      host-port: 30303
+      publish: true
+    udp-service:
+      container: geth-container
+      protocol: udp
+      port: 30303
+      host-port: 30303
+      publish: true
+  files:
+    entrypoint:
+      container: geth-container
+      path: /home/entrypoint.sh
+      contents: |
+        #!/bin/sh
+        set -e
+        
+        apk add --no-cache openssl curl
+
+        openssl rand -hex 32 | tr -d "\n" > /geth/jwtsecret
+        
+        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/eth-genesis.json";
+        geth init --datadir "/geth/data" "/geth/genesis.json"
+        geth --authrpc.jwtsecret /geth/jwtsecret --datadir /geth/data --http --http.addr 0.0.0.0 --http.api eth,net --authrpc.addr 0.0.0.0 --authrpc.vhosts '*'
+      mode: 0755
+
+mainnet:
+  defines: process-group
+  runnable-list:
+    - beacon-kit
+    - geth
