@@ -1,0 +1,221 @@
+namespace: beacon-kit
+
+data:
+  metadata:
+    name: rollkit
+    description: "Rollkit is a blockchain node that connects to the Celestia network."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+  requirements:
+    defines: requirements
+    CPU: "8 Cores"
+    RAM: 49152
+    GPU: false
+    disk: 1024
+
+rollkit:
+  defines: runnable
+  inherits: berachain/base
+  depends:
+    wait-for:
+      runnables:
+        - beacon-kit/geth
+  containers:
+    beacon-kit:
+      image: ghcr.io/berachain/beacon-kit:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 26656:26656
+        - 26656:26656/udp
+      paths:
+        - <- `${monk-volume-path}/rollkit:/geth`
+        - <- `${monk-volume-path}/rollkit:/geth/config`
+  connections:
+    geth:
+      runnable: beacon-kit/geth
+      service: rpc-service
+  services:
+    beacon-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 26656
+      host-port: 26656
+      publish: true
+    udp-service:
+      container: beacon-kit
+      protocol: udp
+      port: 26656
+      host-port: 26656
+      publish: true
+  variables:
+    jwt-token:
+      type: string
+      value: <- act("beacon-kit/geth/export-jwt") trim
+      env: JWT_TOKEN
+    host:
+      type: string
+      value: <- connection-hostname("geth")
+      env: GETH_HOST
+    port:
+      type: string
+      value: <- connection-port("geth")
+      env: GETH_PORT
+  files:
+    entrypoint:
+      container: beacon-kit
+      path: /home/entrypoint.sh
+      contents: |
+        #!/bin/sh
+        set -e
+        
+        apk add --no-cache jq openssl curl
+        
+        resolve_path() {
+        if [[ "$1" =~ : ]]; then
+            # treat as an address or url, return as is
+            echo "$1"
+          fi
+          cd "$(dirname "$1")"
+          local abs_path
+          abs_path="$(pwd -P)/$(basename "$1")"
+          echo "$abs_path"
+        }
+        
+        CHAINID="beacond-2061"
+        MONIKER="localtestnet"
+        LOGLEVEL="info"
+        TRACE=""
+        CONSENSUS_KEY_ALGO="bls12_381"
+        HOMEDIR="/geth"
+        RPC_PREFIX="ipc://"
+        
+        # Path variables
+        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/genesis.json"           
+        curl -o "/geth/eth-genesis.json" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/eth-genesis.json"
+        ETH_GENESIS="/geth/eth-genesis.json"
+      
+        jq '.alloc += {"0x20f33ce90a13a4b5e7697e3544c3083b8f8a51d4": {"balance": "0x123450000000000000000"}}' "$ETH_GENESIS" > temp_genesis.json && mv temp_genesis.json "$ETH_GENESIS"
+        
+        JWT_SECRET_PATH="/geth/jwtsecret"
+        echo "$JWT_TOKEN" > $JWT_SECRET_PATH  
+        
+        curl -o "/geth/config/app.toml" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/app.toml"
+        curl -o "/geth/config/kzg-trusted-setup.json" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/kzg-trusted-setup.json"
+
+        sed -i "s|^jwt-secret-path = \".*\"|jwt-secret-path = \"$JWT_SECRET_PATH\"|" "/geth/config/app.toml"
+        sed -i "s|^trusted-setup-path = \".*\"|trusted-setup-path = \"/geth/config/kzg-trusted-setup.json\"|" "/geth/config/app.toml"
+        sed -i "s|^rpc-dial-url = \".*\"|rpc-dial-url = \"http://$GETH_HOST:$GETH_PORT\"|" "/geth/config/app.toml"
+        
+        
+        BEACON_START_CMD="beacond start --pruning=nothing "$TRACE" \
+        --log_level $LOGLEVEL --home $HOMEDIR \
+        --beacon-kit.engine.jwt-secret-path $JWT_SECRET_PATH"
+        
+        eval $BEACON_START_CMD
+      mode: 0755
+
+geth:
+  defines: runnable
+  containers:
+    geth-container:
+      image: ethereum/client-go:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 8545:8545
+        - 30303:30303
+        - 8551:8551
+      paths:
+        - <- `${monk-volume-path}/geth:/geth`
+  variables:
+    jwt-secret:
+      type: string
+      required: true
+      value: ""
+      env: JWT_SECRET
+  actions:
+    export-jwt:
+      description: "Export the JWT secret."
+      code: exec("geth-container", "bin/sh", "-c", "cat /geth/jwtsecret")
+  services:
+    rpc-service:
+      container: geth-container
+      protocol: tcp
+      port: 8551
+      host-port: 8551
+      publish: true
+    p2p-service:
+      container: geth-container
+      protocol: tcp
+      port: 30303
+      host-port: 30303
+      publish: true
+    http-service:
+      container: geth-container
+      protocol: tcp
+      port: 8545
+      host-port: 8545
+      publish: true
+  files:
+    entrypoint:
+      container: geth-container
+      path: /home/entrypoint.sh
+      contents: |
+        #!/bin/sh
+        set -e
+      
+        apk add --no-cache jq openssl curl
+        
+        if [ -z "$JWT_SECRET" ]; then
+          openssl rand -hex 32 | tr -d "\n" > /geth/jwtsecret
+        else
+          echo "$JWT_SECRET" > /geth/jwtsecret
+        fi
+        
+        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/eth-genesis.json"
+        ETH_GENESIS="/geth/genesis.json"
+
+        jq '.alloc += {"0x20f33ce90a13a4b5e7697e3544c3083b8f8a51d4": {"balance": "0x123450000000000000000"}}' "$ETH_GENESIS" > temp_genesis.json && mv temp_genesis.json "$ETH_GENESIS"
+        
+        geth init --datadir "/geth/data" "/geth/genesis.json"
+        
+        geth --http \
+          --http.addr 0.0.0.0 \
+          --http.api eth,net \
+          --authrpc.addr 0.0.0.0 \
+          --authrpc.jwtsecret "/geth/jwtsecret" \
+          --authrpc.vhosts "*" \
+          --datadir "/geth/data"
+      mode: 0755
+
+local-da:
+  defines: runnable
+  metadata:
+    name: "Rollkit Local DA"
+    description: "Rollkit Local DA Node."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/rollkit
+    tags: blockchain
+    private: false
+  containers:
+    local-da:
+      image: ghcr.io/rollkit/local-da:v0.2.1
+      ports:
+        - 7980:7980 # JSON RPS for the DA
+  services:
+    json-rpc:
+      container: local-da
+      protocol: TCP
+      port: 7980
+      host-port: 7980
+
+testnet:
+  defines: process-group
+  runnable-list:
+    - local-da
+    - rollkit
+    - geth
