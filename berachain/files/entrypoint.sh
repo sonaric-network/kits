@@ -9,7 +9,6 @@
 
     sed -i "s|^moniker = \".*\"|moniker = \"$MONIKER_NAME\"|" "/bin/config/beacond/config/config.toml"
     sed -i "s|^rpc-dial-url = \".*\"|rpc-dial-url = \"http://$GETH_HOST:$GETH_PORT\"|" "/bin/config/beacond/config/app.toml"
-    echo $JWT_TOKEN > /bin/config/beacond/jwt-token
     sed -i "s|^jwt-secret-path = \".*\"|jwt-secret-path = \"/bin/config/beacond/jwt-token\"|" "/bin/config/beacond/config/app.toml"
     sed -i "s|^trusted-setup-path = \".*\"|trusted-setup-path = \"/bin/config/beacond/kzg-trusted-setup.json\"|" "/bin/config/beacond/config/app.toml"
 
@@ -34,5 +33,7 @@
     mv ./snapshots/tmp/reth/db /bin/config/reth/db
     mv ./snapshots/tmp/reth/static_files /bin/config/reth/static_files
   fi
+
+  echo $JWT_TOKEN > /bin/config/beacond/jwt-token
 
   beacond start --minimum-gas-prices "0.01photino" --home /bin/config/beacond
