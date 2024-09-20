@@ -91,6 +91,10 @@ beacon-kit:
       path: /home/entrypoint.sh
       contents: <<< files/entrypoint.sh
       mode: 0755
+  actions:
+    sync-status:
+      description: "Get the sync status of the node."
+      code: exec("beacon-kit", "/bin/sh", "-c", "beacond --home=./build/bin/config/beacond status")
 
 
 geth:
@@ -136,12 +140,34 @@ geth:
         #!/bin/sh
         set -e
         
-        apk add --no-cache openssl curl
-
-        openssl rand -hex 32 | tr -d "\n" > /geth/jwtsecret
+        # Check if openssl is installed, if not install it
+        if ! command -v openssl > /dev/null 2>&1; then
+          echo "openssl not found, installing..."
+          apk add --no-cache openssl curl jq
+        fi
         
-        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/eth-genesis.json";
-        geth init --datadir "/geth/data" "/geth/genesis.json"
+        if [ ! -f /geth/jwtsecret ]; then
+          echo "Generating new JWT secret..."
+          openssl rand -hex 32 | tr -d "\n" > /geth/jwtsecret
+          chmod 600 /geth/jwtsecret
+        else
+          echo "Using existing JWT secret."
+        fi
+        
+        if [ ! -f /geth/genesis.json ]; then
+          echo "Downloading genesis.json..."
+          curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/eth-genesis.json";
+        else
+          echo "Using existing genesis.json."
+        fi
+        
+        if [ ! -d /geth/data/geth ]; then
+          echo "Initializing geth..."
+          geth init --datadir "/geth/data" "/geth/genesis.json"
+        else
+          echo "Using existing geth data."
+        fi   
+        
         geth --authrpc.jwtsecret /geth/jwtsecret --datadir /geth/data --http --http.addr 0.0.0.0 --http.api eth,net --authrpc.addr 0.0.0.0 --authrpc.vhosts '*'
       mode: 0755
 
