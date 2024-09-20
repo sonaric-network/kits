@@ -69,8 +69,8 @@ rollkit:
       contents: |
         #!/bin/sh
         set -e
-              
-        apk add --no-cache openssl curl
+        
+        apk add --no-cache jq openssl curl
         
         resolve_path() {
         if [[ "$1" =~ : ]]; then
@@ -92,10 +92,12 @@ rollkit:
         RPC_PREFIX="ipc://"
         
         # Path variables
-        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/genesis.json"
-        GENESIS=/geth/genesis.json
+        curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/berachain/beacon-kit/main/testing/networks/80084/genesis.json"           
         curl -o "/geth/eth-genesis.json" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/eth-genesis.json"
         ETH_GENESIS="/geth/eth-genesis.json"
+      
+        jq '.alloc += {"0x20f33ce90a13a4b5e7697e3544c3083b8f8a51d4": {"balance": "0x123450000000000000000"}}' "$ETH_GENESIS" > temp_genesis.json && mv temp_genesis.json "$ETH_GENESIS"
+        
         JWT_SECRET_PATH="/geth/jwtsecret"
         echo "$JWT_TOKEN" > $JWT_SECRET_PATH  
         
@@ -163,7 +165,7 @@ geth:
         #!/bin/sh
         set -e
       
-        apk add --no-cache openssl curl
+        apk add --no-cache jq openssl curl
         
         if [ -z "$JWT_SECRET" ]; then
           openssl rand -hex 32 | tr -d "\n" > /geth/jwtsecret
@@ -172,6 +174,9 @@ geth:
         fi
         
         curl -o "/geth/genesis.json" "https://raw.githubusercontent.com/rollkit/beacon-kit/9415dd649af760973ad43587bb782fdc352b1b6c/testing/networks/80084/eth-genesis.json"
+        ETH_GENESIS="/geth/genesis.json"
+
+        jq '.alloc += {"0x20f33ce90a13a4b5e7697e3544c3083b8f8a51d4": {"balance": "0x123450000000000000000"}}' "$ETH_GENESIS" > temp_genesis.json && mv temp_genesis.json "$ETH_GENESIS"
         
         geth init --datadir "/geth/data" "/geth/genesis.json"
         
@@ -184,8 +189,33 @@ geth:
           --datadir "/geth/data"
       mode: 0755
 
+local-da:
+  defines: runnable
+  metadata:
+    name: "Rollkit Local DA"
+    description: "Rollkit Local DA Node."
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source: https://github.com/rollkit/rollkit
+    tags: blockchain
+    private: false
+  containers:
+    local-da:
+      image: ghcr.io/rollkit/local-da:v0.2.1
+      ports:
+        - 7980:7980 # JSON RPS for the DA
+  services:
+    json-rpc:
+      container: local-da
+      protocol: TCP
+      port: 7980
+      host-port: 7980
+
 testnet:
   defines: process-group
   runnable-list:
+    - local-da
     - rollkit
     - geth
