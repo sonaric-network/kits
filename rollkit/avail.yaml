@@ -1,0 +1,195 @@
+namespace: rollkit
+
+#------------------------------------------------------------
+# Avail
+#------------------------------------------------------------
+
+avail-turing-light:
+    defines: runnable
+    metadata:
+        name: "Avail Turing Light Client"
+        shortname: "Avail Light Turing"
+        description: "Avail light client for the Turing network."
+        version: 1.0.0
+        publisher: sonaric
+        icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
+        currency: AVAIL
+        source: https://github.com/availproject
+        tags: blockchain
+        private: false
+    requirements:
+        defines: requirements
+        CPU: "2 Cores"
+        RAM: 4096
+        GPU: false
+        disk: 20
+    containers:
+        avail-light:
+            image: availj/avail-light
+            image-tag: <- `${version}`
+            arch: linux/amd64
+            entrypoint: avail-light --network turing --config /home/avail/config.yml
+            #      entrypoint: sleep 1000000 # TODO
+            bash: ""
+            ports:
+                - 8000:8000  # RPC Port
+                - 38000:38000  # P2P Port
+            paths:
+                - <- `${monk-volume-path}/avail-lc/data:/home/avail/data`
+                - <- `${monk-volume-path}/avail-lc/identity:/home/avail/identity`
+    variables:
+        version:
+            description: "The version of the Avail Light Client to use."
+            type: string
+            #      value: "avail-light-client-v1.11.1"
+            value: "avail-light-client-v1.12.0-rc1"
+        secret-uri: # TODO
+            description: "The secret URI for the node's identity."
+            type: string
+            value: "//avail-light-client"  # Use a dev seed or your own
+            env: SECRET_URI
+    files:
+        config-file:
+            container: avail-light
+            path: /home/avail/config.yml
+            contents: |
+                app_id = 1
+                log_level = "info"
+                http_server_host = '0.0.0.0'
+                http_server_port = 8000
+                port=38000
+                sync_start_block=322264
+                full_node_ws=['wss://avail-turing.public.blastapi.io','wss://turing-testnet.avail-rpc.com']
+                confidence=80.0
+                kad_record_ttl=43200
+                ot_collector_endpoint='http://otel.lightclient.turing.avail.so:4317'
+                genesis_hash='d3d2f3a3495dc597434a99d7d449ebad6616db45e4e4f178f31cc6fa14378b70'
+            mode: 0755
+    services:
+        rpc-service:
+            container: avail-light
+            port: 8000
+            protocol: tcp
+            host-port: 8000
+            publish: true
+        tcp-service:
+            container: avail-light
+            port: 38000
+            protocol: tcp
+            host-port: 38000
+            publish: true
+    actions:
+        get-status:
+            description: "Get the status of the Avail Light Turing node."
+            code: exec("avail-light", "/bin/bash", "-c", "curl http://localhost:8000/v2/status")
+avail-da:
+    defines: runnable
+    metadata:
+        name: "Avail DA"
+        shortname: "Avail DA"
+        description: "The Avail DA implementation connects to an Avail-light-node. It is used to provide a DA layer for the Turing network."
+        version: 1.0.0
+        publisher: sonaric
+        icon: https://avatars.githubusercontent.com/u/125018949?s=200&v=4
+        currency: AVAIL
+        source: https://github.com/rollkit/avail-da
+        tags: blockchain
+        private: false
+    depends:
+        wait-for:
+            runnables:
+                - rollkit/avail-turing-light
+    containers:
+        avail-da:
+            image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/avail-da:latest
+            arch: linux/amd64
+            entrypoint: /app/avail-da
+            ports:
+                - 3000:3000  # GRPC Port
+    variables:
+        avail-rpc:
+            type: string
+            value: <- connection-hostname("rpc-conn") ":" connection-port("rpc-conn") concat-all
+            env: DA_RPC
+    files:
+        config-file:
+            container: avail-da
+            path: /app/config.json
+            #      TODO: app id
+            contents: |
+                {
+                    "lc_url" : "http://{{ v "avail-rpc" }}/v2",
+                    "app_id":1,
+                    "grpc_server_address": "0.0.0.0:3000"
+                }
+            mode: 0755
+    connections:
+        rpc-conn:
+            runnable: rollkit/avail-turing-light
+            service: rpc-service
+    services:
+        grpc:
+            container: avail-da
+            port: 3000
+            protocol: tcp
+            host-port: 3000
+            publish: true
+
+avail-gm-chain:
+    defines: runnable
+    inherits: rollkit/gm
+    depends[override]:
+        wait-for:
+            runnables:
+                - rollkit/avail-da
+    containers:
+        gm:
+            image: ghcr.io/rollkit/gm:latest
+            entrypoint: sleep 1000000 # TODO: /home/start.sh for now testing manually
+            bash: ""
+    variables:
+        da-grpc:
+            type: string
+            value: <- "grpc://" connection-hostname("grpc-conn") ":" connection-port("grpc-conn") concat-all
+            env: DA_GRPC
+    files:
+        start:
+            container: gm
+            path: /home/start.sh
+            #  TODO: da start height
+            contents: |
+                #!/bin/bash
+                rollkit start \
+                --rollkit.aggregator \
+                --rollkit.da_address="grpc://$DA_GRPC" \
+                --rollkit.da_start_height 751328 \
+                --minimum-gas-prices="0.1stake"
+
+            mode: 0755
+    connections[override]:
+        grpc-conn:
+            runnable: rollkit/avail-da
+            service: grpc
+
+# TODO
+avail-frontend:
+    defines: runnable
+    inherits: rollkit/frontend
+
+hello-world-avail:
+    defines: process-group
+    metadata:
+        name: "Rollkit GM Rollup Example Deployment with Avail"
+        description: "Complete Rollkit GM rollup example with an Avail DA and a frontend."
+        website: "https://rollkit.dev/"
+        publisher: sonaric
+        icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+        version: 1.0.0
+        source: https://github.com/rollkit/gm
+        tags: blockchain
+        private: false
+    runnable-list:
+        - rollkit/avail-turing-light
+        - rollkit/avail-da
+        - rollkit/avail-gm-chain
+#    - rollkit/frontend TODO
