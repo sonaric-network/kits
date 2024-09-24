@@ -1,2 +1,4 @@
 REPO rollkit
 LOAD rollkit.yaml
+LOAD celestia.yaml
+
