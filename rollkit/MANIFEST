@@ -2,3 +2,5 @@ REPO rollkit
 LOAD rollkit.yaml
 LOAD celestia.yaml
 
+RESOURCES files/beacon-kit/entrypoint-geth.sh files/beacon-kit/entrypoint.sh
+LOAD beacon-kit.yaml
