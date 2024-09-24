@@ -74,14 +74,12 @@ celestia-gm:
         start:
             container: gm
             path: /home/start.sh
-            # TODO: remove token prints, it's for debugging for now
             contents: |
                 #!/bin/bash
                 if [ -z "$DA_AUTH_TOKEN" ]; then
                   echo "DA_AUTH_TOKEN is empty"
                   exit 1
                 fi
-                echo "DA_AUTH_TOKEN: $DA_AUTH_TOKEN"
                 
                 DA_BLOCK_HEIGHT=$(curl https://rpc-mocha.pops.one/block | jq -r '.result.block.header.height')
                 DA_ADDRESS="http://$DA_HOST:$DA_PORT"
