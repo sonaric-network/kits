@@ -1,0 +1,164 @@
+namespace: rollkit
+
+beacon-kit:
+  defines: runnable
+  metadata:
+    name: rollkit
+    description: |
+      Beacon Kit node with Rollkit.
+      BeaconKit is a modular framework for building EVM-based consensus clients.
+      Rollkit is a modular framework for building EVM-based rollups.
+      Combined, they provide a complete solution for building EVM-based blockchains.
+    website: "https://www.berachain.com/"
+    source: https://github.com/rollkit/beacon-kit/
+    tags: blockchain, rollup, beacon, evm, rollkit
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/96059542?s=200&v=4"
+    version: 1.0.0
+    private: false
+    wallet-support: import-key, export-key, list-keys
+  requirements:
+    defines: requirements
+    CPU: "8 Cores"
+    RAM: 49152
+    GPU: false
+    disk: 1024
+  depends:
+    wait-for:
+      runnables:
+        - rollkit/geth
+        - rollkit/local-da
+  containers:
+    beacon-kit:
+      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/reacond:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 26656:26656
+        - 26656:26656/udp
+        - 36656:36656
+        - 36657:36657
+        - 9290:9290
+        - 9090:9090
+      paths:
+        - <- `${monk-volume-path}/geth:/geth`
+        - <- `${monk-volume-path}/beacond:/beacond`
+  connections:
+    geth:
+      runnable: rollkit/geth
+      service: rpc-service
+    da-conn:
+      runnable: rollkit/local-da
+      service: json-rpc
+  services:
+    beacon-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 26656
+      host-port: 26656
+      publish: true
+    udp-service:
+      container: beacon-kit
+      protocol: udp
+      port: 26656
+      host-port: 26656
+      publish: true
+    p2p-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 36656
+      host-port: 36656
+      publish: true
+    rpc-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 36657
+      host-port: 36657
+      publish: true
+    grpc-service:
+      container: beacon-kit
+      protocol: tcp
+      port: 9290
+      host-port: 9290
+      publish: true
+  variables:
+    da-address:
+      type: string
+      value: <- "http://"  connection-hostname("da-conn") ":" connection-port("da-conn") concat-all
+      env: DA_ADDRESS
+    rpc-dial-url:
+      type: string
+      value: <- "http://"  connection-hostname("geth") ":" connection-port("geth") concat-all
+      env: RPC_DIAL_URL
+  files:
+    entrypoint:
+      container: beacon-kit
+      path: /home/entrypoint.sh
+      contents: <<< files/beacon-kit/entrypoint.sh
+      mode: 0755
+
+geth:
+  defines: runnable
+  metadata:
+    name: "Geth Ethereum Client"
+    description: |
+      Official Go implementation of the Ethereum protocol.
+      Geth is an Ethereum execution client, providing the Ethereum Virtual Machine (EVM) environment used in the Rollkit BeaconKit setup."
+    website: "https://geth.ethereum.org/"
+    publisher: Ethereum Foundation
+    icon: "https://ethereum.org/favicon.ico"
+    version: 1.0.0
+    source: https://github.com/ethereum/go-ethereum
+    tags: blockchain, ethereum, execution-client
+    private: false
+  containers:
+    geth-container:
+      image: ethereum/client-go:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 8545:8545
+        - 30303:30303
+        - 8551:8551
+      paths:
+        - <- `${monk-volume-path}/geth:/geth`
+  services:
+    rpc-service:
+      container: geth-container
+      protocol: tcp
+      port: 8551
+      host-port: 8551
+      publish: true
+    p2p-service:
+      container: geth-container
+      protocol: tcp
+      port: 30303
+      host-port: 30303
+      publish: true
+    http-service:
+      container: geth-container
+      protocol: tcp
+      port: 8545
+      host-port: 8545
+      publish: true
+  files:
+    entrypoint:
+      container: geth-container
+      path: /home/entrypoint.sh
+      contents: <<< files/beacon-kit/entrypoint-geth.sh
+      mode: 0755
+
+
+# TODO: add frontend and switch to avail da
+beacon-kit-evm:
+  defines: process-group
+  metadata:
+    name: "Rollkit Beacon Kit"
+    description: "Rollkit rollup example using Beacon Kit, Geth and Local DA"
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source:
+  runnable-list:
+    - rollkit/local-da
+    - rollkit/beacon-kit
+    - rollkit/geth
