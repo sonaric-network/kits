@@ -147,7 +147,106 @@ geth:
       mode: 0755
 
 
-# TODO: add frontend and switch to avail da
+gm-portal:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - rollkit/geth
+        - rollkit/local-da
+        - rollkit/beacon-kit
+  containers:
+    gm-portal:
+      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-platform:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 5173:5173
+  connections:
+    geth:
+      runnable: rollkit/geth
+      service: http-service
+  variables:
+    defines: variables
+    rpc-url:
+      type: string
+      value: <- connection-ip("geth") ":" connection-port("geth") concat-all
+      env: RPC_URL
+    rpc-api-host:
+      type: string
+      value: localhost
+#      value: <- ip-address-public
+      env: RPC_API_HOST
+    private-key:
+      type: string
+      value: "0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"
+      env: PRIVATE_KEY
+  files:
+    entrypoint:
+      container: gm-portal
+      path: /home/entrypoint.sh
+      contents: |
+        #!/bin/bash
+        set -e
+        if ! command -v jq &> /dev/null
+        then
+          apt-get install -y jq
+        fi
+        cd contracts
+        $FOUNDRY_BIN_DIR/forge script ./script/GmPortal.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+        export CONTRACT_ADDRESS=$(jq -r '.transactions[0].contractAddress' /app/contracts/broadcast/GmPortal.s.sol/80084/run-latest.json)
+        # Replace the current contractAddress line in /app/src/App.tsx
+        sed -i.bak "s/const contractAddress = '.*'/const contractAddress = '${CONTRACT_ADDRESS}'/" /app/src/App.tsx
+
+        $FOUNDRY_BIN_DIR/cast send $CONTRACT_ADDRESS \
+        "gm(string)" "ooga booga" \
+        --private-key $PRIVATE_KEY \
+        --rpc-url $RPC_URL
+
+        $FOUNDRY_BIN_DIR/cast call $CONTRACT_ADDRESS "getTotalGms()" --rpc-url $RPC_URL
+        cd /app
+        yarn && yarn dev --host 0.0.0.0
+      mode: 0755
+    transfer:
+      container: gm-portal
+      path: /home/transfer.sh
+      mode: 0755
+      contents: |
+        #!/bin/bash
+        set -e
+        # get from argument of the script
+        export RECEIVER=$1
+        $FOUNDRY_BIN_DIR/cast send --private-key $PRIVATE_KEY $RECEIVER --value 1ether --rpc-url $RPC_URL
+  services:
+    gm-portal-service:
+      container: gm-portal
+      protocol: tcp
+      port: 5173
+      host-port: 5173
+      publish: true
+  actions:
+    transfer:
+      container: gm-portal
+      description: "Transfer 1 ether to the address."
+      arguments:
+        address:
+          type: string
+          description: "Address of the receiver."
+          required: true
+      code: |
+        exec("gm-portal", "/bin/bash", "-c", `/home/transfer.sh ${args["address"]}`)
+    balance:
+      arguments:
+        address:
+          type: string
+          description: "Address of the receiver."
+          required: true
+      container: gm-portal
+      description: "Get the balance of the account."
+      code: |
+        exec("gm-portal", "/bin/bash", "-c", `$FOUNDRY_BIN_DIR/cast balance ${args["address"]} --rpc-url $RPC_URL`)
+
+
+
 beacon-kit-evm:
   defines: process-group
   metadata:
@@ -162,3 +261,4 @@ beacon-kit-evm:
     - rollkit/local-da
     - rollkit/beacon-kit
     - rollkit/geth
+    - rollkit/gm-portal
