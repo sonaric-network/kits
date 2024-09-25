@@ -157,7 +157,7 @@ gm-portal:
         - rollkit/beacon-kit
   containers:
     gm-portal:
-      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-platform:latest
+      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-platform:dev
       entrypoint: /home/entrypoint.sh
       ports:
         - 5173:5173
