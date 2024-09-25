@@ -45,4 +45,6 @@ geth --http \
   --authrpc.jwtsecret $JWT_SECRET_PATH \
   --authrpc.vhosts "*" \
   --datadir $ETH_DATA_DIR \
-  --ipcpath "$IPC_PATH"
+  --ipcpath "$IPC_PATH" \
+  --http.corsdomain "*" \
+  --http.vhosts "*"
