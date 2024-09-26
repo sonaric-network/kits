@@ -1,0 +1,56 @@
+namespace: rollkit
+
+celestia-beacon-kit:
+  defines: runnable
+  inherits: rollkit/beacon-kit
+  depends[override]:
+    wait-for:
+      runnables:
+        - rollkit/geth
+        - rollkit/celestia-da
+  connections[override]:
+    geth:
+      runnable: rollkit/geth
+      service: rpc-service
+    da-conn:
+      runnable: rollkit/celestia-da
+      service: rpc
+  variables:
+    da-address:
+      type: string
+      value: <- "http://" connection-hostname("da-conn") ":" connection-port("da-conn") concat-all
+      env: DA_ADDRESS
+    da-token:
+      type: string
+      value: <- act("rollkit/celestia-da/get-auth-token") trim
+      env: DA_AUTH_TOKEN
+    da-namespace:
+      type: string
+      value: "00000000000000000000000000000000000000000008e5f679bf7116cb"
+      env: DA_NAMESPACE
+  entrypoint[override]: sleep 10000009999
+
+celestia-gm-portal:
+  defines: runnable
+  inherits: rollkit/gm-portal
+  depends[override]:
+    wait-for:
+      runnables:
+        - rollkit/geth
+        - rollkit/celestia-da
+
+celestia-beacon-kit-evm:
+  defines: process-group
+  metadata:
+    name: "Rollkit Beacon Kit"
+    description: "Rollkit rollup example using Beacon Kit, Geth and Celestia DA"
+    website: "https://rollkit.dev/"
+    publisher: sonaric
+    icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+    version: 1.0.0
+    source:
+  runnable-list:
+    - rollkit/celestia-da
+    - rollkit/celestia-beacon-kit
+    - rollkit/geth
+    - rollkit/celestia-gm-portal
