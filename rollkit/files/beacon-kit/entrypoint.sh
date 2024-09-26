@@ -55,6 +55,25 @@ BEACON_START_CMD="beacond start --pruning=nothing "$TRACE" \
 --api.enable --api.swagger --minimum-gas-prices=0.0001abgt \
 --home $HOMEDIR --beacon-kit.engine.jwt-secret-path ${JWT_SECRET_PATH}"
 
+
+if [ -n "$DA_AUTH_TOKEN" ]; then
+  BEACON_START_CMD="$BEACON_START_CMD --rollkit.da_auth_token $DA_AUTH_TOKEN"
+else
+  echo "DA_AUTH_TOKEN is not set"
+fi
+
+if [ -n "$DA_NAMESPACE" ]; then
+  echo "DA_ADDRESS: $DA_ADDRESS"
+  DA_BLOCK_HEIGHT=$(curl https://rpc-mocha.pops.one/block | jq -r '.result.block.header.height')
+  echo "DA_BLOCK_HEIGHT: $DA_BLOCK_HEIGHT"
+  BEACON_START_CMD="$BEACON_START_CMD --rollkit.da_namespace $DA_NAMESPACE --rollkit.da_start_height $DA_BLOCK_HEIGHT"
+else
+  echo "DA_NAMESPACE is not set"
+fi
+
+
+
+
 # Conditionally add the rpc-dial-url flag if RPC_DIAL_URL is not empty
 if [ -n "$RPC_DIAL_URL" ]; then
   # this will overwrite the default dial url
