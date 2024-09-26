@@ -245,6 +245,18 @@ light-mainnet:
     variables:
         network: "mainnet"
         version: "avail-light-client-v1.11.1"
+
+light-turing:
+    defines: runnable
+    inherits: ./light
+    metadata:
+        name: Avail Light Client Turing
+        description: |
+            Avail light client for the turing network.
+    variables:
+        network: "turing"
+        version: "avail-light-client-v1.12.0-rc1"
+
 # ---------------------- #
 #    VALIDATOR NODES
 # ---------------------- #
@@ -383,4 +395,3 @@ validator-dev:
     variables:
         chain: ""
         name: "SonaricAvailValidatorDev"
-
