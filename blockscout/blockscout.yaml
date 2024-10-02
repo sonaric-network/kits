@@ -1,0 +1,600 @@
+namespace: blockscout
+
+base:
+  metadata:
+    name: "Blockscout"
+    description: |
+      Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
+    publisher: sonaric
+    website: https://www.blockscout.com/
+    icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
+    version: 1.0.0
+    currency: ETH
+  variables:
+    ethereum-jsonrpc-http-url:
+      description: "The URL of the Ethereum JSON-RPC HTTP endpoint"
+      type: string
+      value: https://ethereum-rpc.publicnode.com
+      env: ETHEREUM_JSONRPC_HTTP_URL
+    ethereum-jsonrpc-trace-url:
+      description: "The URL of the Ethereum JSON-RPC Trace endpoint"
+      type: string
+      value: ""
+      env: ETHEREUM_JSONRPC_TRACE_URL
+    ethereum-jsonrpc-ws-url:
+      description: "The URL of the Ethereum JSON-RPC WebSocket endpoint"
+      type: string
+      value: wss://ethereum-rpc.publicnode.com
+      env: ETHEREUM_JSONRPC_WS_URL
+    chain-id:
+      description: "The chain ID of the Ethereum network"
+      type: string
+      value: "1337"
+      env: CHAIN_ID
+    postgres-db:
+      description: "The name of the database to use"
+      type: string
+      value: blockscout
+      env: POSTGRES_DB
+    postgres-user:
+      description: "The user to connect to the database as"
+      type: string
+      value: blockscout
+      env: POSTGRES_USER
+    postgres-password:
+      description: "The password to connect to the database with"
+      type: string
+      value: ceWb1MeLBEeOIfk65gU8EjF8
+      env: POSTGRES_PASSWORD
+    redis-bd-url:
+      description: "The URL of the Redis database"
+      type: string
+      value: <- "redis://" connection-hostname("redis") ":" connection-port("redis") concat-all
+      env: ACCOUNT_REDIS_URL
+    database-url:
+      description: "The URL of the database"
+      type: string
+      value: <- "postgresql://" $postgres-db ":" $postgres-password "@" connection-hostname("postgres") ":" connection-port("postgres") "/" $postgres-db "?ssl=false" concat-all
+      env: DATABASE_URL
+
+redis:
+  defines: runnable
+  inherits: blockscout/base
+  containers:
+    redis:
+      image: redis:alpine
+      restart: always
+      paths:
+        - <- `${monk-volume-path}/directus-redis:/data`
+      entrypoint: redis-server
+      ports:
+        - 6379:6379
+  services:
+    redis-db:
+      container: redis
+      port: 6379
+      protocol: tcp
+      host-port: 6379
+      publish: true
+
+postgres:
+  defines: runnable
+  inherits: blockscout/base
+  containers:
+    postgres:
+      image: postgres
+      image-tag: '15'
+      paths:
+        - <- `${monk-volume-path}/directus-database:/var/lib/postgresql`
+      ports:
+        - 5432:5432
+        - 7432:7432
+      restart: always
+  services:
+    postgres:
+      container: postgres
+      port: 5432
+      protocol: tcp
+      host-port: 5432
+      publish: true
+    postgres2:
+      container: postgres
+      port: 7432
+      protocol: tcp
+      host-port: 7432
+      publish: true
+
+backend:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - blockscout/postgres
+        - blockscout/redis
+  inherits: blockscout/base
+  containers:
+    backend:
+      image: blockscout/blockscout:latest
+      restart: always
+      entrypoint: /app/start.sh
+      ports:
+        - 4000:4000
+  services:
+    backend:
+      container: backend
+      port: 4000
+      protocol: tcp
+      host-port: 4000
+      publish: true
+  connections:
+    postgres:
+      runnable: blockscout/postgres
+      service: postgres
+    redis:
+      runnable: blockscout/redis
+      service: redis-db
+  files:
+    start:
+      container: backend
+      path: /app/start.sh
+      contents: |
+        #!/bin/sh
+        source /app/common-blockscout.env
+        /app/bin/blockscout eval "Elixir.Explorer.ReleaseTasks.create_and_migrate()" && /app/bin/blockscout start
+      mode: 0755
+    config:
+      container: backend
+      path: /app/common-blockscout.env
+      contents: <<< files/common-blockscout.env
+      mode: 0755
+
+visualizer:
+  defines: runnable
+  inherits: blockscout/base
+  containers:
+    visualizer:
+      image: ghcr.io/blockscout/visualizer:latest
+      restart: always
+      ports:
+        - 8081:8081
+  services:
+    visualizer:
+      container: visualizer
+      port: 8081
+      protocol: tcp
+      host-port: 8081
+      publish: true
+  variables:
+    visualizer-server-grpc-enabled:
+      description: "Whether to enable the gRPC server"
+      type: bool
+      value: false
+      env: VISUALIZER_SERVER_GRPC_ENABLED
+#
+#sig-provider:
+#  defines: runnable
+#  inherits: blockscout/base
+#  containers:
+#    sig-provider:
+#      image: ghcr.io/blockscout/sig-provider:latest
+#      restart: always
+
+frontend:
+  defines: runnable
+  inherits: blockscout/base
+  depends:
+    wait-for:
+      runnables:
+        - blockscout/backend
+        - blockscout/postgres
+        - blockscout/redis
+        - blockscout/stats
+        - blockscout/visualizer
+  containers:
+    frontend:
+      image: ghcr.io/blockscout/frontend:latest
+      restart: always
+      ports:
+        - 3000:3000
+  connections:
+    backend:
+      runnable: blockscout/backend
+      service: backend
+    visualizer:
+      runnable: blockscout/visualizer
+      service: visualizer
+    stats:
+      runnable: blockscout/stats
+      service: stats
+  services:
+    frontend:
+      container: frontend
+      port: 3000
+      protocol: tcp
+      host-port: 3000
+      publish: true
+  variables:
+    next-public-api-host:
+      description: "The API host"
+      type: string
+      value: "0.0.0.0"
+      env: NEXT_PUBLIC_API_HOST
+    next-public-api-protocol:
+      description: "The API protocol"
+      type: string
+      value: "http"
+      env: NEXT_PUBLIC_API_PROTOCOL
+    next-public-stats-api-host:
+      description: "The Stats API host"
+      type: string
+      value: "http://localhost:8080"
+      env: NEXT_PUBLIC_STATS_API_HOST
+    next-public-network-name:
+      description: "The name of the network"
+      type: string
+      value: "Awesome chain"
+      env: NEXT_PUBLIC_NETWORK_NAME
+    next-public-network-short-name:
+      description: "The short name of the network"
+      type: string
+      value: "Awesome chain"
+      env: NEXT_PUBLIC_NETWORK_SHORT_NAME
+    next-public-network-id:
+      description: "The network ID"
+      type: string
+      value: "5"
+      env: NEXT_PUBLIC_NETWORK_ID
+    next-public-network-currency-name:
+      description: "The name of the network currency"
+      type: string
+      value: "Ether"
+      env: NEXT_PUBLIC_NETWORK_CURRENCY_NAME
+    next-public-network-currency-symbol:
+      description: "The symbol of the network currency"
+      type: string
+      value: "ETH"
+      env: NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL
+    next-public-network-currency-decimals:
+      description: "The number of decimals in the network currency"
+      type: string
+      value: "18"
+      env: NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS
+    next-public-api-base-path:
+      description: "The base path for the API"
+      type: string
+      value: "/"
+      env: NEXT_PUBLIC_API_BASE_PATH
+    next-public-app-host:
+      description: "The application host"
+      type: string
+      value: "0.0.0.0"
+      env: NEXT_PUBLIC_APP_HOST
+    next-public-app-protocol:
+      description: "The application protocol"
+      type: string
+      value: "http"
+      env: NEXT_PUBLIC_APP_PROTOCOL
+    next-public-homepage-charts:
+      description: "The charts to display on the homepage"
+      type: string
+      value: "['daily_txs','coin_price','market_cap']"
+      env: NEXT_PUBLIC_HOMEPAGE_CHARTS
+    next-public-visualize-api-host:
+      description: "The Visualize API host"
+      type: string
+      value: "http://localhost:8081"
+      env: NEXT_PUBLIC_VISUALIZE_API_HOST
+    next-public-is-testnet:
+      description: "Is this a test network"
+      type: string
+      value: "true"
+      env: NEXT_PUBLIC_IS_TESTNET
+    next-public-api-websocket-protocol:
+      description: "The WebSocket protocol for the API"
+      type: string
+      value: "ws"
+      env: NEXT_PUBLIC_API_WEBSOCKET_PROTOCOL
+    next-public-api-spec-url:
+      description: "The URL for the API spec"
+      type: string
+      value: "https://raw.githubusercontent.com/blockscout/blockscout-api-v2-swagger/main/swagger.yaml"
+      env: NEXT_PUBLIC_API_SPEC_URL
+
+stats-db-init:
+  defines: runnable
+  containers:
+    stats-db-init:
+      image: postgres:15
+      entrypoint: chown -R 2000:2000 /var/lib/postgresql/data
+
+stats-db:
+  defines: runnable
+  containers:
+    stats-db:
+      image: postgres:15
+      ports:
+        - 5432:5432
+        - 7432:7433
+      restart: always
+  services:
+    stats-db:
+      container: stats-db
+      port: 5432
+      protocol: tcp
+      host-port: 5432
+      publish: true
+    stats-db2:
+      container: stats-db
+      port: 7432
+      protocol: tcp
+      host-port: 7432
+      publish: true
+  variables:
+    postgres-db-stats:
+      description: "The name of the database to use"
+      type: string
+      value: stats
+      env: POSTGRES_DB
+    postgres-user-stats:
+      description: "The user to connect to the database as"
+      type: string
+      value: stats
+      env: POSTGRES_USER
+    postgres-password-stats:
+      description: "The password to connect to the database with"
+      type: string
+      value: n0uejXPl61ci6ldCuE2gQU5Y
+      env: POSTGRES_PASSWORD
+
+
+stats:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - blockscout/stats-db
+  containers:
+    stats:
+      image: ghcr.io/blockscout/stats:latest
+      restart: always
+      ports:
+        - 8080:8080
+  services:
+    stats:
+      container: stats
+      port: 8080
+      protocol: tcp
+      host-port: 8080
+      publish: true
+  connections:
+    postgres-stats:
+      runnable: blockscout/stats-db
+      service: stats-db
+    backend:
+      runnable: blockscout/backend
+      service: backend
+  variables:
+    postgres-db-stats:
+      description: "The name of the database to use"
+      type: string
+      value: stats
+      env: POSTGRES_DB
+    postgres-user-stats:
+      description: "The user to connect to the database as"
+      type: string
+      value: stats
+      env: POSTGRES_USER
+    postgres-password-stats:
+      description: "The password to connect to the database with"
+      type: string
+      value: n0uejXPl61ci6ldCuE2gQU5Y
+      env: POSTGRES_PASSWORD
+    stats-db-url:
+      description: "The URL of the stats database"
+      type: string
+      value: <- "postgresql://" $postgres-user-stats ":" $postgres-password-stats "@" connection-hostname("stats-db") ":" connection-port("stats-db") "/stats" "?ssl=false" concat-all
+      env: STATS_DB_URL
+    blockscout-db-url:
+      description: "The URL of the Blockscout database"
+      type: string
+      value: <- "postgresql://" $postgres-db-stats ":" $postgres-password-stats "@" connection-hostname("stats-db") ":" connection-port("stats-db") "/blockscout" "?ssl=false" concat-all
+      env: STATS_BLOCKSCOUT_DB_URL
+    create-database:
+      description: "Whether to create the stats database"
+      type: bool
+      value: true
+      env: STATS_CREATE_DATABASE
+    run-migrations:
+      description: "Whether to run the stats migrations"
+      type: bool
+      value: true
+      env: STATS_RUN_MIGRATIONS
+    stats-server-http-enabled:
+      description: "Is HTTP server enabled"
+      type: bool
+      value: true
+      env: STATS_SERVER_HTTP_ENABLED
+    stats-server-http-addr:
+      description: "HTTP server address"
+      type: string
+      value: "0.0.0.0:8050"
+      env: STATS_SERVER_HTTP_ADDR
+    stats-server-http-max-body-size:
+      description: "Max body size for HTTP server"
+      type: string
+      value: "2097152"
+      env: STATS_SERVER_HTTP_MAX_BODY_SIZE
+    stats-server-grpc-enabled:
+      description: "Is gRPC server enabled"
+      type: bool
+      value: false
+      env: STATS_SERVER_GRPC_ENABLED
+    stats-server-grpc-addr:
+      description: "gRPC server address"
+      type: string
+      value: "0.0.0.0:8051"
+      env: STATS_SERVER_GRPC_ADDR
+    stats-blockscout-db-url:
+      description: "Blockscout database URL"
+      type: string
+      value: ""
+      env: STATS_BLOCKSCOUT_DB_URL
+    stats-create-database:
+      description: "Should the database be created"
+      type: bool
+      value: false
+      env: STATS_CREATE_DATABASE
+    stats-run-migrations:
+      description: "Should migrations be run"
+      type: bool
+      value: false
+      env: STATS_RUN_MIGRATIONS
+    stats-default-schedule:
+      description: "Default schedule for tasks"
+      type: string
+      value: "0 0 1 * * * *"
+      env: STATS_DEFAULT_SCHEDULE
+    stats-force-update-on-start:
+      description: "Force update on start"
+      type: bool
+      value: false
+      env: STATS_FORCE_UPDATE_ON_START
+    stats-metrics-enabled:
+      description: "Are metrics enabled"
+      type: bool
+      value: false
+      env: STATS_METRICS_ENABLED
+    stats-metrics-addr:
+      description: "Metrics server address"
+      type: string
+      value: "0.0.0.0:6060"
+      env: STATS_METRICS_ADDR
+    stats-metrics-route:
+      description: "Route for metrics"
+      type: string
+      value: "/metrics"
+      env: STATS_METRICS_ROUTE
+    stats-jaeger-enabled:
+      description: "Is Jaeger enabled"
+      type: bool
+      value: false
+      env: STATS_JAEGER_ENABLED
+    stats-jaeger-agent-endpoint:
+      description: "Jaeger agent endpoint"
+      type: string
+      value: "localhost:6831"
+      env: STATS_JAEGER_AGENT_ENDPOINT
+    stats-tracing-enabled:
+      description: "Is tracing enabled"
+      type: bool
+      value: true
+      env: STATS_TRACING_ENABLED
+    stats-tracing-format:
+      description: "Tracing format"
+      type: string
+      value: "default"
+      env: STATS_TRACING_FORMAT
+
+
+#user-ops-indexer:
+#  defines: runnable
+#  containers:
+#    user-ops-indexer:
+#      image: ghcr.io/blockscout/user-ops-indexer:latest
+#      restart: always
+#      entrypoint: . /app/common-user-ops-indexer.env
+#  connections:
+#    postgres:
+#      runnable: blockscout/postgres
+#      service: postgres
+#    backend:
+#      runnable: blockscout/backend
+#      service: backend
+#  files:
+#    common-user-ops-indexer:
+#      container: user-ops-indexer
+#      path: /app/common-user-ops-indexer.env
+#      contents: <<< files/common-user-ops-indexer.env
+#      mode: 0755
+
+#proxy:
+#  defines: runnable
+#  containers:
+#    proxy:
+#      image: nginx:latest
+#      ports:
+#        - 80:80
+#        - 8080:8080
+#        - 8081:8081
+#      restart: always
+#  connections:
+#    backend:
+#      runnable: blockscout/backend
+#      service: backend
+#    frontend:
+#      runnable: blockscout/frontend
+#      service: frontend
+#    stats:
+#      runnable: blockscout/stats
+#      service: stats
+#  variables:
+#    back-proxy-pass:
+#      description: "The URL to proxy requests to the backend to"
+#      type: string
+#      value: http://backend:4000
+#      env: BACK_PROXY_PASS
+#    front-proxy-pass:
+#      description: "The URL to proxy requests to the frontend to"
+#      type: string
+#      value: http://frontend:3000
+#      env: FRONT_PROXY_PASS
+
+#stats-group:
+#  defines: process-group
+#  inherits: blockscout/base
+#  runnable-list:
+#    - stats-db
+#    - backend
+#    - stats
+#
+#user-ops-indexer-group:
+#  defines: process-group
+#  inherits: blockscout/base
+#  runnable-list:
+#    - db
+#    - backend
+#    - user-ops-indexer
+#
+#proxy-group:
+#  defines: process-group
+#  inherits: blockscout/base
+#  runnable-list:
+#    - backend
+#    - frontend
+#    - stats
+#    - proxy
+
+
+main-group:
+  defines: process-group
+  inherits: blockscout/base
+  runnable-list:
+    - postgres
+    - redis
+    - backend
+    - frontend
+    - visualizer
+
+test-group:
+  defines: process-group
+  inherits: blockscout/base
+  runnable-list:
+    - postgres
+    - redis
+    - backend
+    - frontend
+    - visualizer
+    - stats-db
+    - stats
+
+

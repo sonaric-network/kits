@@ -1,0 +1,3 @@
+REPO blockscout
+RESOURCES files/common-blockscout.env files/common-frontend.env files/common-user-ops-indexer.env
+LOAD blockscout.yaml
