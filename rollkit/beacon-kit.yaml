@@ -105,7 +105,7 @@ geth:
       Geth is an Ethereum execution client, providing the Ethereum Virtual Machine (EVM) environment used in the Rollkit BeaconKit setup."
     website: "https://geth.ethereum.org/"
     publisher: Ethereum Foundation
-    icon: "https://ethereum.org/favicon.ico"
+    icon: "https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png"
     version: 1.0.0
     source: https://github.com/ethereum/go-ethereum
     tags: blockchain, ethereum, execution-client

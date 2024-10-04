@@ -3,7 +3,7 @@ namespace: ethereum
 base:
   metadata:
     tags: blockchain, evm
-    icon: https://avatars.githubusercontent.com/u/6250754?s=200&v=4
+    icon: https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png
     version: 1.0.0
     currency: ETH
     wallet-support: import-key, export-key, list-keys

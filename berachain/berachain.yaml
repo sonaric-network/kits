@@ -99,6 +99,13 @@ beacon-kit:
 
 geth:
   defines: runnable
+  metadata:
+    name: "Geth Ethereum Client"
+    description: "The Geth Ethereum client is a command-line interface for running Ethereum nodes."
+    version: 1.10.8
+    publisher: Ethereum Foundation
+    icon: https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png
+    currency: ETH
   containers:
     geth-container:
       image: ethereum/client-go:latest
