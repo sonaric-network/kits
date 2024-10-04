@@ -1,7 +1,6 @@
 namespace: rollkit
 
-beacon-kit:
-  defines: runnable
+beacon-kit-base:
   metadata:
     name: rollkit
     description: |
@@ -23,6 +22,10 @@ beacon-kit:
     RAM: 49152
     GPU: false
     disk: 1024
+
+beacon-kit:
+  defines: runnable
+  inherits: rollkit/beacon-kit-base
   depends:
     wait-for:
       runnables:

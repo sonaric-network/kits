@@ -4,22 +4,26 @@ namespace: rollkit
 #------------------------------------------------------------
 celestia-da:
     defines: runnable
-    inherits: celestia/light-mocha
     metadata:
-        name: "Celestia Light Node"
-        description: "Celestia Light Node used as a Data Availability Layer for the Rollkit GM rollup. Network: Mocha"
-        website: "https://celestia.org/"
-        publisher: celestia
-        icon: "https://avatars.githubusercontent.com/u/54859940?s=200&v=4"
-        version: 1.0.0
-        source:
-    checks:
-        readyness:
-            code: |
-                exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK") "" not-equal?
-            period: 5
-            initialDelay: 10
-    containers[override]:
+        name: "Celestia Light"
+        shortname: "Celestia Light"
+        description: |
+            Light clients conduct data availability sampling on the Data Availability network.
+        network: celestia
+        website: https://celestia.org/
+        publisher: sonaric
+        source: https://github.com/celestiaorg/celestia-app
+        tags: blockchain
+        private: false
+        version: 1.0.2
+        currency: TIA
+        icon: https://avatars.githubusercontent.com/u/54859940?s=200&v=4
+    requirements:
+        CPU: "1 Core"
+        RAM: 500
+        disk: 100
+        bandwidth: "56 Kbps"
+    containers:
         celestia:
             image: ghcr.io/celestiaorg/celestia-node
             image-tag: <- `${version}`
@@ -33,12 +37,31 @@ celestia-da:
                 - <- `NODE_TYPE=${node-type}`
                 - <- `RPC_URL=${rpc-url}`
             paths:
-                - <- `${monk-volume-path}/celestia-${node-type}-${network}:/home/celestia`
-    actions:
-        get-auth-token:
-            description: "Get the auth token for the Celestia Light node."
-            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
-    services[override]:
+                - <- `${monk-volume-path}/rollkit/celestia-${node-type}-${network}:/home/celestia`
+    variables:
+        version:
+            description: "Version of the Celestia node."
+            type: string
+            value: "v0.16.0"
+        node-type:
+            description: "Type of the Celestia node."
+            type: string
+            value: "light"
+        network:
+            description: "Network of the Celestia node."
+            type: string
+            value: "celestia"
+        rpc-url:
+            description: "URL to fetch the peer list from."
+            type: string
+            value: "consensus.lunaroasis.net"
+    files:
+        start:
+            container: celestia
+            path: /home/start.sh
+            contents: <<< files/celestia/start.sh
+            mode: 0755
+    services:
         rpc:
             container: celestia
             port: 26658
@@ -57,6 +80,22 @@ celestia-da:
             host-port: 26659
             protocol: tcp
             publish: true
+    actions:
+        get-address:
+            description: "Get the address of the Celestia account."
+            code: exec("celestia", "/bin/bash", "-c", "celestia state account-address")
+        get-balance:
+            description: "Get the balance of the Celestia account."
+            code: exec("celestia", "/bin/bash", "-c", "celestia state balance")
+        get-auth-token:
+            description: "Get the auth token for the Celestia Light node."
+            code: exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK")
+    checks:
+        readyness:
+            code: |
+                exec("celestia", "/bin/bash", "-c", "celestia $NODE_TYPE auth admin --p2p.network $P2P_NETWORK") "" not-equal?
+            period: 5
+            initialDelay: 10
 
 celestia-gm:
     defines: runnable
