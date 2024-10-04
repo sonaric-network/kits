@@ -80,5 +80,6 @@ if [ -n "$RPC_DIAL_URL" ]; then
   BEACON_START_CMD="$BEACON_START_CMD --beacon-kit.engine.rpc-dial-url ${RPC_DIAL_URL}"
 fi
 echo "Starting beacon node..."
+echo "CMD: $BEACON_START_CMD"
 eval $BEACON_START_CMD
 

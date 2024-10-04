@@ -28,7 +28,6 @@ celestia-beacon-kit:
       type: string
       value: "00000000000000000000000000000000000000000008e5f679bf7116cb"
       env: DA_NAMESPACE
-  entrypoint[override]: sleep 10000009999
 
 celestia-gm-portal:
   defines: runnable

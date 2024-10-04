@@ -1,5 +1,7 @@
 REPO rollkit
 LOAD rollkit.yaml
+
+RESOURCES files/celestia/start.sh
 LOAD celestia.yaml
 
 RESOURCES files/beacon-kit/entrypoint-geth.sh files/beacon-kit/entrypoint.sh
