@@ -1,36 +1,8 @@
 namespace: blockscout
 
-base:
-  metadata:
-    name: "Blockscout"
-    description: |
-      Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
-    publisher: sonaric
-    website: https://www.blockscout.com/
-    icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
-    version: 1.0.0
-    currency: ETH
+# common variables
+common:
   variables:
-    ethereum-jsonrpc-http-url:
-      description: "The URL of the Ethereum JSON-RPC HTTP endpoint"
-      type: string
-      value: https://ethereum-rpc.publicnode.com
-      env: ETHEREUM_JSONRPC_HTTP_URL
-    ethereum-jsonrpc-trace-url:
-      description: "The URL of the Ethereum JSON-RPC Trace endpoint"
-      type: string
-      value: ""
-      env: ETHEREUM_JSONRPC_TRACE_URL
-    ethereum-jsonrpc-ws-url:
-      description: "The URL of the Ethereum JSON-RPC WebSocket endpoint"
-      type: string
-      value: wss://ethereum-rpc.publicnode.com
-      env: ETHEREUM_JSONRPC_WS_URL
-    chain-id:
-      description: "The chain ID of the Ethereum network"
-      type: string
-      value: "1337"
-      env: CHAIN_ID
     postgres-db:
       description: "The name of the database to use"
       type: string
@@ -46,27 +18,26 @@ base:
       type: string
       value: ceWb1MeLBEeOIfk65gU8EjF8
       env: POSTGRES_PASSWORD
-    redis-bd-url:
-      description: "The URL of the Redis database"
+    chain-id:
+      description: "The chain ID of the Ethereum network"
       type: string
-      value: <- "redis://" connection-hostname("redis") ":" connection-port("redis") concat-all
-      env: ACCOUNT_REDIS_URL
-    database-url:
-      description: "The URL of the database"
-      type: string
-      value: <- "postgresql://" $postgres-db ":" $postgres-password "@" connection-hostname("postgres") ":" connection-port("postgres") "/" $postgres-db "?ssl=false" concat-all
-      env: DATABASE_URL
+      value: "1337"
+      env: CHAIN_ID
 
 redis:
   defines: runnable
-  inherits: blockscout/base
+  inherits: blockscout/common
+  metadata:
+    name: "Redis"
+    description: |
+      Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache, and message broker.
+    icon: https://avatars.githubusercontent.com/u/1529926?s=200&v=4
   containers:
     redis:
       image: redis:alpine
       restart: always
       paths:
-        - <- `${monk-volume-path}/directus-redis:/data`
-      entrypoint: redis-server
+        - <- `${monk-volume-path}/blockscout/redis:/data`
       ports:
         - 6379:6379
   services:
@@ -75,43 +46,99 @@ redis:
       port: 6379
       protocol: tcp
       host-port: 6379
-      publish: true
 
 postgres:
   defines: runnable
-  inherits: blockscout/base
+  inherits: blockscout/common
+  metadata:
+    name: "Postgres"
+    description: |
+      PostgreSQL is a powerful, open source object-relational database system.
+    icon: https://avatars.githubusercontent.com/u/177543?s=200&v=4"
   containers:
     postgres:
       image: postgres
       image-tag: '15'
+      shm-size: 268435456
       paths:
-        - <- `${monk-volume-path}/directus-database:/var/lib/postgresql`
+        - <- `${monk-volume-path}/blockscout/postgres:/var/lib/postgresql`
       ports:
-        - 5432:5432
-        - 7432:7432
+        - 7432:5432
       restart: always
   services:
     postgres:
       container: postgres
       port: 5432
       protocol: tcp
-      host-port: 5432
-      publish: true
-    postgres2:
-      container: postgres
-      port: 7432
-      protocol: tcp
       host-port: 7432
-      publish: true
+  variables:
+    pg-options:
+      description: "Postgres options"
+      type: string
+      value: "-c max_connections=200 -c client_connection_check_interval=60000"
+      env: PGOPTIONS
+
+geth:
+  defines: runnable
+  inherits: blockscout/common
+  metadata:
+    name: "Geth Ethereum Client"
+    description: |
+      Geth is an Ethereum execution client. Official Go implementation of the Ethereum protocol.
+    website: "https://geth.ethereum.org/"
+    publisher: Ethereum Foundation
+    icon: "https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png"
+    version: 1.0.0
+    source: https://github.com/ethereum/go-ethereum
+    tags: blockchain, ethereum, execution-client
+    private: false
+  containers:
+    geth-container:
+      image: ethereum/client-go:latest
+      entrypoint: /home/entrypoint.sh
+      ports:
+        - 8545:8545
+        - 8546:8546
+      paths:
+        - <- `${monk-volume-path}/blockscout/geth:/root/.ethereum`
+  files:
+    entrypoint:
+      container: geth-container
+      path: /home/entrypoint.sh
+      contents: |
+          #!/bin/sh
+          geth --http --networkid=$CHAIN_ID \
+                --http.addr=0.0.0.0 --http.api=eth,net,web3,debug,txpool \
+                --http.corsdomain="*" --http.vhosts="*" \
+                --ws --ws.addr=0.0.0.0 --ws.api=eth,net,web3,txpool --ws.origins="*"
+      mode: 0755
+  services:
+    http-service:
+      container: geth-container
+      protocol: tcp
+      port: 8545
+      host-port: 8545
+    ws-service:
+      container: geth-container
+      protocol: tcp
+      port: 8546
+      host-port: 8546
+
 
 backend:
   defines: runnable
+  inherits: blockscout/common
+  metadata:
+    name: "Blockscout Backend"
+    description: |
+      Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
+    icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
   depends:
     wait-for:
       runnables:
         - blockscout/postgres
         - blockscout/redis
-  inherits: blockscout/base
+        - blockscout/geth
   containers:
     backend:
       image: blockscout/blockscout:latest
@@ -133,6 +160,12 @@ backend:
     redis:
       runnable: blockscout/redis
       service: redis-db
+    geth:
+      runnable: blockscout/geth
+      service: http-service
+    geth-ws:
+      runnable: blockscout/geth
+      service: ws-service
   files:
     start:
       container: backend
@@ -147,6 +180,33 @@ backend:
       path: /app/common-blockscout.env
       contents: <<< files/common-blockscout.env
       mode: 0755
+  variables:
+    redis-bd-url:
+      description: "The URL of the Redis database"
+      type: string
+      value: <- "redis://" connection-hostname("redis") ":" connection-port("redis") concat-all
+      env: ACCOUNT_REDIS_URL
+    database-url:
+      description: "The URL of the database"
+      type: string
+      value: <- "postgresql://" $postgres-db ":" $postgres-password "@" connection-hostname("postgres") ":" connection-port("postgres") "/" $postgres-db "?ssl=false" concat-all
+      env: DATABASE_URL
+    ethereum-jsonrpc-http-url:
+      description: "The URL of the Ethereum JSON-RPC HTTP endpoint"
+      type: string
+      value: <- "http://" connection-hostname("geth") ":" connection-port("geth") concat-all
+      env: ETHEREUM_JSONRPC_HTTP_URL
+    ethereum-jsonrpc-trace-url:
+      description: "The URL of the Ethereum JSON-RPC Trace endpoint"
+      type: string
+      value: <- "http://" connection-hostname("geth") ":" connection-port("geth") concat-all
+      env: ETHEREUM_JSONRPC_TRACE_URL
+    ethereum-jsonrpc-ws-url:
+      description: "The URL of the Ethereum JSON-RPC WebSocket endpoint"
+      type: string
+      value: <- "ws://" connection-hostname("geth-ws") ":" connection-port("geth-ws") concat-all
+      env: ETHEREUM_JSONRPC_WS_URL
+
 
 visualizer:
   defines: runnable
@@ -300,13 +360,6 @@ frontend:
       value: "https://raw.githubusercontent.com/blockscout/blockscout-api-v2-swagger/main/swagger.yaml"
       env: NEXT_PUBLIC_API_SPEC_URL
 
-stats-db-init:
-  defines: runnable
-  containers:
-    stats-db-init:
-      image: postgres:15
-      entrypoint: chown -R 2000:2000 /var/lib/postgresql/data
-
 stats-db:
   defines: runnable
   containers:
@@ -322,13 +375,11 @@ stats-db:
       port: 5432
       protocol: tcp
       host-port: 5432
-      publish: true
     stats-db2:
       container: stats-db
       port: 7432
       protocol: tcp
       host-port: 7432
-      publish: true
   variables:
     postgres-db-stats:
       description: "The name of the database to use"
@@ -574,17 +625,27 @@ stats:
 #    - stats
 #    - proxy
 
-
-main-group:
-  defines: process-group
-  inherits: blockscout/base
-  runnable-list:
-    - postgres
-    - redis
-    - backend
-    - frontend
-    - visualizer
-
+blockscout:
+    defines: process-group
+    metadata:
+      name: "Blockscout"
+      description: |
+        Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
+        Run a full Blockscout deployment with all services.
+      publisher: sonaric
+      website: https://www.blockscout.com/
+      icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
+      version: 1.0.0
+      currency: ETH
+    runnable-list:
+        - postgres
+        - redis
+        - geth
+        - backend
+#        - frontend
+#        - visualizer
+#        - stats-db
+#        - statsQ
 test-group:
   defines: process-group
   inherits: blockscout/base
