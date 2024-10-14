@@ -7,9 +7,11 @@ local-da:
         description: |
             Rollkit Local DA Node. Local DA implements the go-da interface over a Local Data Availability service.
             It is intended to be used for testing DA layers without having to set up the actual services.
-        website: "https://rollkit.dev/"
+        website: https://rollkit.dev/
         publisher: sonaric
-        icon: "https://avatars.githubusercontent.com/u/120482652?s=200&v=4"
+        icon: https://avatars.githubusercontent.com/u/120482652?s=200&v=4
+        twitter: https://x.com/RollkitDev
+        telegram: https://t.me/rollkit
         version: 1.0.0
         source: https://github.com/rollkit/local-da
         tags: blockchain

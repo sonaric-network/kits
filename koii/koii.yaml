@@ -9,6 +9,11 @@ base:
     website: https://koii.network/
     publisher: sonaric
     icon: https://avatars.githubusercontent.com/u/75863118?s=200&v=4
+    source: https://github.com/koii-network/koii-node
+    twitter: https://x.com/KoiiFoundation
+    discord: https://discord.com/invite/koii-network
+    youtube: https://www.youtube.com/c/KoiiNetwork
+    telegram: https://t.me/koiinetwork
     tags: blockchain
     currency: KOII
     wallet-support: export-key, address, balance

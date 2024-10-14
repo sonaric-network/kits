@@ -3,12 +3,20 @@ namespace: berachain
 base:
   metadata:
     name: BeraChain
+    shortname: BeraChain
+    publisher: sonaric
+    website: https://www.berachain.com/
     description: BeraChain archive node
     network-name: mainnet
     node-type: archive
-    icon: https://avatars.githubusercontent.com/u/92709226?s=200&v=4
+    icon: https://avatars.githubusercontent.com/u/96059542?s=200&v=4
+    source: https://github.com/berachain/beacon-kit
+    twitter: https://x.com/berachain
+    discord: https://discord.com/invite/berachain
+    telegram: https://t.me/BerachainPortal
     version: 1.0.0
     currency: BERA
+    tags: blockchain
   requirements:
     defines: requirements
     CPU: "8 Cores"
@@ -104,7 +112,10 @@ geth:
     description: "The Geth Ethereum client is a command-line interface for running Ethereum nodes."
     version: 1.10.8
     publisher: Ethereum Foundation
+    tags: blockchain, evm
+    website: https://ethereum.org
     icon: https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png
+    source: https://github.com/ethereum/ethereum-org-website
     currency: ETH
   containers:
     geth-container:

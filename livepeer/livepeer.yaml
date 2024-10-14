@@ -11,6 +11,9 @@ base:
         icon: https://avatars.githubusercontent.com/u/25355022?s=200&v=4
         version: 1.0.1
         source: https://github.com/livepeer/go-livepeer
+        discord: https://discord.com/invite/livepeer
+        telegram: https://t.me/livepeerorg
+        reddit: https://www.reddit.com/r/livepeer/
         tags: blockchain
         private: false
         currency: LPT
