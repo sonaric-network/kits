@@ -11,6 +11,10 @@ base:
         icon: https://avatars.githubusercontent.com/u/39103922?s=48&v=4
         version: 1.0.1
         source: https://github.com/MinaProtocol/mina
+        twitter: https://x.com/minaprotocol
+        discord: https://discord.com/invite/minaprotocol
+        youtube: https://www.youtube.com/channel/UCWzKMFfIlMzHUXKSnYot5HA
+        telegram: https://t.me/minaprotocol
         tags: blockchain
         private: false
         currency: MINA

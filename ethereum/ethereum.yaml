@@ -3,8 +3,13 @@ namespace: ethereum
 base:
   metadata:
     tags: blockchain, evm
+    website: https://ethereum.org
     icon: https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png
+    source: https://github.com/ethereum/ethereum-org-website
+    twitter: https://x.com/ethdotorg
+    discord: https://discord.com/invite/ethereum-org
     version: 1.0.0
+    publisher: sonaric
     currency: ETH
     wallet-support: import-key, export-key, list-keys
   requirements:

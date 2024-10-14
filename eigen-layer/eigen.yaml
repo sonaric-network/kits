@@ -10,6 +10,9 @@ eigen-layer-common:
         publisher: sonaric
         icon: https://docs.eigenlayer.xyz/img/eigenlayer-logo.png
         version: 1.0
+        twitter: https://x.com/eigenlayer
+        discord: https://discord.com/invite/eigenlayer
+        youtube: https://www.youtube.com/@EigenLayer
         source: https://github.com/Layr-Labs
         tags: blockchain, evm
         private: true

@@ -8,9 +8,12 @@ common:
         publisher: sonaric
         icon: https://avatars.githubusercontent.com/u/156484414?s=200&v=4
         version: 1.0.0
-        currency: '-'
+        currency: ALEO
         source: https://github.com/AleoNet/snarkOS
         tags: blockchain
+        twitter: https://x.com/AleoHQ
+        discord: https://discord.com/invite/aleo
+        youtube: https://www.youtube.com/@aleofoundation
         description: |
             snarkOS is a decentralized operating system for zero-knowledge applications.
         private: false
@@ -107,6 +110,7 @@ client:
         node-type: "client"
     requirements:
         RAM: 32768
+        GPU: true
         disk: 300
         network: 100Mbps
 
@@ -120,6 +124,7 @@ prover:
         node-type: "prover"
     requirements:
         RAM: 32768
+        GPU: false
         disk: 32
         network: 500Mbps
 
@@ -133,6 +138,7 @@ validator:
         node-type: "validator"
     requirements:
         RAM: 65536
+        GPU: false
         disk: 2048
         network: 1000Mbps
 

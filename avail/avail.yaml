@@ -10,6 +10,8 @@ common:
         version: 1.0.0
         currency: AVAIL
         source: https://github.com/availproject
+        twitter: https://x.com/AvailProject
+        discord: https://discord.com/invite/y6fHnxZQX8
         tags: blockchain
         private: false
         wallet-support: keys-rotate
@@ -266,6 +268,7 @@ validator-base:
         name: Avail Validator
         description: |
             Avail validator node
+
     containers:
         node:
             entrypoint: /usr/local/bin/entrypoint.sh

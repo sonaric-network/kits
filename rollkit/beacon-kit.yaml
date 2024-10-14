@@ -8,11 +8,14 @@ beacon-kit-base:
       BeaconKit is a modular framework for building EVM-based consensus clients.
       Rollkit is a modular framework for building EVM-based rollups.
       Combined, they provide a complete solution for building EVM-based blockchains.
-    website: "https://www.berachain.com/"
+    website: https://www.berachain.com/
     source: https://github.com/rollkit/beacon-kit/
     tags: blockchain, rollup, beacon, evm, rollkit
     publisher: sonaric
-    icon: "https://avatars.githubusercontent.com/u/96059542?s=200&v=4"
+    icon: https://avatars.githubusercontent.com/u/96059542?s=200&v=4
+    twitter: https://x.com/berachain
+    discord: https://discord.com/invite/berachain
+    telegram: https://t.me/BerachainPortal
     version: 1.0.0
     private: false
     wallet-support: import-key, export-key, list-keys

@@ -8,7 +8,11 @@ mainnet:
     description: "Polygon Mainnet archive node, requires 8.5TB of storage."
     network-name: mainnet
     node-type: archive
+    website: https://polygon.technology/
     icon: https://avatars.githubusercontent.com/u/30753617?s=200&v=4
+    source: https://github.com/maticnetwork/
+    twitter: https://x.com/0xPolygon
+    discord: https://discord.com/invite/0xPolygonCommunity
     version: 1.0.0
     currency: ETH
   requirements:
