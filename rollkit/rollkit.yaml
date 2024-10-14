@@ -13,7 +13,7 @@ local-da:
         twitter: https://x.com/RollkitDev
         telegram: https://t.me/rollkit
         version: 1.0.0
-        source: https://github.com/rollkit/rollkit
+        source: https://github.com/rollkit/local-da
         tags: blockchain
         private: false
     containers:
