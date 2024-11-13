@@ -1,32 +1,74 @@
 namespace: blockscout
 
-# common variables
-common:
-  variables:
-    postgres-db:
-      description: "The name of the database to use"
-      type: string
-      value: blockscout
-      env: POSTGRES_DB
-    postgres-user:
-      description: "The user to connect to the database as"
-      type: string
-      value: blockscout
-      env: POSTGRES_USER
-    postgres-password:
-      description: "The password to connect to the database with"
-      type: string
-      value: ceWb1MeLBEeOIfk65gU8EjF8
-      env: POSTGRES_PASSWORD
-    chain-id:
-      description: "The chain ID of the Ethereum network"
-      type: string
-      value: "1337"
-      env: CHAIN_ID
+# =====================================
+#        Blockscout Deployment
+# =====================================
 
+blockscout:
+  defines: process-group
+  metadata:
+    name: "Blockscout"
+    description: |
+      Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
+      Run a full Blockscout deployment with all services.
+    publisher: sonaric
+    website: https://www.blockscout.com/
+    icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
+    version: 1.0.0
+    currency: ETH
+  runnable-list:
+    # rollkit with local-da, beacon-kit, geth
+    - rollkit/local-da
+    - rollkit/beacon-kit
+    - rollkit/geth
+    # blockscout services
+    - postgres-db
+    - stats-db
+    - redis
+    - backend
+    - frontend
+    - nginx
+    - stats
+    - visualizer
+    - sig-provider
+    - user-ops-indexer
+
+
+# =====================================
+#        Variables
+# =====================================
+common-vars:
+  postgres-db:
+    description: "The name of the database to use"
+    type: string
+    value: blockscout
+  postgres-user:
+    description: "The user to connect to the database as"
+    type: string
+    value: blockscout
+  postgres-password:
+    description: "The password to connect to the database with"
+    type: string
+    value: ceWb1MeLBEeOIfk65gU8EjF8
+  stats-postgres-db:
+    description: "The name of the stats database to use"
+    type: string
+    value: stats
+  stats-postgres-user:
+    description: "The user to connect to the stats database as"
+    type: string
+    value: stats
+  stats-postgres-password:
+    description: "The password to connect to the stats database with"
+    type: string
+    value: n0uejXPl61ci6ldCuE2gQU5Y
+
+
+# =====================================
+#        Redis
+# =====================================
 redis:
   defines: runnable
-  inherits: blockscout/common
   metadata:
     name: "Redis"
     description: |
@@ -47,9 +89,40 @@ redis:
       protocol: tcp
       host-port: 6379
 
-postgres:
+# =====================================
+#       Database
+# =====================================
+postgresql:
+  metadata:
+    name: PostgreSQL
+    website: https://www.postgresql.org
+    source: https://hub.docker.com/r/bitnami/postgresql
+    publisher: sonaric
+    icon: https://www.postgresql.org/media/img/about/press/elephant.png
+    tags: postgresql, community
+    description: |
+      PostgreSQL is a powerful, open source object-relational database system.
+  readyness:
+    code: |
+      exec("pg_isready", "/bin/bash", "-c", "pg_isready") contains? "accepting connections"
+    period: 5
+    initialDelay: 10
+  variables:
+    max_connections:
+      env: POSTGRESQL_MAX_CONNECTIONS
+      type: string
+      value: "2000"
+    timezone:
+      env: POSTGRESQL_TIMEZONE
+      type: string
+      value: UTC
+    host-port:
+      type: string
+
+
+postgres-db:
   defines: runnable
-  inherits: blockscout/common
+  inherits: blockscout/postgresql
   metadata:
     name: "Postgres"
     description: |
@@ -57,77 +130,69 @@ postgres:
     icon: https://avatars.githubusercontent.com/u/177543?s=200&v=4"
   containers:
     postgres:
-      image: postgres
-      image-tag: '15'
+      restart: always
+      image: bitnami/postgresql
+      image-tag: latest
       shm-size: 268435456
       paths:
-        - <- `${monk-volume-path}/blockscout/postgres:/var/lib/postgresql`
+        - <- `${monk-volume-path}/blockscout/postgres-db:/bitnami/postgresql`
       ports:
         - 7432:5432
-      restart: always
-  services:
-    postgres:
-      container: postgres
-      port: 5432
-      protocol: tcp
-      host-port: 7432
+      environment:
+        - <- `POSTGRES_DB=${postgres-db}`
+        - <- `POSTGRES_USER=${postgres-user}`
+        - <- `POSTGRES_PASSWORD=${postgres-password}`
   variables:
-    pg-options:
-      description: "Postgres options"
+    inherits: blockscout/common-vars
+    host-port:
       type: string
-      value: "-c max_connections=200 -c client_connection_check_interval=60000"
-      env: PGOPTIONS
-
-geth:
-  defines: runnable
-  inherits: blockscout/common
-  metadata:
-    name: "Geth Ethereum Client"
-    description: |
-      Geth is an Ethereum execution client. Official Go implementation of the Ethereum protocol.
-    website: "https://geth.ethereum.org/"
-    publisher: Ethereum Foundation
-    icon: "https://ethereum.org/_next/static/media/eth-diamond-purple-purple.74f3909b.png"
-    version: 1.0.0
-    source: https://github.com/ethereum/go-ethereum
-    tags: blockchain, ethereum, execution-client
-    private: false
-  containers:
-    geth-container:
-      image: ethereum/client-go:latest
-      entrypoint: /home/entrypoint.sh
-      ports:
-        - 8545:8545
-        - 8546:8546
-      paths:
-        - <- `${monk-volume-path}/blockscout/geth:/root/.ethereum`
-  files:
-    entrypoint:
-      container: geth-container
-      path: /home/entrypoint.sh
-      contents: |
-          #!/bin/sh
-          geth --http --networkid=$CHAIN_ID \
-                --http.addr=0.0.0.0 --http.api=eth,net,web3,debug,txpool \
-                --http.corsdomain="*" --http.vhosts="*" \
-                --ws --ws.addr=0.0.0.0 --ws.api=eth,net,web3,txpool --ws.origins="*"
-      mode: 0755
+      value: 7432
   services:
-    http-service:
-      container: geth-container
+    postgres-db:
+      container: postgres
       protocol: tcp
-      port: 8545
-      host-port: 8545
-    ws-service:
-      container: geth-container
-      protocol: tcp
-      port: 8546
-      host-port: 8546
+      port: 5432
+      host-port: <- `${host-port}`
 
+stats-db:
+  defines: runnable
+  inherits: blockscout/postgresql
+  metadata:
+    name: "Postgres Stats DB"
+    description: |
+      PostgreSQL database for Blockscout stats
+  containers:
+    stats-db:
+      restart: always
+      image: bitnami/postgresql
+      image-tag: latest
+      shm-size: 268435456
+      ports:
+        - 7433:5432
+      paths:
+        - <- `${monk-volume-path}/blockscout/stats-db:/bitnami/postgresql`
+      environment:
+        - <- `POSTGRES_DB=${stats-postgres-db}`
+        - <- `POSTGRES_USER=${stats-postgres-user}`
+        - <- `POSTGRES_PASSWORD=${stats-postgres-password}`
+  variables:
+    inherits: blockscout/common-vars
+    host-port:
+      type: string
+      value: 7433
+  services:
+    postgres-stats:
+      container: stats-db
+      protocol: tcp
+      port: 5432
+      host-port: <- `${host-port}`
+
+# =====================================
+#        Blockscout Backend
+# =====================================
 
 backend:
   defines: runnable
-  inherits: blockscout/common
   metadata:
     name: "Blockscout Backend"
     description: |
@@ -136,12 +201,14 @@ backend:
   depends:
     wait-for:
       runnables:
-        - blockscout/postgres
+        - blockscout/postgres-db
         - blockscout/redis
-        - blockscout/geth
+        - rollkit/geth
   containers:
     backend:
       image: blockscout/blockscout:latest
+      paths:
+        - <- `${monk-volume-path}/blockscout/backend/logs:/app/logs`
       restart: always
       entrypoint: /app/start.sh
       ports:
@@ -152,20 +219,29 @@ backend:
       port: 4000
       protocol: tcp
       host-port: 4000
-      publish: true
   connections:
     postgres:
-      runnable: blockscout/postgres
-      service: postgres
+      runnable: blockscout/postgres-db
+      service: postgres-db
     redis:
       runnable: blockscout/redis
       service: redis-db
-    geth:
-      runnable: blockscout/geth
+    eth-http:
+      runnable: rollkit/geth
       service: http-service
-    geth-ws:
-      runnable: blockscout/geth
+    eth-ws:
+      runnable: rollkit/geth
       service: ws-service
+    visualizer:
+      runnable: blockscout/visualizer
+      service: visualizer
+    sig-provider:
+      runnable: blockscout/sig-provider
+      service: sig-provider
+    ops-indexer:
+      runnable: blockscout/user-ops-indexer
+      service: user-ops-indexer
+
   files:
     start:
       container: backend
@@ -181,6 +257,29 @@ backend:
       contents: <<< files/common-blockscout.env
       mode: 0755
   variables:
+    inherits: blockscout/common-vars
+    chain-id:
+      type: string
+      value: ""
+      env: CHAIN_ID
+    network:
+      type: string
+      value: "POA"
+      env: NETWORK
+    subnetwork:
+      type: string
+      value: "Awesome chain"
+      env: SUBNETWORK
+    logo-url:
+      description: "The URL of the logo"
+      type: string
+      value: "https://avatars.githubusercontent.com/u/45625840?s=200&v=4"
+      env: LOGO
+    footer-logo-url:
+      description: "The URL of the footer logo"
+      type: string
+      value: "https://avatars.githubusercontent.com/u/45625840?s=200&v=4"
+      env: FOOTER_LOGO
     redis-bd-url:
       description: "The URL of the Redis database"
       type: string
@@ -194,64 +293,61 @@ backend:
     ethereum-jsonrpc-http-url:
       description: "The URL of the Ethereum JSON-RPC HTTP endpoint"
       type: string
-      value: <- "http://" connection-hostname("geth") ":" connection-port("geth") concat-all
+      value: <- "http://" connection-hostname("eth-http") ":" connection-port("eth-http") concat-all
       env: ETHEREUM_JSONRPC_HTTP_URL
     ethereum-jsonrpc-trace-url:
       description: "The URL of the Ethereum JSON-RPC Trace endpoint"
       type: string
-      value: <- "http://" connection-hostname("geth") ":" connection-port("geth") concat-all
+      value: <- "http://" connection-hostname("eth-http") ":" connection-port("eth-http") concat-all
       env: ETHEREUM_JSONRPC_TRACE_URL
     ethereum-jsonrpc-ws-url:
       description: "The URL of the Ethereum JSON-RPC WebSocket endpoint"
       type: string
-      value: <- "ws://" connection-hostname("geth-ws") ":" connection-port("geth-ws") concat-all
+      value: <- "ws://" connection-hostname("eth-ws") ":" connection-port("eth-ws") concat-all
       env: ETHEREUM_JSONRPC_WS_URL
+    vizualize-api-url:
+      description: "The URL of the Visualize API"
+      type: string
+      value: <- "http://" connection-hostname("visualizer") ":" connection-port("visualizer") concat-all
+      env: MICROSERVICE_VISUALIZE_SOL2UML_URL
+    sig-provider-url:
+      description: "The URL of the Signature Provider"
+      type: string
+      value: <- "http://" connection-hostname("sig-provider") ":" connection-port("sig-provider") concat-all
+      env: MICROSERVICE_SIG_PROVIDER_URL
+    account-abstraction-url:
+      description: "The URL of the Account Abstraction service"
+      type: string
+      value: <- "http://" connection-hostname("ops-indexer") ":" connection-port("ops-indexer") concat-all
+      env: MICROSERVICE_ACCOUNT_ABSTRACTION_URL
 
 
-visualizer:
+
+sig-provider:
   defines: runnable
-  inherits: blockscout/base
-  containers:
-    visualizer:
-      image: ghcr.io/blockscout/visualizer:latest
-      restart: always
-      ports:
-        - 8081:8081
   services:
-    visualizer:
-      container: visualizer
-      port: 8081
+    sig-provider:
+      container: sig-provider
+      port: 8050
       protocol: tcp
-      host-port: 8081
-      publish: true
-  variables:
-    visualizer-server-grpc-enabled:
-      description: "Whether to enable the gRPC server"
-      type: bool
-      value: false
-      env: VISUALIZER_SERVER_GRPC_ENABLED
-#
-#sig-provider:
-#  defines: runnable
-#  inherits: blockscout/base
-#  containers:
-#    sig-provider:
-#      image: ghcr.io/blockscout/sig-provider:latest
-#      restart: always
+      host-port: 8083
+  containers:
+    sig-provider:
+      image: ghcr.io/blockscout/sig-provider:latest
+      restart: always
+      arch: linux/amd64
+  ports:
+    - 8083:8050
 
 frontend:
   defines: runnable
-  inherits: blockscout/base
   depends:
     wait-for:
       runnables:
-        - blockscout/backend
-        - blockscout/postgres
-        - blockscout/redis
         - blockscout/stats
-        - blockscout/visualizer
   containers:
     frontend:
+      arch: linux/amd64
       image: ghcr.io/blockscout/frontend:latest
       restart: always
       ports:
@@ -274,10 +370,14 @@ frontend:
       host-port: 3000
       publish: true
   variables:
+    hostname:
+      type: string
+      value: "0.0.0.0"
+      env: HOSTNAME
     next-public-api-host:
       description: "The API host"
       type: string
-      value: "0.0.0.0"
+      value: <- ip-address-public
       env: NEXT_PUBLIC_API_HOST
     next-public-api-protocol:
       description: "The API protocol"
@@ -287,8 +387,13 @@ frontend:
     next-public-stats-api-host:
       description: "The Stats API host"
       type: string
-      value: "http://localhost:8080"
+      value: <- "http://" connection-hostname("stats") ":" connection-port("stats") concat-all
       env: NEXT_PUBLIC_STATS_API_HOST
+    next_public_network_icon:
+      description: "The icon of the network"
+      type: string
+      value: "https://avatars.githubusercontent.com/u/43071041?s=200&v=4"
+      env: NEXT_PUBLIC_NETWORK_ICON
     next-public-network-name:
       description: "The name of the network"
       type: string
@@ -297,7 +402,7 @@ frontend:
     next-public-network-short-name:
       description: "The short name of the network"
       type: string
-      value: "Awesome chain"
+      value: "Ethereum"
       env: NEXT_PUBLIC_NETWORK_SHORT_NAME
     next-public-network-id:
       description: "The network ID"
@@ -327,7 +432,7 @@ frontend:
     next-public-app-host:
       description: "The application host"
       type: string
-      value: "0.0.0.0"
+      value: <- ip-address-public
       env: NEXT_PUBLIC_APP_HOST
     next-public-app-protocol:
       description: "The application protocol"
@@ -342,7 +447,7 @@ frontend:
     next-public-visualize-api-host:
       description: "The Visualize API host"
       type: string
-      value: "http://localhost:8081"
+      value: <- "http://" connection-hostname("visualizer") ":" connection-port("visualizer") concat-all
       env: NEXT_PUBLIC_VISUALIZE_API_HOST
     next-public-is-testnet:
       description: "Is this a test network"
@@ -360,302 +465,230 @@ frontend:
       value: "https://raw.githubusercontent.com/blockscout/blockscout-api-v2-swagger/main/swagger.yaml"
       env: NEXT_PUBLIC_API_SPEC_URL
 
-stats-db:
-  defines: runnable
-  containers:
-    stats-db:
-      image: postgres:15
-      ports:
-        - 5432:5432
-        - 7432:7433
-      restart: always
-  services:
-    stats-db:
-      container: stats-db
-      port: 5432
-      protocol: tcp
-      host-port: 5432
-    stats-db2:
-      container: stats-db
-      port: 7432
-      protocol: tcp
-      host-port: 7432
-  variables:
-    postgres-db-stats:
-      description: "The name of the database to use"
-      type: string
-      value: stats
-      env: POSTGRES_DB
-    postgres-user-stats:
-      description: "The user to connect to the database as"
-      type: string
-      value: stats
-      env: POSTGRES_USER
-    postgres-password-stats:
-      description: "The password to connect to the database with"
-      type: string
-      value: n0uejXPl61ci6ldCuE2gQU5Y
-      env: POSTGRES_PASSWORD
-
-
 stats:
   defines: runnable
   depends:
     wait-for:
       runnables:
         - blockscout/stats-db
+        - blockscout/backend
   containers:
     stats:
       image: ghcr.io/blockscout/stats:latest
+      arch: linux/amd64
       restart: always
       ports:
-        - 8080:8080
+        - 9001:8050
   services:
     stats:
       container: stats
       port: 8080
       protocol: tcp
-      host-port: 8080
-      publish: true
+      host-port: 9001
   connections:
+    postgres:
+      runnable: blockscout/postgres-db
+      service: postgres-db
     postgres-stats:
       runnable: blockscout/stats-db
-      service: stats-db
+      service: postgres-stats
     backend:
       runnable: blockscout/backend
       service: backend
   variables:
-    postgres-db-stats:
-      description: "The name of the database to use"
-      type: string
-      value: stats
-      env: POSTGRES_DB
-    postgres-user-stats:
-      description: "The user to connect to the database as"
-      type: string
-      value: stats
-      env: POSTGRES_USER
-    postgres-password-stats:
-      description: "The password to connect to the database with"
-      type: string
-      value: n0uejXPl61ci6ldCuE2gQU5Y
-      env: POSTGRES_PASSWORD
+    inherits: blockscout/common-vars
     stats-db-url:
       description: "The URL of the stats database"
       type: string
-      value: <- "postgresql://" $postgres-user-stats ":" $postgres-password-stats "@" connection-hostname("stats-db") ":" connection-port("stats-db") "/stats" "?ssl=false" concat-all
-      env: STATS_DB_URL
+      value: <- "postgresql://" $stats-postgres-user ":" $stats-postgres-password "@" connection-hostname("postgres-stats") ":" connection-port("postgres-stats") "/" $stats-postgres-db concat-all
+      env: STATS__DB_URL
     blockscout-db-url:
       description: "The URL of the Blockscout database"
       type: string
-      value: <- "postgresql://" $postgres-db-stats ":" $postgres-password-stats "@" connection-hostname("stats-db") ":" connection-port("stats-db") "/blockscout" "?ssl=false" concat-all
-      env: STATS_BLOCKSCOUT_DB_URL
-    create-database:
-      description: "Whether to create the stats database"
-      type: bool
-      value: true
-      env: STATS_CREATE_DATABASE
-    run-migrations:
-      description: "Whether to run the stats migrations"
-      type: bool
-      value: true
-      env: STATS_RUN_MIGRATIONS
+      value: <- "postgresql://" $postgres-user ":" $postgres-password "@" connection-hostname("postgres") ":" connection-port("postgres") "/" $postgres-db concat-all
+      env: STATS__BLOCKSCOUT_DB_URL
     stats-server-http-enabled:
-      description: "Is HTTP server enabled"
+      description: "Whether to enable the HTTP server"
       type: bool
       value: true
-      env: STATS_SERVER_HTTP_ENABLED
+      env: STATS__SERVER__HTTP__ENABLED
     stats-server-http-addr:
-      description: "HTTP server address"
+      description: "The address to bind the HTTP server to"
       type: string
       value: "0.0.0.0:8050"
-      env: STATS_SERVER_HTTP_ADDR
+      env: STATS__SERVER__HTTP__ADDR
     stats-server-http-max-body-size:
-      description: "Max body size for HTTP server"
-      type: string
-      value: "2097152"
-      env: STATS_SERVER_HTTP_MAX_BODY_SIZE
-    stats-server-grpc-enabled:
-      description: "Is gRPC server enabled"
-      type: bool
-      value: false
-      env: STATS_SERVER_GRPC_ENABLED
-    stats-server-grpc-addr:
-      description: "gRPC server address"
-      type: string
-      value: "0.0.0.0:8051"
-      env: STATS_SERVER_GRPC_ADDR
-    stats-blockscout-db-url:
-      description: "Blockscout database URL"
-      type: string
-      value: ""
-      env: STATS_BLOCKSCOUT_DB_URL
+      description: "The maximum body size for the HTTP server"
+      type: int
+      value: 2097152
+      env: STATS__SERVER__HTTP__MAX_BODY_SIZE
     stats-create-database:
-      description: "Should the database be created"
+      description: "Whether to create the database"
       type: bool
       value: false
-      env: STATS_CREATE_DATABASE
+      env: STATS__CREATE_DATABASE
     stats-run-migrations:
-      description: "Should migrations be run"
-      type: bool
-      value: false
-      env: STATS_RUN_MIGRATIONS
-    stats-default-schedule:
-      description: "Default schedule for tasks"
-      type: string
-      value: "0 0 1 * * * *"
-      env: STATS_DEFAULT_SCHEDULE
-    stats-force-update-on-start:
-      description: "Force update on start"
-      type: bool
-      value: false
-      env: STATS_FORCE_UPDATE_ON_START
-    stats-metrics-enabled:
-      description: "Are metrics enabled"
-      type: bool
-      value: false
-      env: STATS_METRICS_ENABLED
-    stats-metrics-addr:
-      description: "Metrics server address"
-      type: string
-      value: "0.0.0.0:6060"
-      env: STATS_METRICS_ADDR
-    stats-metrics-route:
-      description: "Route for metrics"
-      type: string
-      value: "/metrics"
-      env: STATS_METRICS_ROUTE
-    stats-jaeger-enabled:
-      description: "Is Jaeger enabled"
-      type: bool
-      value: false
-      env: STATS_JAEGER_ENABLED
-    stats-jaeger-agent-endpoint:
-      description: "Jaeger agent endpoint"
-      type: string
-      value: "localhost:6831"
-      env: STATS_JAEGER_AGENT_ENDPOINT
-    stats-tracing-enabled:
-      description: "Is tracing enabled"
+      description: "Whether to run the migrations"
       type: bool
       value: true
-      env: STATS_TRACING_ENABLED
+      env: STATS__RUN_MIGRATIONS
+    stats-tracing-enabled:
+      description: "Whether to enable tracing"
+      type: bool
+      value: true
+      env: STATS__TRACING__ENABLED
     stats-tracing-format:
-      description: "Tracing format"
+      description: "The format of the tracing"
       type: string
       value: "default"
-      env: STATS_TRACING_FORMAT
+      env: STATS__TRACING__FORMAT
+    blockscout-api-url:
+      description: "The URL of the Blockscout API"
+      type: string
+      value: <- "http://" connection-hostname("backend") ":" connection-port("backend") concat-all
+      env: STATS__BLOCKSCOUT_API_URL
 
+user-ops-indexer:
+  defines: runnable
+  containers:
+    user-ops-indexer:
+      image: ghcr.io/blockscout/user-ops-indexer:latest
+      restart: always
+      environment:
+        - USER_OPS_INDEXER__CONFIG=/app/config.toml
+  services:
+    user-ops-indexer:
+      container: user-ops-indexer
+      port: 8051
+      protocol: tcp
+      host-port: 8082
+  connections:
+    postgres:
+      runnable: blockscout/postgres-db
+      service: postgres-db
+    backend:
+      runnable: blockscout/backend
+      service: backend
+    geth-http:
+      runnable: rollkit/geth
+      service: ws-service
+  variables:
+    inherits: blockscout/common-vars
+    indexer-rpc-url:
+      description: "The URL of the indexer RPC"
+      type: string
+      value: <- "ws://" connection-hostname("geth-http") ":" connection-port("geth-http") concat-all
+      env: USER_OPS_INDEXER__INDEXER__RPC_URL
+    indexer-db-url:
+      description: "The URL of the indexer database"
+      type: string
+      value: <- "postgresql://" $postgres-user ":" $postgres-password "@" connection-hostname("postgres") ":" connection-port("postgres") "/" $postgres-db concat-all
+  files:
+    config-file:
+        container: user-ops-indexer
+        path: /app/config.toml
+        mode: 0755
+        # example: https://github.com/blockscout/blockscout-rs/blob/8f7f08f0991d220a07a19007ddaa74293e3cba37/user-ops-indexer/user-ops-indexer-server/config/base.toml
+        contents: <<< files/ops-indexer.config.toml
+# =====================================
+#        Visualizer
+# =====================================
+visualizer:
+  defines: runnable
+  containers:
+    visualizer:
+      image: ghcr.io/blockscout/visualizer:latest
+      arch: linux/amd64
+      restart: always
+      ports:
+        - 9002:8050
+  services:
+    visualizer:
+      container: visualizer
+      port: 8050
+      protocol: tcp
+      host-port: 9002
+  variables:
+    visualizer-server-grpc-enabled:
+      description: "Whether to enable the gRPC server"
+      type: bool
+      value: false
+      env: VISUALIZER_SERVER_GRPC_ENABLED
 
-#user-ops-indexer:
-#  defines: runnable
-#  containers:
-#    user-ops-indexer:
-#      image: ghcr.io/blockscout/user-ops-indexer:latest
-#      restart: always
-#      entrypoint: . /app/common-user-ops-indexer.env
-#  connections:
-#    postgres:
-#      runnable: blockscout/postgres
-#      service: postgres
-#    backend:
-#      runnable: blockscout/backend
-#      service: backend
-#  files:
-#    common-user-ops-indexer:
-#      container: user-ops-indexer
-#      path: /app/common-user-ops-indexer.env
-#      contents: <<< files/common-user-ops-indexer.env
-#      mode: 0755
-
-#proxy:
-#  defines: runnable
-#  containers:
-#    proxy:
-#      image: nginx:latest
-#      ports:
-#        - 80:80
-#        - 8080:8080
-#        - 8081:8081
-#      restart: always
-#  connections:
-#    backend:
-#      runnable: blockscout/backend
-#      service: backend
-#    frontend:
-#      runnable: blockscout/frontend
-#      service: frontend
-#    stats:
-#      runnable: blockscout/stats
-#      service: stats
-#  variables:
-#    back-proxy-pass:
-#      description: "The URL to proxy requests to the backend to"
-#      type: string
-#      value: http://backend:4000
-#      env: BACK_PROXY_PASS
-#    front-proxy-pass:
-#      description: "The URL to proxy requests to the frontend to"
-#      type: string
-#      value: http://frontend:3000
-#      env: FRONT_PROXY_PASS
-
-#stats-group:
-#  defines: process-group
-#  inherits: blockscout/base
-#  runnable-list:
-#    - stats-db
-#    - backend
-#    - stats
-#
-#user-ops-indexer-group:
-#  defines: process-group
-#  inherits: blockscout/base
-#  runnable-list:
-#    - db
-#    - backend
-#    - user-ops-indexer
-#
-#proxy-group:
-#  defines: process-group
-#  inherits: blockscout/base
-#  runnable-list:
-#    - backend
-#    - frontend
-#    - stats
-#    - proxy
-
-blockscout:
-    defines: process-group
-    metadata:
-      name: "Blockscout"
-      description: |
-        Blockscout is a tool for inspecting and analyzing Ethereum blocks and transactions.
-        Run a full Blockscout deployment with all services.
-      publisher: sonaric
-      website: https://www.blockscout.com/
-      icon: https://avatars.githubusercontent.com/u/45625840?s=200&v=4
-      version: 1.0.0
-      currency: ETH
-    runnable-list:
-        - postgres
-        - redis
-        - geth
-        - backend
-#        - frontend
-#        - visualizer
-#        - stats-db
-#        - statsQ
-test-group:
-  defines: process-group
-  inherits: blockscout/base
-  runnable-list:
-    - postgres
-    - redis
-    - backend
-    - frontend
-    - visualizer
-    - stats-db
-    - stats
-
-
+nginx:
+  defines: runnable
+  metadata:
+    name: "Nginx"
+    description: |
+      Nginx is a web server that can also be used as a reverse proxy, load balancer, mail proxy, and HTTP cache.
+    icon: https://avatars.githubusercontent.com/u/1412239?s=200&v=4
+  wait-for:
+    runnables:
+      - blockscout/frontend
+      - blockscout/backend
+      - blockscout/stats
+    timeout: 30
+  services:
+    server-port:
+      container: nginx-reverse-proxy
+      port: 80
+      protocol: tcp
+      host-port: 80
+      publish: true
+    visualizer-port:
+      container: nginx-reverse-proxy
+      port: 8081
+      protocol: tcp
+      host-port: 8081
+      publish: true
+    stats-port:
+      container: nginx-reverse-proxy
+      port: 8080
+      protocol: tcp
+      host-port: 8080
+      publish: true
+  containers:
+    nginx-reverse-proxy:
+      image: docker.io/bitnami/nginx:latest
+      cap-add:
+        - CAP_NET_BIND_SERVICE
+  connections:
+    frontend:
+      runnable: blockscout/frontend
+      service: frontend
+    backend:
+      runnable: blockscout/backend
+      service: backend
+    stats:
+      runnable: blockscout/stats
+      service: stats
+    visualizer:
+      runnable: blockscout/visualizer
+      service: visualizer
+  files:
+    server-def:
+      contents: <<< files/default.conf.template
+      mode: 0644
+      path: /opt/bitnami/nginx/conf/server_blocks/reverse_proxy.conf
+      container: nginx-reverse-proxy
+  variables:
+    backend-proxy-pass:
+      description: "The URL of the backend"
+      type: string
+      value: <- "http://" connection-hostname("backend") ":" connection-port("backend") concat-all
+      env: BACK_PROXY_PASS
+    frontend-proxy-pass:
+      description: "The URL of the frontend"
+      type: string
+      value: <- "http://" connection-hostname("frontend") ":" connection-port("frontend") concat-all
+      env: FRONT_PROXY_PASS
+    visualizer-proxy:
+      description: "The URL of the Visualizer"
+      type: string
+      value: <- "http://" connection-hostname("visualizer") ":" connection-port("visualizer") concat-all
+      env: VISUALIZER_PROXY_PASS
+    stats-proxy:
+      description: "The URL of the Stats"
+      type: string
+      value: <- "http://" connection-hostname("stats") ":" connection-port("stats") concat-all
+      env: STATS_PROXY_PASS
