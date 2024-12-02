@@ -1,5 +1,5 @@
 # Stage 1: Build avail-da binary
-FROM golang:1.19 as builder
+FROM golang:1.21 AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
