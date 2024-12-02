@@ -29,7 +29,7 @@ da-node-base:
     inherits: ./eigen-layer-common
     containers:
         node:
-            image: "us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/eigenda-cli-node"
+            image: sonaric.azurecr.io/public/eigenda-cli-node:latest
             image-tag: <- `${version}`
             entrypoint: /sonaric/scripts/entrypoint.sh
             ports:
