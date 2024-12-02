@@ -103,7 +103,7 @@ avail-da:
                 - rollkit/avail-turing-light
     containers:
         avail-da:
-            image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/avail-da:latest
+            image: sonaric.azurecr.io/public/avail-da:latest
             arch: linux/amd64
             entrypoint: /app/avail-da
             ports:
