@@ -36,7 +36,7 @@ beacon-kit:
         - rollkit/local-da
   containers:
     beacon-kit:
-      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/reacond:latest
+      image: sonaric.azurecr.io/public/reacond:latest
       entrypoint: /home/entrypoint.sh
       ports:
         - 26656:26656

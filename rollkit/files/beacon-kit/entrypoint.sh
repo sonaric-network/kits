@@ -3,7 +3,7 @@ set -e
 
 # install only if not already installed
 if ! command -v jq > /dev/null 2>&1; then
-  apk add --no-cache openssl jq
+  apk add --no-cache openssl jq curl
 fi
 
 CHAINID="reacond-2061"
