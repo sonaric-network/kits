@@ -137,9 +137,6 @@ base:
     list-keys:
       description: "List addresses of all keys in the wallet."
       code: exec("erigon", "/home/erigon/scripts/list-keys.sh")
-    sync-status:
-      description: "Get the sync status of the node."
-      code: exec("erigon", "/home/erigon/scripts/sync-status.sh")
   files:
     list-keys:
       container: erigon
@@ -147,13 +144,6 @@ base:
       contents: |
         #!/bin/sh
         ls {{ v "data-dir" }}/keystore
-      mode: 0755
-    sync-status:
-      container: erigon
-      path: /home/erigon/scripts/sync-status.sh
-      contents: |
-        #!/bin/sh
-        curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' http://127.0.0.1:8545
       mode: 0755
 
 mainnet:
