@@ -97,7 +97,7 @@ sonaric run templates/local/ethereum/mainnet-pruned
  └─🧊 Peer test-gcp2-1
     └─🔩 templates/local/ethereum/mainnet-pruned 
        └─📦 f4c02cdde053c34d8f8107bd1b92aa92-m-mainnet-pruned-erigon running
-          ├─🧩 thorax/erigon:v2.60.0                                                        
+          ├─🧩 erigontech/erigon:v2.60.10                                                        
           ├─💾 /var/lib/sonaricd/volumes/ethereum -> /home/erigon/.local/share/erigon 
           ├─🔌 open (public) TCP 34.118.93.118:4001 -> 4001          
           ├─🔌 open (public) UDP 34.118.93.118:30304 -> 30304        

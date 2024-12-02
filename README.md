@@ -69,7 +69,7 @@ Output:
  └─🧊 Peer local
     └─🔩 templates/local/gnosis/mainnet
        └─📦 local-f2bcba1ec616d5457ce3bdc89f-l-gnosis-mainnet-erigon running
-          ├─🧩 thorax/erigon:v2.58.2
+          ├─🧩 erigontech/erigon:v2.60.10
           ├─🔌 open (public) UDP 188.146.114.165:4000 -> 4000
           ├─🔌 open TCP 188.146.114.165:42069 -> 42069
           ├─🔌 open (public) UDP 188.146.114.165:30304 -> 30304

@@ -19,8 +19,8 @@ base:
     GPU: false
   containers:
     erigon:
-      image: "thorax/erigon"
-      image-tag: v2.60.0
+      image: "erigontech/erigon"
+      image-tag: v2.60.10
       paths:
         - <- `${monk-volume-path}/ethereum:${data-dir}`
         - <- `${monk-volume-path}/ethereum/keystore:/home/erigon/.local/share/erigon/keystore` # needed for the wallet import/export
