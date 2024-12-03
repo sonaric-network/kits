@@ -169,7 +169,7 @@ celestia-frontend:
                 - rollkit/celestia-gm
     containers:
         frontend:
-            image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-frontend:latest
+            image: sonaric.azurecr.io/public/gm-frontend:latest
             ports:
                 - 3000:3000 # HTTP
     variables:
