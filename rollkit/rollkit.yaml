@@ -134,7 +134,7 @@ frontend:
                 - rollkit/gm
     containers:
         frontend:
-            image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/gm-frontend:latest # todo: make own image with params
+            image: sonaric.azurecr.io/public/gm-frontend:latest
             ports:
                 - 3000:3000 # HTTP
     variables:
