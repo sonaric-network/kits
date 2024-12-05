@@ -97,7 +97,8 @@ farmer:
             description: The wallet address for receiving rewards.
             type: string
             env: WALLET_ADDRESS
-            value: ''
+            required: true
+            value: ""
         node-rpc-url:
             description: The node RPC URL.
             type: string
