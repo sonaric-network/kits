@@ -1,0 +1,143 @@
+namespace: autonomys
+
+common:
+    metadata:
+        name: Autonomys Network
+        shortname: Autonomys Network
+        description: >-
+            The Autonomys Network is a blockchain network with a focus on
+            decentralized operations, including farming, staking, and node operation.
+        network: autonomys
+        publisher: Sonaric
+        website: 'https://www.autonomys.xyz'
+        source: 'https://github.com/autonomys/subspace'
+        currency: AUTO
+        icon: 'https://docs.autonomys.xyz/img/logo-black.png'
+        tags: 'blockchain,decentralized,farming,staking,node'
+    variables:
+        version:
+            description: The version of the Autonomys Network.
+            type: string
+            value: 'mainnet-2024-nov-28'
+
+
+mainnet:
+    defines: runnable
+    inherits: autonomys/common
+    metadata:
+        name: Autonomys Mainnet Node
+        shortname: mainnet-node
+        description: >-
+            A node for participating in the Autonomys Network mainnet. Implementation for the Subspace protocol.
+        network: mainnet
+    requirements:
+        CPU: '4'
+        RAM: 8192
+        GPU: false
+        disk: 100
+    variables:
+        name:
+            description: The name of the node.
+            type: string
+            value: 'subspace'
+        chain-id:
+            description: The chain to connect to.
+            type: string
+            value: 'mainnet'
+    containers:
+        node:
+            image: 'ghcr.io/autonomys/node'
+            image-tag: <- `${version}`
+            paths:
+                - '<- `${monk-volume-path}/autonomys/node-data:/var/subspace:rw`'
+            restart: unless-stopped
+            cmd: <- `run --chain ${chain-id} --base-path /var/subspace --listen-on /ip4/0.0.0.0/tcp/30333 --dsn-listen-on /ip4/0.0.0.0/tcp/30433 --rpc-cors=all --rpc-methods=unsafe --rpc-listen-on=0.0.0.0:9944 --farmer --name ${name}`
+            ports:
+                - 30333:30333 # P2P
+                - 30433:30433 # DSN
+                - 9944:9944 # RPC
+    services:
+        p2p-port:
+            container: node
+            port: 30333
+            host-port: 30333
+            protocol: tcp
+            publish: true
+        dsn-port:
+            container: node
+            port: 30433
+            host-port: 30433
+            protocol: tcp
+            publish: true
+        rpc-port:
+            container: node
+            port: 9944
+            host-port: 9944
+            protocol: tcp
+            publish: true
+farmer:
+    defines: runnable
+    inherits: autonomys/common
+    metadata:
+        name: Autonomys Farmer Node
+        shortname: farmer
+        description: >-
+            Manages plotting, replotting, and farming rewards.
+    requirements:
+        CPU: '4'
+        RAM: 8192
+        GPU: false
+        disk: 100
+    depends:
+        wait-for:
+            runnables:
+                - autonomys/mainnet
+    variables:
+        reward-address:
+            description: The wallet address for receiving rewards.
+            type: string
+            env: WALLET_ADDRESS
+            value: ''
+        node-rpc-url:
+            description: The node RPC URL.
+            type: string
+            value: <- "ws://" connection-hostname("node") ":9944" concat-all
+            env: NODE_RPC_URL
+    containers:
+        node:
+            image: 'ghcr.io/autonomys/farmer'
+            image-tag: <- `${version}`
+            paths:
+                - '<- `${monk-volume-path}/autonomys/farmer-data:/var/subspace:rw`'
+            restart: unless-stopped
+            ports:
+                - 30533:30533 # Farmer
+            cmd: <- `farm --node-rpc-url=${node-rpc-url} --listen-on=/ip4/0.0.0.0/tcp/30533 --reward-address=${reward-address} path=/var/subspace,size=100G`
+    services:
+        farmer-port:
+            container: node
+            port: 30533
+            host-port: 30533
+            protocol: tcp
+            publish: false
+    connections:
+        node:
+            runnable: autonomys/mainnet
+            service: rpc-port
+
+
+base-cluster:
+    defines: process-group
+    metadata:
+        name: "Autonomys Farmer Cluster"
+        description: "Node implementation for the Autonomys Network and farmer node for managing plotting, replotting, and farming rewards."
+        website: "https://www.autonomys.xyz"
+        publisher: Sonaric
+        icon: "https://docs.autonomys.xyz/img/logo-black.png"
+        version: 1.0.0
+    runnable-list:
+        - autonomys/mainnet
+        - autonomys/farmer
+
+
+
