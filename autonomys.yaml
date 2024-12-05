@@ -94,7 +94,7 @@ farmer:
                 - autonomys/mainnet
     variables:
         reward-address:
-            description: The wallet address for receiving rewards.
+            description: The Subwallet address for receiving rewards.
             type: string
             env: WALLET_ADDRESS
             required: true
