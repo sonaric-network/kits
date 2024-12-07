@@ -47,4 +47,9 @@ geth --http \
   --datadir $ETH_DATA_DIR \
   --ipcpath "$IPC_PATH" \
   --http.corsdomain "*" \
-  --http.vhosts "*"
+  --http.vhosts "*" \
+  --ws \
+  --ws.addr 0.0.0.0 \
+  --ws.port 8546 \
+  --ws.origins "*" \
+  --ws.api eth,net,web3

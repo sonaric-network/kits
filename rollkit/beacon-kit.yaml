@@ -124,6 +124,7 @@ geth:
         - 8545:8545
         - 30303:30303
         - 8551:8551
+        - 8546:8546
       paths:
         - <- `${monk-volume-path}/geth:/geth`
   services:
@@ -145,6 +146,11 @@ geth:
       port: 8545
       host-port: 8545
       publish: true
+    ws-service:
+        container: geth-container
+        protocol: tcp
+        port: 8546
+        host-port: 8546
   files:
     entrypoint:
       container: geth-container
@@ -183,8 +189,7 @@ gm-portal:
       env: RPC_URL
     rpc-api-host:
       type: string
-      value: localhost
-#      value: <- ip-address-public
+      value: <- ip-address-public
       env: RPC_API_HOST
     private-key:
       type: string
