@@ -1,0 +1,65 @@
+namespace: bsquared-network
+
+common:
+  metadata:
+    name: Bsquared Network
+    shortname: Bsquared Network
+    description: >-
+      Bsquared (B²) Network is an EVM-compatible Rollup built on zero-knowledge
+      proof verification commitment on the Bitcoin blockchain. Rollup data and
+      zk proof verification commitments are recorded on the Bitcoin Network and
+      confirmed through a challenge-response mechanism.
+    network: bsquared-network
+    publisher: Sonaric
+    website: 'https://www.bsquared.network/'
+    source: 'https://github.com/b2network'
+    currency: B2
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.b_network1706193885600.png
+    tags: 'bitcoin layer-2,zero-knowledge l2 network,zk-rollup,defi,nft,socialfi'
+
+rollup-node:
+  defines: runnable
+  inherits: bsquared-network/common
+  metadata:
+    name: Bsquared Rollup Node
+    shortname: rollup-node
+    description: >-
+      A rollup node for the Bsquared Network, utilizing zero-knowledge proof
+      verification on the Bitcoin blockchain.
+    network: rollup-node
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: 'bsquarednetwork/rollup-node:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/data`'
+  services:
+    p2p:
+      container: node
+      port: 30303
+      host-port: 30303
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 8545
+      host-port: 8545
+      protocol: tcp
+      publish: false
+  variables:
+    network-id:
+      description: The network ID to connect to
+      type: string
+      env: NETWORK_ID
+      default: '1'
+    sync-mode:
+      description: The synchronization mode for the node
+      type: string
+      env: SYNC_MODE
+      default: fast
+
