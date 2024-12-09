@@ -1,0 +1,79 @@
+namespace: titan-network
+
+common:
+  metadata:
+    name: Titan Network
+    shortname: Titan Network
+    description: >-
+      Titan Network is a digital resource platform that connects idle community
+      resources with global demand, enabling users to engage in DePIN
+      (Decentralized Physical Infrastructure Network) services. It simplifies
+      participation in building the Internet of Value by incentivizing users to
+      contribute their resources, fostering a more decentralized and
+      value-driven digital economy.
+    network: titan-network
+    publisher: Sonaric
+    website: 'https://www.titannet.io/'
+    source: 'https://github.com/Titannet-dao/titan-node'
+    currency: TTN
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.titan_network1726129864556.png
+    tags: >-
+      blockchain,wallet,staking,smart contract deployment,resource network,node
+      operation,data dashboard,storage,depIN services,cloud services,cdn
+      acceleration,verifiable random functions,trusted storage,trusted container
+      execution
+
+l2-edge-node:
+  defines: runnable
+  inherits: titan-network/common
+  metadata:
+    name: Titan Network L2 Edge Node
+    shortname: l2-edge-node
+    description: >-
+      The L2 Edge Node for Titan Network allows users to connect their idle
+      resources to the network, enabling decentralized services and earning
+      incentives.
+    network: l2-edge-node
+  requirements:
+    CPU: 2 cores
+    RAM: 2048
+    GPU: false
+    disk: 50
+  containers:
+    node:
+      image: 'nezha123/titan-edge:latest'
+      paths:
+        - '<- `${monk-volume-path}/storage:/root/.titanedge`'
+      entrypoint: >-
+        docker run --network=host -d -v ~/.titanedge:/root/.titanedge
+        nezha123/titan-edge
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: '0755'
+      contents: >-
+        #!/bin/sh
+
+        mkdir -p ~/.titanedge
+
+        # Bind the identification code
+
+        # docker run --rm -it -v ~/.titanedge:/root/.titanedge
+        nezha123/titan-edge bind --hash=your-hash-here
+        https://api-test1.container1.titannet.io/api/v2/device/binding
+  services:
+    default-port:
+      container: node
+      port: 1234
+      host-port: 1234
+      protocol: tcp
+      publish: true
+  variables:
+    storage-path:
+      description: The path for node data storage
+      type: string
+      env: STORAGE_PATH
+      default: ~/.titanedge
+
