@@ -1,0 +1,65 @@
+namespace: hyperbridge
+
+common:
+  metadata:
+    name: Hyperbridge
+    shortname: Hyperbridge
+    description: >-
+      Hyperbridge is a cross-chain protocol that uses cryptographic proofs to
+      create a decentralized and permissionless network of relayers, enabling
+      secure transmission of messages across blockchain networks. The relayers
+      do not require whitelisting or staking and are incentivized by user fees
+      for performing cross-chain operations. Acting as a cryptoeconomic
+      coprocessor, Hyperbridge provides secure, verifiable interoperability
+      using consensus and storage proofs. Developers can use on-chain and
+      off-chain SDKs to send and read cross-chain messages, enhancing blockchain
+      interoperability.
+    network: hyperbridge
+    publisher: Sonaric
+    website: 'https://hyperbridge.network/'
+    source: 'https://github.com/polytope-labs/hyperbridge'
+    currency: BRIDGE
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.hyperbridge1726069360996.png
+    tags: >-
+      blockchain,bridge,dex,services,framework,on-chain,off-chain,interoperability,permissionless,multichain,sdk,cross-chain
+
+mainnet:
+  defines: runnable
+  inherits: hyperbridge/common
+  metadata:
+    name: Hyperbridge Mainnet Node
+    shortname: mainnet
+    description: >-
+      A node for participating in the Hyperbridge mainnet, enabling cross-chain
+      message transmission and earning fees.
+    network: mainnet
+  requirements:
+    CPU: 2 cores
+    RAM: 2048
+    GPU: false
+    disk: 20
+  containers:
+    node:
+      image: 'polytopelabs/hyperbridge:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/home/root/.nexus`'
+  services:
+    rpc-port:
+      container: node
+      port: 9933
+      host-port: 9933
+      protocol: tcp
+      publish: true
+    p2p-port:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+  variables:
+    node-name:
+      description: The name of your node in the network
+      type: string
+      env: YOUR_NODE_NAME_HERE
+
