@@ -1,5 +1,5 @@
 REPO blockscout
-RESOURCES files/common-blockscout.env files/common-frontend.env files/common-user-ops-indexer.env files/default.conf.template files/ops-indexer.config.toml
+RESOURCES files/common-blockscout.env files/common-frontend.env files/default.conf.template files/ops-indexer.config.toml
 
 LOAD chains.yaml
 LOAD blockscout.yaml
