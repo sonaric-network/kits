@@ -1,0 +1,60 @@
+namespace: api3
+
+common:
+  metadata:
+    name: API3
+    shortname: API3
+    description: >-
+      API3 is a blockchain project that connects decentralized blockchain
+      projects with data and services provided by Web APIs. It offers a
+      collaborative decentralized network of APIs that are scalable, with
+      incentives for network participants through token rewards, governance
+      participation, and API3 token utility. Airnode can be deployed using
+      ChainAPI and is compatible with multiple EVM-based blockchains, offering
+      zero cost and zero trust deployment.
+    network: api3
+    publisher: Sonaric
+    website: 'https://api3.org/'
+    source: 'https://github.com/API3DAO'
+    currency: API3
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.api31605687583993.png'
+    tags: >-
+      blockchain,dao,data feeds,oracles,web3
+      apis,airnode,defi,on-chain,off-chain,security,transparency
+
+airseeker:
+  defines: runnable
+  inherits: api3/common
+  metadata:
+    name: API3 Airseeker Node
+    shortname: airseeker
+    description: >-
+      The Airseeker node for API3, which connects decentralized blockchain
+      projects with data and services provided by Web APIs.
+    network: airseeker
+  requirements:
+    CPU: unknown
+    RAM: 0
+    GPU: false
+    disk: 0
+  containers:
+    node:
+      image: 'api3/airseeker:latest'
+      paths:
+        - '<- `${monk-volume-path}/config:/app/config`'
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: '0755'
+      contents: >-
+        cp .env.example .env && cp config/airseeker.example.json
+        config/airseeker.json && cp config/secrets.example.env
+        config/secrets.env
+  variables:
+    config_path:
+      description: The path to the configuration file
+      type: string
+      env: CONFIG_PATH
+      default: ./config/airseeker.json
+
