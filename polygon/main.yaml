@@ -1,0 +1,97 @@
+namespace: polygon
+
+common:
+  metadata:
+    name: Polygon
+    shortname: Polygon
+    description: >-
+      Polygon (MATIC) is an interoperability layer-2 scaling solution for
+      building Ethereum-compatible blockchains. In essence, the Polygon network
+      acts as an add-on layer to Ethereum that does not change the original
+      layer. It is a multi-level platform from which interoperable blockchains
+      can be launched. It seeks to improve the scalability of Ethereum via a
+      plethora of sidechains, and at the same time reduce gas fees associated
+      with the original blockchain.
+    network: polygon
+    publisher: Sonaric
+    website: 'https://polygon.technology/'
+    source: 'https://github.com/maticnetwork/'
+    currency: MATIC
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.polygon1698243029264.png'
+    tags: 'blockchain,bridge,services,framework,on-chain,off-chain'
+
+full-node:
+  defines: runnable
+  inherits: polygon/common
+  metadata:
+    name: Polygon Full Node
+    shortname: full-node
+    description: 'A full node for the Polygon PoS network, running Heimdall and Bor.'
+    network: full-node
+  requirements:
+    CPU: 4 cores
+    RAM: 16384
+    GPU: false
+    disk: 4000
+  containers:
+    node:
+      image: '0xpolygon/heimdall:1.0.3'
+      paths:
+        - '<- `${monk-volume-path}/heimdall-data:/root/.heimdalld`'
+        - '<- `${monk-volume-path}/bor-data:/root/.bor`'
+  services:
+    heimdall-tcp:
+      container: node
+      port: 26656
+      host-port: 26656
+      protocol: tcp
+      publish: true
+    bor-tcp:
+      container: node
+      port: 30303
+      host-port: 30303
+      protocol: tcp
+      publish: true
+  variables:
+    heimdall_chain_id:
+      description: The chain ID for Heimdall
+      type: string
+      env: HEIMDALL_CHAIN_ID
+    bor_chain_id:
+      description: The chain ID for Bor
+      type: string
+      env: BOR_CHAIN_ID
+
+zkevm-node:
+  defines: runnable
+  inherits: polygon/common
+  metadata:
+    name: Polygon zkEVM Node
+    shortname: zkevm-node
+    description: >-
+      A node for the Polygon zkEVM network, suitable for local or production
+      environments.
+    network: zkevm-node
+  requirements:
+    CPU: 4 cores
+    RAM: 16384
+    GPU: false
+    disk: 350
+  containers:
+    node:
+      image: 'polygon/zkevm-node:latest'
+      paths:
+        - '<- `${monk-volume-path}/zkevm-data:/root/.zkevm`'
+  services:
+    zkevm-tcp:
+      container: node
+      port: 8545
+      host-port: 8545
+      protocol: tcp
+      publish: true
+  variables:
+    zkevm_network:
+      description: 'The network type for zkEVM (e.g., mainnet, testnet)'
+      type: string
+      env: ZKEVM_NETWORK
+
