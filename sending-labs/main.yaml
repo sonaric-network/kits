@@ -1,0 +1,105 @@
+namespace: sending-labs
+
+common:
+  metadata:
+    name: Sending Labs
+    shortname: Sending Labs
+    description: >-
+      SendingNetwork, a project under DePIN, endeavors to decentralize
+      communications through the development of a novel Transmission Control
+      Protocol/Internet Protocol (TCP/IP) stack. TCP/IP serves as a foundational
+      set of protocols governing internet communication, enabling seamless data
+      transmission across devices. By decentralizing this infrastructure,
+      SendingNetwork aims to enhance the resilience, security, and privacy of
+      digital communications.
+    network: sending-labs
+    publisher: Sonaric
+    website: 'https://www.sending.network/'
+    source: 'https://github.com/orgs/Sending-Network/repositories'
+    currency: SEND
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.sending_labs1676557819064.png
+    tags: >-
+      blockchain,wallet,decentralized internet,communication layer,web3
+      communication,secure communication,decentralized infrastructure,real-time
+      communication,data service,dao,nft,gaming,instant messaging,content
+      platform,ticket platform,custom solutions
+
+watchdog-node:
+  defines: runnable
+  inherits: sending-labs/common
+  metadata:
+    name: Sending Labs WatchDog Node
+    shortname: watchdog-node
+    description: A node for monitoring and ensuring the stability of the Sending Network.
+    network: watchdog-node
+  requirements:
+    CPU: 2 cores
+    RAM: 4096
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: ''
+
+edge-node:
+  defines: runnable
+  inherits: sending-labs/common
+  metadata:
+    name: Sending Labs Edge Node
+    shortname: edge-node
+    description: >-
+      A node for participating in the Sending Network with enhanced
+      capabilities.
+    network: edge-node
+  requirements:
+    CPU: 2 cores
+    RAM: 8192
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: ''
+  services:
+    port-9085:
+      container: node
+      port: 9085
+      host-port: 9085
+      protocol: tcp
+      publish: true
+    port-15858:
+      container: node
+      port: 15858
+      host-port: 15858
+      protocol: tcp
+      publish: true
+    port-9702:
+      container: node
+      port: 9702
+      host-port: 9702
+      protocol: tcp
+      publish: true
+    port-2112:
+      container: node
+      port: 2112
+      host-port: 2112
+      protocol: tcp
+      publish: true
+
+delegation-node:
+  defines: runnable
+  inherits: sending-labs/common
+  metadata:
+    name: Sending Labs Delegation Node
+    shortname: delegation-node
+    description: A node for managing and delegating tasks within the Sending Network.
+    network: delegation-node
+  requirements:
+    CPU: 8 cores
+    RAM: 16384
+    GPU: false
+    disk: 150
+  containers:
+    node:
+      image: ''
+
