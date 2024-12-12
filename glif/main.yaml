@@ -1,0 +1,64 @@
+namespace: glif
+
+common:
+  metadata:
+    name: GLIF
+    shortname: GLIF
+    description: >-
+      GLIF is a leading contributor to the Filecoin network, providing essential
+      applications and tools such as wallets and DeFi protocols. Users can
+      participate as Storage Providers or Liquidity Providers to earn rewards in
+      the form of GLIF Points.
+    network: glif
+    publisher: Sonaric
+    website: 'https://www.glif.io/en'
+    source: 'https://github.com/glifio'
+    currency: FIL
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.glif1707234743228.png'
+    tags: 'blockchain,wallet,defi,filecoin,services'
+
+mainnet:
+  defines: runnable
+  inherits: glif/common
+  metadata:
+    name: GLIF Mainnet Node
+    shortname: mainnet
+    description: >-
+      A node for participating in the Filecoin mainnet using GLIF's Docker
+      setup.
+    network: mainnet
+  requirements:
+    CPU: 4 cores
+    RAM: 8192
+    GPU: false
+    disk: 500
+  containers:
+    node:
+      image: 'glif/lotus:v1.23.1-rc3-mainnet-arm64'
+      paths:
+        - '<- `${monk-volume-path}/lotus-data:/var/lib/lotus`'
+  services:
+    api-port:
+      container: node
+      port: 1234
+      host-port: 1234
+      protocol: tcp
+      publish: true
+    p2p-port:
+      container: node
+      port: 1235
+      host-port: 1235
+      protocol: tcp
+      publish: true
+  variables:
+    network:
+      description: 'The network to connect to, e.g., mainnet or testnet'
+      type: string
+      env: NETWORK
+      default: mainnet
+    branch:
+      description: The branch of the Lotus code to use
+      type: string
+      env: BRANCH
+      default: v1.23.1-rc3
+
