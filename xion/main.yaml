@@ -1,0 +1,114 @@
+namespace: xion
+
+common:
+  metadata:
+    name: XION
+    shortname: XION
+    description: >-
+      Burnt (XION) is a Layer 1 blockchain designed to streamline the consumer
+      experience by eliminating technical hurdles associated with
+      cryptocurrencies. It offers a suite of features that enable easy fiat
+      transitions, direct purchases with credit cards, user-friendly Web2-style
+      logins, secure account management optimized for mobile devices, and the
+      benefit of no gas fees.
+    network: xion
+    publisher: Sonaric
+    website: 'https://xion.burnt.com/'
+    source: 'https://github.com/burnt-labs'
+    currency: XION
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.burnt_xion1706292182585.png
+    tags: >-
+      blockchain,layer 1,consumer experience,fiat transitions,credit card
+      purchases,web2-style logins,mobile optimization,no gas fees
+
+mainnet:
+  defines: runnable
+  inherits: xion/common
+  metadata:
+    name: XION Mainnet Node
+    shortname: mainnet
+    description: XION Mainnet Node for running the main network of the XION blockchain.
+    network: mainnet
+  requirements:
+    CPU: 8 cores
+    RAM: 32768
+    GPU: false
+    disk: 256
+  containers:
+    node:
+      image: 'burnt-labs/xion:mainnet'
+      paths:
+        - '<- `${monk-volume-path}/xion-data:/root/.xiond`'
+      entrypoint: >-
+        xiond start --home /var/lib/xion --chain-id $CHAIN_ID --moniker
+        $NODE_NAME
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: '0755'
+      contents: >-
+        #!/bin/sh
+
+        set -e
+
+        # Initialize the node configuration
+
+        xiond init $NODE_NAME --chain-id $CHAIN_ID
+
+        # Fetch genesis file
+
+        curl -o /var/lib/xion/config/genesis.json
+        https://xion.burnt.com/genesis.json
+
+        # Set seeds and peers
+
+        sed -i 's/seeds = ""/seeds = "seed1,seed2"/'
+        /var/lib/xion/config/config.toml
+
+        sed -i 's/persistent_peers = ""/persistent_peers = "peer1,peer2"/'
+        /var/lib/xion/config/config.toml
+  services:
+    api:
+      container: node
+      port: 1317
+      host-port: 1317
+      protocol: tcp
+      publish: true
+    grpc:
+      container: node
+      port: 9090
+      host-port: 9090
+      protocol: tcp
+      publish: true
+    p2p:
+      container: node
+      port: 26656
+      host-port: 26656
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 26657
+      host-port: 26657
+      protocol: tcp
+      publish: true
+    prometheus:
+      container: node
+      port: 26660
+      host-port: 26660
+      protocol: tcp
+      publish: true
+  variables:
+    chain-id:
+      description: The chain ID for the XION network
+      type: string
+      env: CHAIN_ID
+      default: xion-mainnet-1
+    node-name:
+      description: The name of the node
+      type: string
+      env: NODE_NAME
+      default: xion-node
+
