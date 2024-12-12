@@ -1,0 +1,105 @@
+namespace: arch-network
+
+common:
+  metadata:
+    name: Arch Network
+    shortname: Arch Network
+    description: >-
+      Arch Network is a bitcoin-native application platform that introduces
+      smart contract functionality directly into Bitcoin through a novel
+      architecture. It leverages a Rust-based zero-knowledge virtual machine,
+      known as the ArchVM, along with a decentralized verifier network,
+      collectively referred to as the Arch Network. The ArchVM is inspired by
+      SVM (Single Virtual Machine) and is designed for parallel execution,
+      incorporating zero-knowledge proofs (ZKPs) for transaction verification.
+    network: arch-network
+    publisher: Sonaric
+    website: 'https://www.arch.network/'
+    source: 'https://github.com/arch-network'
+    currency: ARCH
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.arch_network1715342149965.png
+    tags: >-
+      blockchain,smart contracts,decentralized
+      applications,bitcoin,zero-knowledge proofs
+
+mainnet:
+  defines: runnable
+  inherits: arch-network/common
+  metadata:
+    name: Arch Network Mainnet Node
+    shortname: mainnet
+    description: >-
+      A production-ready node for the Arch Network, suitable for running on the
+      mainnet.
+    network: mainnet
+  requirements:
+    CPU: multi-core
+    RAM: 64000
+    GPU: false
+    disk: 1000
+  containers:
+    node:
+      image: 'ghcr.io/archway-network/archwayd:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/root/.archwayd`'
+  services:
+    p2p:
+      container: node
+      port: 26656
+      host-port: 26656
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 26657
+      host-port: 26657
+      protocol: tcp
+      publish: true
+  variables:
+    chain_id:
+      description: The ID of the blockchain network
+      type: string
+      env: CHAIN_ID
+      default: arch-mainnet
+
+testnet:
+  defines: runnable
+  inherits: arch-network/common
+  metadata:
+    name: Arch Network Testnet Node
+    shortname: testnet
+    description: >-
+      A testnet node for the Arch Network, suitable for development and testing
+      purposes.
+    network: testnet
+  requirements:
+    CPU: multi-core
+    RAM: 64000
+    GPU: false
+    disk: 1000
+  containers:
+    node:
+      image: 'ghcr.io/archway-network/archwayd-debug:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/root/.archwayd`'
+  services:
+    p2p:
+      container: node
+      port: 26656
+      host-port: 26656
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 26657
+      host-port: 26657
+      protocol: tcp
+      publish: true
+  variables:
+    chain_id:
+      description: The ID of the blockchain network
+      type: string
+      env: CHAIN_ID
+      default: arch-testnet
+
