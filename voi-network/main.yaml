@@ -1,0 +1,63 @@
+namespace: voi-network
+
+common:
+  metadata:
+    name: Voi Network
+    shortname: Voi Network
+    description: >-
+      Voi is a groundbreaking blockchain platform with a focus on building
+      Digital Community Infrastructure (DCI) and supporting Decentralized
+      Autonomous Organizations (DAOs). By combining these elements with the
+      power of blockchain, Voi aims to create a new kind of digital society
+      where individuals and communities can flourish.
+    network: voi-network
+    publisher: Sonaric
+    website: 'https://www.voi.network/'
+    source: 'https://github.com/VoiNetwork/voi-swarm'
+    currency: VOI
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.voi_network1727874066714.png
+    tags: 'blockchain,dao,digital community infrastructure'
+
+relay-node:
+  defines: runnable
+  inherits: voi-network/common
+  metadata:
+    name: Voi Network Relay Node
+    shortname: relay-node
+    description: >-
+      A Relay Node for the Voi Network, designed to handle high traffic and
+      provide reliable network connectivity.
+    network: relay-node
+  requirements:
+    CPU: '12'
+    RAM: 16384
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: 'voinetwork/relay-node:latest'
+      paths:
+        - '<- `${monk-volume-path}/voi-data:/voi/data`'
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: '0755'
+      contents: |-
+        export VOINETWORK_PROFILE=relay
+        /bin/bash -c "$(curl -fsSL https://get.voi.network/swarm)"
+  services:
+    metrics:
+      container: node
+      port: 9100
+      host-port: 9100
+      protocol: tcp
+      publish: true
+  variables:
+    voi-network-profile:
+      description: 'Profile setting for the Voi Network node, set to relay for relay nodes.'
+      type: string
+      env: VOINETWORK_PROFILE
+      default: relay
+
