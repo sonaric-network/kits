@@ -1,0 +1,107 @@
+namespace: 5ire
+
+common:
+  metadata:
+    name: 5ire
+    shortname: 5ire
+    description: >-
+      5ireChain is a blockchain ecosystem for Impact & SDG-related development,
+      management, and investment, with a network of working groups, collectives,
+      and DAOs to help accelerate the United Nations 2030 Agenda for Sustainable
+      Development. The 5IRE network aims to bring a paradigm shift from a
+      for-profit to a for-benefit. It will implement sustainability by design
+      while ensuring interoperability, forkless upgradeability, scalability,
+      strong security guarantees, democracy & governance.
+    network: 5ire
+    publisher: Sonaric
+    website: 'https://5ire.org/'
+    source: 'https://github.com/5ire-tech/5ireChain'
+    currency: 5IRE
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.5_ire1691658310704.png'
+    tags: 'blockchain,validator,sustainability,network,staking'
+
+mainnet-full-node:
+  defines: runnable
+  inherits: 5ire/common
+  metadata:
+    name: 5ire Mainnet Full Node
+    shortname: mainnet-full-node
+    description: >-
+      A full node for the 5ireChain mainnet, ensuring interoperability and
+      strong security.
+    network: mainnet-full-node
+  requirements:
+    CPU: '2'
+    RAM: 4096
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: '5irechain/5ire-node:mainnet'
+      paths:
+        - '<- `${monk-volume-path}/data:/5ire/data/`'
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9944
+      host-port: 9944
+      protocol: tcp
+      publish: true
+  variables:
+    telemetry:
+      description: Enable or disable telemetry
+      type: bool
+      env: TELEMETRY
+      default: 'false'
+    pruning:
+      description: Set pruning mode
+      type: string
+      env: PRUNING
+      default: archive
+
+mainnet-validator:
+  defines: runnable
+  inherits: 5ire/common
+  metadata:
+    name: 5ire Mainnet Validator Node
+    shortname: mainnet-validator
+    description: >-
+      A validator node for the 5ireChain mainnet, participating in consensus and
+      earning rewards.
+    network: mainnet-validator
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 200
+  containers:
+    node:
+      image: '5irechain/5ire-node:mainnet'
+      paths:
+        - '<- `${monk-volume-path}/data:/5ire/data/`'
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9944
+      host-port: 9944
+      protocol: tcp
+      publish: true
+  variables:
+    telemetry:
+      description: Enable or disable telemetry
+      type: bool
+      env: TELEMETRY
+      default: 'false'
+
