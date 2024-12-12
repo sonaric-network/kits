@@ -1,0 +1,90 @@
+namespace: arweave
+
+arweave-base:
+  metadata:
+    name: Arweave
+    shortname: Arweave
+    website: https://arweave.org/
+    publisher: sonaric
+    icon: https://avatars.githubusercontent.com/u/31965957?s=200&v=4
+    version: 1.0.0
+    currency: AR
+    source: https://github.com/ArweaveTeam/arweave
+    tags: blockchain
+    twitter: https://x.com/arweaveeco
+    discord: https://discord.com/invite/AhsZfBm
+    description: |
+        Arweave is a new type of storage that backs data with sustainable and perpetual endowments, allowing users and developers to truly store data forever – for the very first time.
+    private: false
+  requirements:
+    defines: requirements
+    CPU: "32 Cores"
+    RAM: 65536
+  containers:
+    arweave:
+      image: us-central1-docker.pkg.dev/sonaric-platform/sonaric-public/arwave:test
+      entrypoint: /app/testnet.sh
+      paths:
+        - <- `${monk-volume-path}/arweave/data_dir:/opt/data_dir/`
+      ports:
+        - 1984:1984
+      ulimits:
+        nofile:
+          hard: 1000000
+          soft: 1000000
+        nproc:
+          hard: 1000000
+          soft: 1000000
+  services:
+    json-rpc:
+      container: arweave
+      protocol: TCP
+      port: 1984
+      host-port: 1984
+      publish: true
+
+arweave-localnet:
+  defines: runnable
+  inherits: arweave/arweave-base
+  files:
+    localnet:
+      container: arweave
+      path: /app/localnet.sh
+      contents: |
+        #!/bin/sh
+  
+        mkdir /opt/data_dir/storage_modules
+        sed -i 's/+A1024/+A200/g; s/+SDio1024/+SDio200/g' arweave/bin/arweave.env
+                
+        ./arweave/bin/create-wallet /opt/data_dir
+        mining_addr=$(ls /opt/data_dir/wallets/ | grep -oP '(?<=arweave_keyfile_)[^\.]+')
+        
+        ./arweave/rebar3 as prod tar
+        ./arweave/bin/start-localnet init data_dir /opt/data_dir mining_addr $mining_addr storage_module 0,$mining_addr mine
+                     
+      mode: 0755
+
+arweave-testnet:
+  defines: runnable
+  inherits: arweave/arweave-base
+  files:
+    testnet:
+      container: arweave
+      path: /app/testnet.sh
+      contents: |
+        #!/bin/sh
+
+        mkdir /opt/data_dir/storage_modules
+        sed -i 's/+A1024/+A200/g; s/+SDio1024/+SDio200/g' arweave/bin/arweave.env
+
+        ./arweave/arweave-server \
+          peer ams-1.eu-central-1.arweave.xyz \
+          peer fra-1.eu-central-2.arweave.xyz \
+          peer sgp-1.ap-central-2.arweave.xyz \
+          peer blr-1.ap-central-1.arweave.xyz \
+          peer sfo-1.na-west-1.arweave.xyz
+
+        ./arweave/rebar3 as testnet tar
+        ./arweave/bin/start peer testnet-1.arweave.xyz peer testnet-2.arweave.xyz peer testnet-3.arweave.xyz
+      mode: 0755
+
