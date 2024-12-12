@@ -1,0 +1,95 @@
+namespace: nulink
+
+common:
+  metadata:
+    name: NuLink
+    shortname: NuLink
+    description: >-
+      NuLink network is a decentralized solution for web3 privacy-preserving
+      applications developers to implement practices and breed security and
+      privacy. The NuLink platform provides endpoint encryption and
+      cryptographic access control.
+    network: nulink
+    publisher: Sonaric
+    website: 'https://www.nulink.org/'
+    source: 'https://github.com/NuLink-network'
+    currency: NLK
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.nu_link1668653806954.png'
+    tags: >-
+      blockchain, access control, proxy re-encryption, attribute-based
+      encryption, secure computation, zero-knowledge proof, secure multi-party
+      computation, fully homomorphic encryption, decentralized applications,
+      encrypted nfts, data privacy, decentralized storage
+
+nulink-chain:
+  defines: runnable
+  inherits: nulink/common
+  metadata:
+    name: NuLink Chain Node
+    shortname: nulink-chain
+    description: NuLink Chain Node for running the blockchain network.
+    network: nulink-chain
+  requirements:
+    CPU: '2'
+    RAM: 4096
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: 'nulink/nulink-chain:latest'
+      paths:
+        - >-
+          <-
+          `${monk-volume-path}/nulink-chain-data:/root/.local/share/nulink-chain`
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9933
+      host-port: 9933
+      protocol: tcp
+      publish: false
+  variables:
+    chain:
+      description: 'The chain to connect to, e.g., dev, testnet, mainnet'
+      type: string
+      env: CHAIN
+      default: dev
+
+nulink-watcher:
+  defines: runnable
+  inherits: nulink/common
+  metadata:
+    name: NuLink Watcher Node
+    shortname: nulink-watcher
+    description: NuLink Watcher Node for monitoring and interacting with the network.
+    network: nulink-watcher
+  requirements:
+    CPU: '2'
+    RAM: 2048
+    GPU: false
+    disk: 50
+  containers:
+    node:
+      image: 'nulink/nulink-watcher:latest'
+      paths:
+        - '<- `${monk-volume-path}/nulink-watcher-config:/app/config`'
+  services:
+    watcher-api:
+      container: node
+      port: 8080
+      host-port: 8080
+      protocol: tcp
+      publish: true
+  variables:
+    config-file:
+      description: Path to the configuration file
+      type: string
+      env: CONFIG_FILE
+      default: /etc/nulink-watcher/config.json
+
