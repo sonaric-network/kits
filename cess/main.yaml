@@ -1,0 +1,110 @@
+namespace: cess
+
+common:
+  metadata:
+    name: CESS
+    shortname: CESS
+    description: >-
+      CESS is a blockchain-based distributed cloud system focused on
+      decentralized storage solutions. Users can deploy various types of nodes
+      and participate as storage miners, earning rewards for contributing
+      resources. The project is currently in the Final Testnet Venus phase,
+      offering various decentralized services and integrating AI technologies.
+    network: cess
+    publisher: Sonaric
+    website: 'https://cess.cloud/'
+    source: 'https://github.com/CESSProject'
+    currency: CESS
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.cess1703845260907.png'
+    tags: >-
+      blockchain,wallet,services,on-chain,off-chain,framework,decentralized
+      storage,ai integration
+
+storage-node:
+  defines: runnable
+  inherits: cess/common
+  metadata:
+    name: CESS Storage Node
+    shortname: storage-node
+    description: >-
+      A node for participating in the CESS network as a storage miner,
+      contributing storage resources and earning rewards.
+    network: storage-node
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 500
+  containers:
+    node:
+      image: 'cess/storage-node:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/var/lib/cess`'
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9933
+      host-port: 9933
+      protocol: tcp
+      publish: false
+  variables:
+    node-name:
+      description: The name of the node in the network
+      type: string
+      env: NODE_NAME
+    validator:
+      description: Whether the node should act as a validator
+      type: bool
+      env: VALIDATOR
+      default: 'false'
+
+consensus-node:
+  defines: runnable
+  inherits: cess/common
+  metadata:
+    name: CESS Consensus Node
+    shortname: consensus-node
+    description: >-
+      A node for participating in the CESS network consensus, helping to
+      validate and secure the network.
+    network: consensus-node
+  requirements:
+    CPU: '8'
+    RAM: 16384
+    GPU: false
+    disk: 1000
+  containers:
+    node:
+      image: 'cess/consensus-node:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/var/lib/cess`'
+  services:
+    p2p:
+      container: node
+      port: 30334
+      host-port: 30334
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9934
+      host-port: 9934
+      protocol: tcp
+      publish: false
+  variables:
+    node-name:
+      description: The name of the node in the network
+      type: string
+      env: NODE_NAME
+    validator:
+      description: Whether the node should act as a validator
+      type: bool
+      env: VALIDATOR
+      default: 'true'
+
