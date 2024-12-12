@@ -1,0 +1,80 @@
+namespace: graphlinq-chain
+
+common:
+  metadata:
+    name: Graphlinq Chain
+    shortname: Graphlinq Chain
+    description: >-
+      GraphLinq is a set of tools including an IDE and an engine that run
+      simultaneously with multiple blockchains and centralized data stream to
+      offer a service of automatization of a process without coding skill
+      required. The goal of GraphLinq is to provide a way to interact with the
+      blockchain with any connected systems as effortlessly as possible and
+      without knowing how to code.
+    network: graphlinq-chain
+    publisher: Sonaric
+    website: 'https://graphlinq.io/'
+    source: 'https://github.com/GraphLinq/GraphLinq-Chain'
+    currency: GLQ
+    icon: >-
+      https://plotter.blob.core.windows.net/icons/60x60.graphlinq
+      protocol1638435697667.png
+    tags: 'tools, ide, blockchain, automatization, service, nodes, wallets'
+
+mainnet:
+  defines: runnable
+  inherits: graphlinq-chain/common
+  metadata:
+    name: GraphLinq Mainnet Node
+    shortname: mainnet
+    description: >-
+      A node for participating in the GraphLinq mainnet, allowing interaction
+      with the blockchain and connected systems.
+    network: mainnet
+  requirements:
+    CPU: '2'
+    RAM: 4096
+    GPU: false
+    disk: 100
+  containers:
+    node:
+      image: 'graphlinqchain/docker-glq-nodemanager:v0.0.9'
+      paths:
+        - '<- `${monk-volume-path}/keystore:/root/.graphlinq/keystore`'
+  services:
+    http:
+      container: node
+      port: 8080
+      host-port: 8080
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 8545
+      host-port: 8545
+      protocol: tcp
+      publish: true
+    ws:
+      container: node
+      port: 8551
+      host-port: 8551
+      protocol: tcp
+      publish: true
+    p2p1:
+      container: node
+      port: 30310
+      host-port: 30310
+      protocol: tcp
+      publish: true
+    p2p2:
+      container: node
+      port: 30311
+      host-port: 30311
+      protocol: tcp
+      publish: true
+  variables:
+    access-code:
+      description: The access code for node management.
+      type: string
+      env: ACCESS_CODE
+
