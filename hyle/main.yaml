@@ -1,0 +1,69 @@
+namespace: hyle
+
+common:
+  metadata:
+    name: Hylé
+    shortname: Hylé
+    description: >-
+      Hylé builds out the Hylé network, which uses zero-knowledge proofs (ZKP)
+      for scalability and privacy. Hylé wants to be the core layer for the
+      modular ZK tech stack. The Hyle network runs its own consensus mechanism
+      and is purpose-built for ZKP verification, offering developers and users
+      options for what suits their systems.
+    network: hyle
+    publisher: Sonaric
+    website: 'https://www.hyle.eu/'
+    source: 'https://github.com/Hyle-org/hyle'
+    currency: HYLE
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.hyle1715690093721.png'
+    tags: 'blockchain,zero-knowledge proofs,scalability,privacy,consensus mechanism'
+
+mainnet:
+  defines: runnable
+  inherits: hyle/common
+  metadata:
+    name: Hylé Mainnet Node
+    shortname: mainnet
+    description: >-
+      A node for participating in the Hylé mainnet, utilizing zero-knowledge
+      proofs for enhanced scalability and privacy.
+    network: mainnet
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 200
+  containers:
+    node:
+      image: 'hyle/mainnet:latest'
+      paths:
+        - '<- `${monk-volume-path}/data:/hyle/data`'
+      entrypoint: >-
+        docker run -v ./db:/hyle/data -e HYLE_RUN_INDEXER=false -p 4321:4321 -p
+        1234:1234 hyle
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: '0755'
+      contents: docker build . -t hyle
+  services:
+    p2p:
+      container: node
+      port: 4321
+      host-port: 4321
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 1234
+      host-port: 1234
+      protocol: tcp
+      publish: false
+  variables:
+    run-indexer:
+      description: Flag to run the node with indexer
+      type: bool
+      env: HYLE_RUN_INDEXER
+      default: 'false'
+
