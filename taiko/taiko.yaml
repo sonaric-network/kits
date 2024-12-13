@@ -1,0 +1,355 @@
+namespace: taiko
+
+base:
+  metadata:
+    name: "Taiko"
+    shortname: Taiko
+    description: >-
+      Taiko is a decentralized Ethereum-equivalent ZK-EVM and general-purpose
+      ZK-Rollup. Its purpose is to allow developers and users of dApps developed
+      for Ethereum L1 to be used on Taiko without any changes. As a result,
+      dApps can be easily deployed to L2, inheriting Ethereum's security while
+      incurring lower transaction fees than on L1.
+    website: 'https://taiko.xyz/'
+    source: 'https://github.com/taikoxyz/simple-taiko-node'
+    icon: https://avatars.githubusercontent.com/u/99078433?s=200&v=4
+    network: taiko
+    publisher: Sonaric
+    version: 1.0.0
+    tags: >-
+      blockchain, rollup, bridge, developer tools, community, open source,
+      security: blockchain
+    currency: TAIKO
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 100
+
+execution-engine:
+  defines: runnable
+  inherits: taiko/base
+  containers:
+    execution-engine:
+      image: us-docker.pkg.dev/evmchain/images/taiko-geth:v1.5.0
+      restart: unless-stopped
+      entrypoint: /home/start.sh
+      ports:
+        - 6060:6060
+        - 8545:8545
+        - 8546:8546
+        - 8551:8551
+        - 5052:5052
+        - 8551:8551
+        - 30306:30306
+      paths:
+        - <- `${monk-volume-path}/taiko:/data/taiko-geth`
+  services:
+    port-tcp:
+      container: execution-engine
+      port: 30306
+      protocol: tcp
+      host-port: 30306
+      publish: true
+    port-udp:
+      container: execution-engine
+      port: 30306
+      protocol: udp
+      host-port: 30306
+      publish: true
+    metrics-port:
+      container: execution-engine
+      port: 6060
+      protocol: tcp
+      host-port: 6060
+      publish: true
+    ws-port:
+      container: execution-engine
+      port: 8546
+      protocol: tcp
+      host-port: 8546
+      publish: true
+    authrpc-port:
+      container: execution-engine
+      port: 8551
+      protocol: tcp
+      host-port: 8551
+      publish: true
+    http-port:
+      container: execution-engine
+      port: 8545
+      protocol: tcp
+      host-port: 8545
+      publish: true
+    resp-port:
+      container: execution-engine
+      port: 5052
+      protocol: tcp
+      host-port: 5052
+      publish: true
+  files:
+    start:
+      container: execution-engine
+      path: /home/start.sh
+      contents: <<< files/start.sh
+      mode: 0755
+    config:
+      container: execution-engine
+      path: /home/config.toml
+      contents: <<< files/config.toml
+      mode: 0755
+
+client-driver:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - taiko/execution-engine
+  containers:
+    client-driver:
+      image: us-docker.pkg.dev/evmchain/images/taiko-client:taiko-client-v0.29.0
+      restart: unless-stopped
+      entrypoint: /home/start-driver.sh
+      paths:
+        - <- `${monk-volume-path}/taiko:/data/taiko-geth`
+  variables:
+    l1_rpc:
+      type: string
+      required: true
+      value: ""
+      env: L1_RPC
+    l1_ws_rpc:
+      type: string
+      required: true
+      value: ""
+      env: L1_WS_RPC
+    l1_beacon_api:
+      type: string
+      required: true
+      value: ""
+      env: L1_BEACON_API
+    taiko_l1_address:
+      type: string
+      required: true
+      value: "0x06a9Ab27c7e2255df1815E6CC0168d7755Feb19a"
+      env: TAIKO_L1_ADDRESS
+    taiko_l2_address:
+      type: string
+      required: true
+      value: "0x1670000000000000000000000000000000010001"
+      env: TAIKO_L2_ADDRESS
+    p2p_sync_url:
+      type: string
+      required: true
+      value: "https://rpc.mainnet.taiko.xyz"
+      env: P2P_SYNC_URL
+    taiko_token_l1_address:
+      type: string
+      required: true
+      value: "0x10dea67478c5F8C5E2D90e5E9B26dBe60c54d800"
+      env: TAIKO_TOKEN_L1_ADDRESS
+    l1_proposer_private_key:
+      type: string
+      required: true
+      value: ""
+      env: L1_PROPOSER_PRIVATE_KEY
+    l2_suggested_fee_recipient:
+      type: string
+      required: true
+      value: ""
+      env: L2_SUGGESTED_FEE_RECIPIENT
+    nodeIP:
+      type: string
+      value: <- ip-address-public
+      env: NODE_IP
+    node-ws:
+      type: string
+      value: <- connection-hostname("engine-ws-port")
+      env: NODE_WS
+    node-authrpc:
+      type: string
+      value: <- connection-hostname("engine-authrpc-port")
+      env: NODE_AUTHRPC
+    node-resp:
+      type: string
+      value: <- connection-hostname("engine-resp-port")
+      env: NODE_RESP
+    node-http:
+      type: string
+      value: <- connection-hostname("engine-http-port")
+      env: NODE_HTTP
+
+  connections:
+    engine-port-udp:
+      runnable: taiko/execution-engine
+      service: port-udp
+    engine-port-tcp:
+      runnable: taiko/execution-engine
+      service: port-tcp
+    engine-metrics-port:
+      runnable: taiko/execution-engine
+      service: metrics-port
+    engine-ws-port:
+      runnable: taiko/execution-engine
+      service: ws-port
+    engine-resp-port:
+      runnable: taiko/execution-engine
+      service: resp-port
+    engine-authrpc-port:
+      runnable: taiko/execution-engine
+      service: authrpc-port
+    engine-http-port:
+      runnable: taiko/execution-engine
+      service: http-port
+  files:
+    start-driver:
+      container: client-driver
+      path: /home/start-driver.sh
+      contents: <<< files/start-driver.sh
+      mode: 0755
+    config:
+      container: client-driver
+      path: /home/config.toml
+      contents: <<< files/config.toml
+      mode: 0755
+
+client-prover-relayer:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - taiko/execution-engine
+        - taiko/client-driver-with-prover
+  inherits: taiko/base
+  containers:
+    client-prover-relayer:
+      image: us-docker.pkg.dev/evmchain/images/taiko-client:taiko-client-v0.29.0
+      restart: unless-stopped
+      ports:
+        - 9876:9876
+      entrypoint: /home/start-prover-relayer.sh
+      paths:
+        - <- `${monk-volume-path}/taiko:/data/taiko-geth`
+  variables:
+    nodeIP:
+      type: string
+      value: <- ip-address-public
+      env: NODE_IP
+    node-host:
+      type: string
+      value: <- connection-hostname("engine-http")
+      env: NODE_HOST
+  files:
+    start-proposer:
+      container: client-prover-relayer
+      path: /home/start-prover-relayer.sh
+      contents: <<< files/start-prover-relayer.sh
+      mode: 0755
+    config:
+      container: client-proposer
+      path: /home/config.toml
+      contents: <<< files/config.toml
+      mode: 0755
+
+client-proposer:
+  defines: runnable
+  depends:
+    wait-for:
+      runnables:
+        - taiko/execution-engine
+        - taiko/client-driver-with-prover
+  inherits: taiko/base
+  containers:
+    client-proposer:
+      image: us-docker.pkg.dev/evmchain/images/taiko-client:taiko-client-v0.29.0
+      restart: unless-stopped
+      entrypoint: /home/start-proposer.sh
+      paths:
+        - <- `${monk-volume-path}/taiko:/data/taiko-geth`
+  variables:
+    nodeIP:
+      type: string
+      value: <- ip-address-public
+      env: NODE_IP
+    node-ws:
+      type: string
+      value: <- connection-hostname("engine-ws-port")
+      env: NODE_WS
+    node-authrpc:
+      type: string
+      value: <- connection-hostname("engine-authrpc-port")
+      env: NODE_AUTHRPC
+    node-resp:
+      type: string
+      value: <- connection-hostname("engine-resp-port")
+      env: NODE_RESP
+    node-http:
+      type: string
+      value: <- connection-hostname("engine-http-port")
+      env: NODE_HTTP
+
+  connections:
+    engine-port-udp:
+      runnable: taiko/execution-engine
+      service: port-udp
+    engine-port-tcp:
+      runnable: taiko/execution-engine
+      service: port-tcp
+    engine-metrics-port:
+      runnable: taiko/execution-engine
+      service: metrics-port
+    engine-ws-port:
+      runnable: taiko/execution-engine
+      service: ws-port
+    engine-resp-port:
+      runnable: taiko/execution-engine
+      service: resp-port
+    engine-authrpc-port:
+      runnable: taiko/execution-engine
+      service: authrpc-port
+    engine-http-port:
+      runnable: taiko/execution-engine
+      service: http-port
+  files:
+    start-proposer:
+      container: client-proposer
+      path: /home/start-proposer.sh
+      contents: <<< files/start-proposer.sh
+      mode: 0755
+    config:
+      container: client-proposer
+      path: /home/config.toml
+      contents: <<< files/config.toml
+      mode: 0755
+
+client-driver-with-prover:
+  defines: runnable
+  inherits: taiko/client-driver
+  variables:
+    p2p_sync:
+      type: string
+      value: true
+      env: P2P_SYNC
+
+prover-group:
+  defines: process-group
+  variables:
+    defines: variables
+  runnable-list:
+    - execution-engine
+    - client-driver
+
+# todo: need to test on machin with intel SGX
+prover-relayer-group:
+  defines: process-group
+  runnable-list:
+    - execution-engine
+    - client-driver-with-prover
+    - client-prover-relayer
+
+proposer-group:
+  defines: process-group
+  runnable-list:
+    - execution-engine
+    - client-driver-with-prover
+    - client-proposer

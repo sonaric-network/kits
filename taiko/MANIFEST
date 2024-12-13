@@ -1,0 +1,4 @@
+REPO taiko
+RESOURCES files/start.sh files/start-proposer.sh files/start-driver.sh files/start-prover-relayer.sh files/config.toml files/config-raiko.toml
+LOAD taiko.yaml
+LOAD raiko.yaml

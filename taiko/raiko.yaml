@@ -1,0 +1,291 @@
+namespace: raiko
+
+base:
+  metadata:
+    name: "Raiko"
+    shortname: Raiko
+    description: |
+      Taiko's multi-prover for Taiko & Ethereum blocks. Currently supports Risc0, SP1, and SGX.
+    website: 'https://taiko.xyz/'
+    source: 'https://github.com/taikoxyz/raiko'
+    publisher: Sonaric
+    icon: https://avatars.githubusercontent.com/u/99078433?s=200&v=4
+    network: taiko
+    version: 1.0.0
+
+raiko-init:
+  defines: runnable
+  containers:
+    raiko-init:
+      image: us-docker.pkg.dev/evmchain/images/raiko:latest
+      entrypoint: /home/start.sh
+  files:
+    start:
+      container: raiko-init
+      path: /home/start.sh
+      contents: |
+        #!/bin/bash
+        source /home/config-raiko.toml
+        /opt/raiko/bin/entrypoint.sh --init
+      mode: 0755
+    config:
+      container: raiko-init
+      path: /home/config-raiko.toml
+      contents: <<< files/config-raiko.toml
+      mode: 0755
+
+init-self-register:
+  defines: runnable
+  containers:
+    init-self-register:
+      image: us-docker.pkg.dev/evmchain/images/raiko:latest
+      entrypoint: /home/start.sh
+      paths:
+        - <- `${monk-volume-path}/raiko:/data/raiko-init`
+  files:
+    start:
+      container: raiko-init
+      path: /home/start.sh
+      contents: |
+        #!/bin/bash
+        source /home/config-raiko.toml
+        /opt/raiko/bin/entrypoint.sh --init-self-register
+      mode: 0755
+    config:
+      container: raiko-init
+      path: /home/config-raiko.toml
+      contents: <<< files/config-raiko.toml
+      mode: 0755
+  variables:
+    L1_RPC:
+      type: string
+      required: true
+      value: ""
+      env: L1_RPC
+    L1_CHAIN_ID:
+      type: string
+      required: true
+      value: ""
+      env: L1_CHAIN_ID
+    SGX_VERIFIER_ADDRESS:
+      type: string
+      required: true
+      value: ""
+      env: SGX_VERIFIER_ADDRESS
+    HOLESKY_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_RPC
+    HOLESKY_BEACON_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_BEACON_RPC
+    TAIKO_A7_RPC:
+      type: string
+      required: true
+      value: ""
+      env: TAIKO_A7_RPC
+
+raiko:
+  defines: runnable
+  containers:
+    raiko:
+      image: us-docker.pkg.dev/evmchain/images/raiko:latest
+      entrypoint: /home/start.sh
+      ports:
+        - 8080:8080
+      paths:
+        - <- `${monk-volume-path}/raiko:/data/raiko`
+      environment:
+        - <- `SGX_DIRECT=$SGX_DIRECT`
+        - <- `SGX_INSTANCE_ID=$SGX_INSTANCE_ID`
+        - <- `ETHEREUM_RPC=$ETHEREUM_RPC`
+        - <- `ETHEREUM_BEACON_RPC=$ETHEREUM_BEACON_RPC`
+        - <- `HOLESKY_RPC=$HOLESKY_RPC`
+        - <- `HOLESKY_BEACON_RPC=$HOLESKY_BEACON_RPC`
+        - <- `TAIKO_A7_RPC=$TAIKO_A7_RPC`
+        - <- `TAIKO_MAINNET_RPC=$TAIKO_MAINNET_RPC`
+        - <- `L1_NETWORK=$L1_NETWORK`
+        - <- `NETWORK=$NETWORK`
+  files:
+    start:
+      container: raiko-init
+      path: /home/start.sh
+      contents: |
+        #!/bin/bash
+        source /home/config-raiko.toml
+        /opt/raiko/bin/entrypoint.sh --config-path=/etc/raiko/config.sgx.json --chain-spec-path=/etc/raiko/chain_spec_list.docker.json
+      mode: 0755
+    config:
+      container: raiko-init
+      path: /home/config-raiko.toml
+      contents: <<< files/config-raiko.toml
+      mode: 0755
+  variables:
+    SGX_DIRECT:
+      type: string
+      required: true
+      value: ""
+      env: SGX_DIRECT
+    SGX_INSTANCE_ID:
+      type: string
+      required: true
+      value: ""
+      env: SGX_INSTANCE_ID
+    ETHEREUM_RPC:
+      type: string
+      required: true
+      value: ""
+      env: ETHEREUM_RPC
+    ETHEREUM_BEACON_RPC:
+      type: string
+      required: true
+      value: ""
+      env: ETHEREUM_BEACON_RPC
+    HOLESKY_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_RPC
+    HOLESKY_BEACON_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_BEACON_RPC
+    TAIKO_A7_RPC:
+      type: string
+      required: true
+      value: ""
+      env: TAIKO_A7_RPC
+    TAIKO_MAINNET_RPC:
+      type: string
+      required: true
+      value: ""
+      env: TAIKO_MAINNET_RPC
+    L1_NETWORK:
+      type: string
+      required: true
+      value: ""
+      env: L1_NETWORK
+    NETWORK:
+      type: string
+      required: true
+      value: ""
+      env: NETWORK
+
+raiko-self-register:
+  defines: runnable
+  containers:
+    raiko-self-register:
+      image: us-docker.pkg.dev/evmchain/images/raiko:latest
+      ports:
+        - 8080:8080
+      entrypoint: /home/start.sh
+      paths:
+        - <- `${monk-volume-path}/raiko:/data/raiko`
+      environment:
+        - <- `ETHEREUM_RPC=$ETHEREUM_RPC`
+        - <- `ETHEREUM_BEACON_RPC=$ETHEREUM_BEACON_RPC`
+        - <- `HOLESKY_RPC=$HOLESKY_RPC`
+        - <- `HOLESKY_BEACON_RPC=$HOLESKY_BEACON_RPC`
+        - <- `TAIKO_A7_RPC=$TAIKO_A7_RPC`
+        - <- `TAIKO_MAINNET_RPC=$TAIKO_MAINNET_RPC`
+        - <- `L1_NETWORK=$L1_NETWORK`
+        - <- `NETWORK=$NETWORK`
+  files:
+    start:
+      container: raiko-init
+      path: /home/start.sh
+      contents: |
+        #!/bin/bash
+        source /home/config-raiko.toml
+        /opt/raiko/bin/entrypoint.sh --config-path=/etc/raiko/config.sgx.json --chain-spec-path=/etc/raiko/chain_spec_list.docker.json
+      mode: 0755
+    config:
+      container: raiko-init
+      path: /home/config-raiko.toml
+      contents: <<< files/config-raiko.toml
+      mode: 0755
+  variables:
+    ETHEREUM_RPC:
+      type: string
+      required: true
+      value: ""
+      env: ETHEREUM_RPC
+    ETHEREUM_BEACON_RPC:
+      type: string
+      required: true
+      value: ""
+      env: ETHEREUM_BEACON_RPC
+    HOLESKY_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_RPC
+    HOLESKY_BEACON_RPC:
+      type: string
+      required: true
+      value: ""
+      env: HOLESKY_BEACON_RPC
+    TAIKO_A7_RPC:
+      type: string
+      required: true
+      value: ""
+      env: TAIKO_A7_RPC
+    TAIKO_MAINNET_RPC:
+      type: string
+      required: true
+      value: ""
+      env: TAIKO_MAINNET_RPC
+    L1_NETWORK:
+      type: string
+      required: true
+      value: ""
+      env: L1_NETWORK
+    NETWORK:
+      type: string
+      required: true
+      value: ""
+      env: NETWORK
+
+pccs:
+  defines: runnable
+  containers:
+    pccs:
+      image: us-docker.pkg.dev/evmchain/images/raiko:latest
+      restart: unless-stopped
+
+init-group:
+  defines: process-group
+  runnable-list:
+    - raiko-init
+    - pccs
+
+init-self-register-group:
+  defines: process-group
+  runnable-list:
+    - init-self-register
+    - pccs
+
+raiko-group:
+  defines: process-group
+  runnable-list:
+    - raiko
+    - pccs
+
+raiko-self-register-group:
+  defines: process-group
+  runnable-list:
+    - raiko-self-register
+    - pccs
+
+full-group:
+  defines: process-group
+  runnable-list:
+    - raiko-init
+    - init-self-register
+    - raiko
+    - raiko-self-register
+    - pccs
