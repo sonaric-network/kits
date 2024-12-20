@@ -1,0 +1,101 @@
+namespace: fuel
+
+common:
+  metadata:
+    name: Fuel
+    shortname: Fuel
+    description: >-
+      Fuel is a Rust full node implementation of the Fuel v2 protocol, designed
+      to run as a node in the Fuel network, which is a blockchain protocol.
+    network: fuel
+    publisher: Sonaric
+    website: 'https://www.fuel.network/'
+    source: 'https://github.com/FuelLabs/fuel-core'
+    currency: FUEL
+    icon: https://github.com/FuelLabs/sway-examples/raw/master/public/sway-examples-logo-light-theme.png
+    tags: 'blockchain,protocol,rust'
+  requirements:
+    CPU: '4'
+    RAM: 8192
+    GPU: false
+    disk: 100
+  variables:
+    ethereum-rpc-endpoint:
+      description: 'Ethereum RPC endpoint'
+      type: string
+      value: "https://ethereum-rpc.publicnode.com"
+      env: ETHEREUM_RPC_ENDPOINT
+    password:
+      description: 'password for wallet'
+      type: string
+      required: true
+      value: "12345678"
+      env: PASSWORD
+    private-key:
+      description: 'private key for wallet'
+      type: string
+      required: true
+      value: ""
+      env: PRIVATE_KEY
+  services:
+    p2p:
+      container: node
+      port: 30303
+      host-port: 30303
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 8545
+      host-port: 8545
+      protocol: tcp
+      publish: true
+  actions:
+    export-mnemonic-phrase:
+      description: "Export the mnemonic phrase."
+      code: exec("node", "/bin/bash", "-c", "cat /root/forc_wallet_output.txt")
+    export-address:
+      description: "Export the private key."
+      code: exec("node", "/bin/bash", "-c", "cat /root/forc_wallet_account.txt")
+
+testnet:
+  defines: runnable
+  inherits: fuel/common
+  containers:
+    node:
+      image: sonaric.azurecr.io/public/fuel-core
+      paths:
+        - '<- `${monk-volume-path}/fuel-data:/var/lib/fuel`'
+      entrypoint: /root/testnet.sh
+  files:
+    entrypoint:
+      container: node
+      path: /root/testnet.sh
+      contents: <<< files/testnet.sh
+      mode: 0755
+    account:
+      container: node
+      path: /root/forc_wallet_account.exp
+      contents: <<< files/forc_wallet_account.exp
+      mode: 0755
+
+mainnet:
+  defines: runnable
+  inherits: fuel/common
+  containers:
+    node:
+      image: sonaric.azurecr.io/public/fuel-core
+      paths:
+        - '<- `${monk-volume-path}/fuel-data:/var/lib/fuel`'
+      entrypoint: /root/mainnet.sh
+  files:
+    entrypoint:
+      container: node
+      path: /root/mainnet.sh
+      contents: <<< files/mainnet.sh
+      mode: 0755
+    account:
+      container: node
+      path: /root/forc_wallet_account.exp
+      contents: <<< files/forc_wallet_account.exp
+      mode: 0755
