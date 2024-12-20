@@ -1,0 +1,3 @@
+REPO fuel
+RESOURCES files/mainnet.sh files/testnet.sh files/forc_wallet_account.exp
+LOAD fuel.yaml

@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+
+# Установите таймаут ожидания (в секундах)
+set timeout 20
+
+# Переменные
+set password [lindex $argv 0]
+set forc_wallet_path "/root/.fuelup/bin/forc-wallet"
+
+# Создание аккаунта
+spawn $forc_wallet_path account new
+expect "Please enter your wallet password to derive account 1:"
+send "$password\r"
+expect eof
