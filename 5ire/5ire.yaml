@@ -1,0 +1,137 @@
+namespace: 5ire
+
+common:
+  metadata:
+    name: 5ire
+    shortname: 5ire
+    description: >-
+      5ireChain is a blockchain ecosystem for Impact & SDG-related development,
+      management, and investment, with a network of working groups, collectives,
+      and DAOs to help accelerate the United Nations 2030 Agenda for Sustainable
+      Development. The 5IRE network aims to bring a paradigm shift from a
+      for-profit to a for-benefit. It will implement sustainability by design
+      while ensuring interoperability, forkless upgradeability, scalability,
+      strong security guarantees, democracy & governance.
+    network: 5ire
+    publisher: Sonaric
+    website: 'https://5ire.org/'
+    source: 'https://github.com/5ire-tech/5ireChain'
+    currency: 5IRE
+    icon: 'https://plotter.blob.core.windows.net/icons/60x60.5_ire1691658310704.png'
+    tags: 'blockchain,validator,sustainability,network,staking'
+
+base-node:
+  inherits: 5ire/common
+  metadata:
+    description: >-
+      This is a common template for all nodes in the 5ire. Won't run on its own.
+  containers:
+    node:
+      image: <- `${image}`
+      arch: linux/amd64
+      ports:
+        - 30333:30333
+        - 9944:9944
+      paths:
+        - <- `${monk-volume-path}/5ire/${node-type}/data:/5ire/data/`
+      cmd: <- `--no-telemetry --base-path /5ire/data/ --chain ${chain-spec} --bootnodes ${bootnodes} ${extra-args}`
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9944
+      host-port: 9944
+      protocol: tcp
+      publish: true
+  variables: # default values are for mainnet node
+    image:
+      description: The Docker image to use
+      type: string
+      required: true
+      value: '5irechain/5ire-node:mainnet'
+    node-type:
+      type: string
+      value: 'mainnet-full'
+    chain-spec:
+      description: The chain specification to use
+      type: string
+      required: true
+      value: '/5ire/specs/5ire-mainnet-specRaw.json'
+    bootnodes:
+      description: The bootnodes to use
+      type: string
+      required: true
+      value: '/ip4/44.229.117.8/tcp/30333/p2p/12D3KooWHZ98etYokeswbKfCbUrgU2U2RjEaH1t1HprVGcLcFcnD'
+    extra-args:
+      description: Extra arguments to pass to the node
+      type: string
+      value: ''
+
+mainnet-full:
+  defines: runnable
+  inherits: 5ire/base-node
+  metadata:
+    name: 5ire Mainnet Full Node
+    shortname: mainnet-full-node
+    description: >-
+      A full node for the 5ireChain mainnet, ensuring interoperability and
+      strong security.
+    network: mainnet
+  variables:
+    extra-args: '--pruning archive --rpc-external --rpc-cors all'
+    node-type: 'mainnet-full'
+
+
+testnet-full:
+  defines: runnable
+  inherits: 5ire/base-node
+  metadata:
+    name: 5ire Testnet Full Node
+    shortname: testnet-full-node
+    description: >-
+      A full node for the 5ireChain testnet, ensuring interoperability and strong security.
+    network: testnet
+  containers:
+    node:
+  variables:
+    image: '5irechain/5ire-thunder-node:ga'
+    chain-spec: '/5ire/specs/5ire-thunder-SpecRaw.json'
+    bootnodes: '/ip4/18.220.218.66/tcp/30333/p2p/12D3KooWA33HomkBqsKNqEbaP3ubXCSxHmqDNNPDf2qPzmiS9FsL'
+    extra-args: '--pruning archive --rpc-external --rpc-cors all'
+    node-type: 'testnet-full'
+
+mainnet-validator:
+  defines: runnable
+  inherits: 5ire/base-node
+  metadata:
+    name: 5ire Mainnet Validator Node
+    shortname: mainnet-validator
+    description: >-
+      A validator node for the 5ireChain mainnet, participating in consensus and earning rewards.
+    network: mainnet
+  variables:
+    extra-args: '--validator'
+    node-type: 'mainnet-validator'
+
+
+testnet-validator:
+  defines: runnable
+  inherits: 5ire/base-node
+  metadata:
+      name: 5ire Testnet Validator Node
+      shortname: testnet-validator
+      description: >-
+        A validator node for the 5ireChain testnet, participating in consensus and earning rewards.
+      network: testnet
+  variables:
+    image: '5irechain/5ire-thunder-node:ga'
+    chain-spec: '/5ire/specs/5ire-thunder-SpecRaw.json'
+    bootnodes: '/ip4/18.220.218.66/tcp/30333/p2p/12D3KooWA33HomkBqsKNqEbaP3ubXCSxHmqDNNPDf2qPzmiS9FsL'
+    extra-args: '--validator'
+    node-type: 'testnet-validator'
+
