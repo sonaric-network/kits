@@ -1,0 +1,184 @@
+namespace: 5irechain
+common:
+  metadata:
+    name: 5ireChain
+    shortname: 5ireChain
+    description: >-
+      5ireChain is a hybrid Layer-1 blockchain ecosystem designed with economic
+      and environmental sustainability at its core. It uses a Sustainable Proof
+      of Stake (SPoS) consensus mechanism to reward sustainable practices. The
+      platform is EVM-compatible, supports dual-chain smart contracts, and
+      integrates real-world assets (RWA) for tokenizing physical assets. It is
+      energy-efficient, using 45% less energy compared to traditional systems,
+      and achieves high performance with over 1,500 transactions per second
+      (TPS) and an average block time of 3 seconds.
+    network: 5irechain
+    publisher: Sonaric
+    website: 'https://www.5ire.org/'
+    source: 'https://github.com/5ire-tech/5ireChain'
+    currency: 5IRE
+    icon: 'https://avatars.githubusercontent.com/u/106282920?s=200&v=4'
+    tags: 'blockchain,layer-1,evm-compatible,sustainability,real-world-assets'
+  requirements:
+    CPU: 4
+    RAM: 8192
+    GPU: false
+    disk: 250
+
+
+5ire-base:
+  inherits: 5irechain/common
+  variables:
+    node-type:
+      type: string
+      description: >
+        Specifies the type of node (e.g., mainnet-full, mainnet-validator,
+        thunder-testnet-full, thunder-testnet-validator).
+    image:
+      type: string
+      description: Specifies the Docker image to be used for the node.
+    chain:
+      type: string
+      description: Specifies the chain configuration file path.
+    bootnodes:
+      type: string
+      description: Specifies the bootnodes for the network.
+    extra-args:
+      type: string
+      description: Specifies additional arguments for the node.
+  containers:
+    node:
+      image: <- $image
+      paths:
+        - '<- `${monk-volume-path}/5ire/${node-type}/data:/5ire/data/`'
+      cmd: <- `--no-telemetry --base-path /5ire/data/ --chain ${chain} --bootnodes ${bootnodes} ${extra-args}`
+      arch: linux/amd64
+  services:
+    p2p:
+      container: node
+      port: 30333
+      host-port: 30333
+      protocol: tcp
+      publish: true
+    rpc:
+      container: node
+      port: 9944
+      host-port: 9944
+      protocol: tcp
+      publish: true
+
+
+mainnet-fullnode:
+  defines: runnable
+  inherits: 5irechain/5ire-base
+  metadata:
+    name: 5ireChain Mainnet Full Node
+    shortname: mainnet-fullnode
+    description: >-
+      A full node for the 5ireChain mainnet, supporting P2P communication and
+      RPC services.
+    network: mainnet-fullnode
+  variables:
+    image:
+      type: string
+      value: '5irechain/5ire-node:mainnet'
+    node-type:
+      type: string
+      value: mainnet-full
+    chain:
+      type: string
+      value: /5ire/specs/5ire-mainnet-specRaw.json
+    bootnodes:
+      type: string
+      value: >-
+        /ip4/44.229.117.8/tcp/30333/p2p/12D3KooWHZ98etYokeswbKfCbUrgU2U2RjEaH1t1HprVGcLcFcnD
+    extra-args:
+      type: string
+      value: --pruning archive --rpc-external --rpc-cors all
+
+
+mainnet-validator:
+  defines: runnable
+  inherits: 5irechain/5ire-base
+  metadata:
+    name: 5ireChain Mainnet Validator Node
+    shortname: mainnet-validator
+    description: >-
+      A validator node for the 5ireChain mainnet, participating in consensus and
+      block validation.
+    network: mainnet-validator
+  variables:
+    image:
+      type: string
+      value: '5irechain/5ire-node:mainnet'
+    node-type:
+      type: string
+      value: mainnet-validator
+    chain:
+      type: string
+      value: /5ire/specs/5ire-mainnet-specRaw.json
+    bootnodes:
+      type: string
+      value: >-
+        /ip4/44.229.117.8/tcp/30333/p2p/12D3KooWHZ98etYokeswbKfCbUrgU2U2RjEaH1t1HprVGcLcFcnD
+    extra-args:
+      type: string
+      value: --validator
+
+
+thunder-testnet-fullnode:
+  defines: runnable
+  inherits: 5irechain/5ire-base
+  metadata:
+    name: 5ireChain Thunder Testnet Full Node
+    shortname: thunder-testnet-fullnode
+    description: >-
+      A full node for the 5ireChain Thunder Testnet, supporting P2P
+      communication and RPC services.
+    network: thunder-testnet-fullnode
+  variables:
+    image:
+      type: string
+      value: '5irechain/5ire-thunder-node:ga'
+    node-type:
+      type: string
+      value: thunder-testnet-full
+    chain:
+      type: string
+      value: /5ire/specs/5ire-thunder-SpecRaw.json
+    bootnodes:
+      type: string
+      value: >-
+        /ip4/18.220.218.66/tcp/30333/p2p/12D3KooWA33HomkBqsKNqEbaP3ubXCSxHmqDNNPDf2qPzmiS9FsL
+    extra-args:
+      type: string
+      value: --pruning archive --rpc-external --rpc-cors all
+
+
+thunder-testnet-validator:
+  defines: runnable
+  inherits: 5irechain/5ire-base
+  metadata:
+    name: 5ireChain Thunder Testnet Validator Node
+    shortname: thunder-testnet-validator
+    description: >-
+      A validator node for the 5ireChain Thunder Testnet, participating in
+      consensus and block validation.
+    network: thunder-testnet-validator
+  variables:
+    image:
+      type: string
+      value: '5irechain/5ire-thunder-node:ga'
+    node-type:
+      type: string
+      value: thunder-testnet-validator
+    chain:
+      type: string
+      value: /5ire/specs/5ire-thunder-SpecRaw.json
+    bootnodes:
+      type: string
+      value: >-
+        /ip4/18.220.218.66/tcp/30333/p2p/12D3KooWA33HomkBqsKNqEbaP3ubXCSxHmqDNNPDf2qPzmiS9FsL
+    extra-args:
+      type: string
+      value: --validator
