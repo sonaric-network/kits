@@ -65,7 +65,8 @@ l2-edge-node:
     node-hash:
       description: Unique identification hash for binding the node to the network.
       type: string
-      value: '0301B57F-4086-4F71-9194-FF8AE63ED779'
+      required: true
+      value: ''
       env: NODE_HASH
     path:
       description: Path to the storage directory.

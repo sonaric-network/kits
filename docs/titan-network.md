@@ -29,6 +29,14 @@ Repository  Template                     Version  Type      Tags
 local       titan-network/l2-edge-node            runnable  blockchain
 ```
 
+### Configuration
+
+Template variables can be set to customize the node's behavior. The following variables can be configured:
+| Name                         | Type   | Description                                         | Default Value                                           |
+|------------------------------|--------|-----------------------------------------------------|---------------------------------------------------------|
+| `node-hash`                  | string | [identification code](https://titannet.gitbook.io/titan-network-en/resource-network-test/bind-the-identity-code)| `""`                                                    |
+
+
 ### Run Titan Network
 
 Run a Titan Network node using:
