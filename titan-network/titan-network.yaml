@@ -1,0 +1,87 @@
+namespace: titan-network
+
+common:
+  metadata:
+    name: Titan Network
+    shortname: Titan Network
+    description: >-
+      Titan Network is a digital resource network designed to match idle
+      community resources with global demand, enabling the aggregation or
+      deployment of hardware resources to provide interchangeable digital
+      resources such as computing, storage, and bandwidth. It features built-in
+      economic incentives and network design to reward contributors while
+      delivering high-quality results to end-users. The platform is open-source,
+      has a low barrier to entry, and aims to facilitate the construction of the
+      Internet of Value.
+    network: titan-network
+    publisher: Sonaric
+    website: 'https://www.titannet.io/'
+    source: 'https://github.com/Filecoin-Titan/titan'
+    currency: TNT3
+    icon: >-
+      https://titannet.gitbook.io/~gitbook/image?url=https%3A%2F%2F3822791205-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FrZQtAKIIsvAQP0E9RumD%252Ficon%252FSIzCqggdE10AHjahCad9%252FiShot2023-05-25_16.19.31.png%3Falt%3Dmedia%26token%3D925990e2-c6f4-4f86-9250-b40100b7265f&width=32&dpr=4&quality=100&sign=b2907329&sv=2
+    tags: 'digital resources, blockchain, decentralized network'
+
+l2-edge-node:
+  defines: runnable
+  inherits: titan-network/common
+  metadata:
+    name: Titan L2 Edge Node
+    shortname: l2-edge-node
+    description: L2 Edge nodes provide storage and bandwidth sharing.
+    network: l2-edge-node
+  requirements:
+    CPU: "1Core"
+    RAM: 1024
+    GPU: false
+    disk: 50
+  containers:
+    node:
+      image: 'nezha123/titan-edge:latest'
+      paths:
+        - '<- `${monk-volume-path}/titan-edge-storage:/root/.titanedge`'
+      entrypoint: ./sonaric-init.sh
+  ports:
+    edge:
+      container: node
+      port: 1234
+      host-port: 1234
+      protocol: tcp
+      publish: true
+  files:
+    init:
+      container: node
+      path: /sonaric-init.sh
+      mode: 0755
+      contents: |-
+        #!/bin/bash
+        titan-edge daemon start --init --url=https://cassini-locator.titannet.io:5000/rpc/v0 & sleep 5
+        titan-edge daemon stop
+        titan-edge bind --hash=$NODE_HASH https://api-test1.container1.titannet.io/api/v2/device/binding
+        titan-edge config set --storage-path $STORAGE_PATH
+        titan-edge config set --storage-size 50GB
+        titan-edge daemon start --url=https://cassini-locator.titannet.io:5000/rpc/v0
+  variables:
+    node-hash:
+      description: Unique identification hash for binding the node to the network.
+      type: string
+      value: '0301B57F-4086-4F71-9194-FF8AE63ED779'
+      env: NODE_HASH
+    path:
+      description: Path to the storage directory.
+      type: string
+      value: '/root/.titanedge'
+      env: STORAGE_PATH
+  actions:
+    import-key:
+      description: Import the private key.
+      arguments:
+        privkey:
+          description: "Private key."
+          type: string
+          required: true
+      code: exec("node", "/bin/bash", "-c", `echo "${args["privkey"]}" > /root/private.key && titan-edge key import /root/private.key && rm /root/private.key`)
+    export-key:
+      description: Export the private key.
+      code: exec("node", "/bin/bash", "-c", "cat $STORAGE_PATH/private.key")
+
