@@ -12,6 +12,10 @@
 - [Documentation and API References](#documentation-and-api-references)
 
 ### Overview
+Quilibrium is a decentralized network designed for launching applications
+with the privacy of end-to-end encryption (E2EE) and the simplicity of
+cloud services. It is also described as a "decentralized MPC platform as a
+service."
 
 ### Load Template
 
