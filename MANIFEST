@@ -10,3 +10,4 @@ LOAD gnosis.yaml polygon.yaml solana.yaml
 DIR rollkit
 LOAD zkagi.yaml
 DIR blockscout
+LOAD filstation/filstation.yaml
