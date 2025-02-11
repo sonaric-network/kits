@@ -56,7 +56,7 @@ default-node:
           type: string
           required: true
       code: exec("node", "/bin/bash", "-c", `echo "${args["privkey"]}" > /root/.config/key.yml`)
-    get-balance:
+    balance:
       container: node
       description: Get the balance.
       code: exec("node", "/bin/bash", "-c", "qclient token balance")
