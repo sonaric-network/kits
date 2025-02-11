@@ -9,6 +9,7 @@
 - [Template Actions](#template-actions)
     - [Export key](#export-key)
     - [Import key](#import-key)
+    - [Balance](#balance)
 - [Documentation and API References](#documentation-and-api-references)
 
 ### Overview
@@ -155,6 +156,16 @@ sonaric purge quilibrium/default-node
 Import a key to the node's key store.
 ```bash
 sonaric do templates/local/quilibrium/default-node/import-key privkey=
+```
+
+### Balance
+Check the balance of the node.
+```bash
+  sonaric do templates/local/quilibrium/default-node/balance
+```
+
+```
+2.12345678
 ```
 
 ### Import Config

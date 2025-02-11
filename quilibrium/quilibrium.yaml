@@ -13,7 +13,7 @@ common:
     publisher: Sonaric
     website: 'https://quilibrium.com/'
     source: 'https://github.com/QuilibriumNetwork'
-    currency: Unknown
+    currency: QUIL
     icon: 'https://quilibrium.guide/logo-red.png'
     tags: 'decentralized,mpc,privacy,e2ee'
 
@@ -59,7 +59,7 @@ default-node:
     balance:
       container: node
       description: Get the balance.
-      code: exec("node", "/bin/bash", "-c", "qclient token balance")
+      code: exec("node", "/bin/bash", "-c", "qclient token balance | grep 'Total balance' | awk '{print $3}'")
     import-config:
       container: node
       description: Import the config.
