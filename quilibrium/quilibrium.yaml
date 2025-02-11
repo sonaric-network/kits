@@ -1,0 +1,119 @@
+namespace: quilibrium
+
+common:
+  metadata:
+    name: Quilibrium
+    shortname: Quilibrium
+    description: >-
+      Quilibrium is a decentralized network designed for launching applications
+      with the privacy of end-to-end encryption (E2EE) and the simplicity of
+      cloud services. It is also described as a "decentralized MPC platform as a
+      service."
+    network: quilibrium
+    publisher: Sonaric
+    website: 'https://quilibrium.com/'
+    source: 'https://github.com/QuilibriumNetwork'
+    currency: QUIL
+    icon: 'https://quilibrium.guide/logo-red.png'
+    tags: 'decentralized,mpc,privacy,e2ee'
+
+default-node:
+  defines: runnable
+  inherits: quilibrium/common
+  metadata:
+    name: Quilibrium Default Node
+    shortname: default-node
+    description: >-
+      The default node setup for Quilibrium, designed for general participation
+      in the network.
+    network: default-node
+  requirements:
+    CPU: '8'
+    RAM: 16384
+    GPU: false
+    disk: 250
+  containers:
+    node:
+      image: 'avacalho/quilibrium:2.0.6.3'
+      paths:
+        - '<- `${monk-volume-path}/config-data:/root/.config`'
+      entrypoint: node --signature-check=false
+  actions:
+    export-key:
+      container: node
+      description: Export the private key.
+      code: exec("node", "/bin/bash", "-c", "cat /root/.config/key.yml")
+    export-config:
+      container: node
+      description: Export the config.
+      code: exec("node", "/bin/bash", "-c", "cat /root/.config/config.yml")
+    import-key:
+      container: node
+      description: Import the private key.
+      arguments:
+        privkey:
+          description: "Private key"
+          type: string
+          required: true
+      code: exec("node", "/bin/bash", "-c", `echo "${args["privkey"]}" > /root/.config/key.yml`)
+    balance:
+      container: node
+      description: Get the balance.
+      code: exec("node", "/bin/bash", "-c", "qclient token balance | grep 'Total balance' | awk '{print $3}'")
+    import-config:
+      container: node
+      description: Import the config.
+      arguments:
+        config:
+          description: "Config"
+          type: string
+          required: true
+      code: exec("node", "/bin/bash", "-c", `echo "${args["config"]}" > /root/.config/config.yml`)
+  services:
+    p2p-port:
+      container: node
+      port: 8336
+      host-port: 8336
+      protocol: tcp
+      publish: true
+    p2p-port-udp:
+      container: node
+      port: 8336
+      host-port: 8336
+      protocol: udp
+      publish: true
+    grpc-port:
+      container: node
+      port: 8337
+      host-port: 8337
+      protocol: tcp
+      publish: true
+    rest-port:
+      container: node
+      port: 8338
+      host-port: 8338
+      protocol: tcp
+      publish: true
+  variables:
+    goexperiment:
+      description: Go experiment variable.
+      type: string
+      value: arenas
+      env: GOEXPERIMENT
+    listen-grpc-multiaddr:
+      description: gRPC multiaddress.
+      type: string
+      value: /ip4/0.0.0.0/tcp/8337
+      env: DEFAULT_LISTEN_GRPC_MULTIADDR
+    listen-rest-multiaddr:
+      description: REST multiaddress.
+      type: string
+      value: /ip4/0.0.0.0/tcp/8338
+      env: DEFAULT_LISTEN_REST_MULTIADDR
+    stats-multiaddr:
+      description: Stats multiaddress.
+      type: string
+      value: /dns/stats.quilibrium.com/tcp/443
+      env: DEFAULT_STATS_MULTIADDR
+
+
