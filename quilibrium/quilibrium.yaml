@@ -55,7 +55,11 @@ default-node:
           description: "Private key"
           type: string
           required: true
-        code: exec("node", "/bin/bash", "-c", `echo "${args["privkey"]}" > /root/.config/key.yml`)
+      code: exec("node", "/bin/bash", "-c", `echo "${args["privkey"]}" > /root/.config/key.yml`)
+    get-balance:
+      container: node
+      description: Get the balance.
+      code: exec("node", "/bin/bash", "-c", "qclient token balance")
     import-config:
       container: node
       description: Import the config.
@@ -64,7 +68,7 @@ default-node:
           description: "Config"
           type: string
           required: true
-        code: exec("node", "/bin/bash", "-c", `echo "${args["config"]}" > /root/.config/config.yml`)
+      code: exec("node", "/bin/bash", "-c", `echo "${args["config"]}" > /root/.config/config.yml`)
   services:
     p2p-port:
       container: node
