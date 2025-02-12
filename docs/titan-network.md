@@ -7,7 +7,10 @@
 - [Run Titan Network](#run-titan-network)
 - [logs](#logs)
 - [Template Actions](#template-actions)
-    - [Export key](#export-key)
+  - [Status](#status)
+  - [Balance](#balance)
+  - [Import key](#import-key)
+  - [Export key](#export-key)
 - [Documentation and API References](#documentation-and-api-references)
 
 ### Overview
@@ -30,19 +33,16 @@ local       titan-network/l2-edge-node            runnable  blockchain
 ```
 
 ### Configuration
-
-Template variables can be set to customize the node's behavior. The following variables can be configured:
-| Name                         | Type   | Description                                         | Default Value                                           |
-|------------------------------|--------|-----------------------------------------------------|---------------------------------------------------------|
-| `node-hash`                  | string | [identification code](https://titannet.gitbook.io/titan-network-en/resource-network-test/bind-the-identity-code)| `""`                                                    |
-
+| Name        | Type   | Description                                                                                                      | Default Value | Required |
+|-------------|--------|------------------------------------------------------------------------------------------------------------------|---------------|----------|
+| `node-hash` | string | [identification code](https://titannet.gitbook.io/titan-network-en/resource-network-test/bind-the-identity-code) | `""`          | Yes      |
 
 ### Run Titan Network
 
 Run a Titan Network node using:
 
 ```bash
-sonaric run titan-network/l2-edge-node
+sonaric run -s node-hash="<node-hash>" titan-network/l2-edge-node
 ```
 
 Output:
@@ -100,6 +100,29 @@ sonaric purge titan-network/l2-edge-node
 ```
 
 ## Template Actions
+
+### Status
+Check the status of the node.
+```bash
+  sonaric do templates/local/titan-network/l2-edge-node/status
+```
+
+Output:
+```
+{"running":true,"online":true}
+```
+
+### Balance
+Check the balance of the node.
+```bash
+sonaric do templates/local/titan-network/l2-edge-node/balance
+```
+
+Output:
+```
+9.687494
+```
+
 
 ### Import Key
 Import a key to the node's key store.

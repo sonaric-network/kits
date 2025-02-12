@@ -53,7 +53,7 @@ l2-edge-node:
       container: node
       path: /sonaric-init.sh
       mode: 0755
-      contents: |-
+      contents: |
         #!/bin/bash
         titan-edge daemon start --init --url=https://cassini-locator.titannet.io:5000/rpc/v0 & sleep 5
         titan-edge daemon stop
@@ -85,4 +85,16 @@ l2-edge-node:
     export-key:
       description: Export the private key.
       code: exec("node", "/bin/bash", "-c", "cat $STORAGE_PATH/private.key")
+    status:
+      description: Get the status of the node.
+      code: exec("node", "/bin/bash", "-c", " titan-edge state 2>/dev/null")
+    balance:
+      arguments:
+        info-url:
+          description: "Node ID"
+          type: string
+          default: <- "https://api-test1.container1.titannet.io/api/v2/get_query_info?key=" exec("node", "/bin/bash", "-c", "cat $STORAGE_PATH/node_id") concat
+      description: Get the balance of the node.
+      code: |
+        http-get($args["info-url"]) parse-json get-in(".data.list[0].cumulative_profit")
 
