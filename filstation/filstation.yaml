@@ -1,0 +1,73 @@
+namespace: filstation
+
+common:
+    metadata:
+        name: Station Core
+        shortname: Station Core
+        description: >
+            Station Core is a headless version of Filecoin Station that connects your
+            computer's idle resources to the Filecoin network and rewards you with
+            FIL. It is suitable for running on all kinds of servers.
+        network: filstation
+        publisher: sonaric
+        website: 'https://filstation.app'
+        source: 'https://github.com/filecoin-station/core'
+        currency: FIL
+        icon: "https://avatars.githubusercontent.com/u/114507463?s=200&v=4"
+        tags: 'filecoin, decentralized-storage, blockchain'
+
+headless-node:
+    defines: runnable
+    inherits: filstation/common
+    metadata:
+        name: Station Core Headless Node
+        shortname: filstation-node
+        description: >-
+            A headless version of Filecoin Station suitable for running on servers,
+            connecting idle resources to the Filecoin network.
+        network: headless-node
+    requirements:
+        RAM: 1024
+        disk: 2
+    containers:
+        node:
+            image: 'ghcr.io/checkernetwork/core:latest'
+            paths:
+                - '<- `${monk-volume-path}/filstation/state:/home/node/.local/state/filecoin-station-core`'
+                - '<- `${monk-volume-path}/filstation/cache:/home/node/.cache/filecoin-station-core`'
+                - '<- `${monk-volume-path}/filstation/keystore:/home/node/keystore`' # needed for the wallet import/export
+            hooks:
+                container-started: address
+    variables:
+        keystore-dir:
+            description: "Path to the keystore directory."
+            type: string
+            value: <- `${monk-volume-path}/filstation/keystore`
+        wallet-address:
+            description: The Filecoin wallet address to receive rewards.
+            type: string
+            env: FIL_WALLET_ADDRESS
+            value: <- act("filstation/headless-node/address") trim
+        passphrase:
+            description: The passphrase for securing the node.
+            type: string
+            env: PASSPHRASE
+            value: ""
+        rpc-url:
+            description: The RPC URL to connect to the Filecoin network.
+            type: string
+            value: "https://rpc.ankr.com/filecoin"
+    actions:
+        balance:
+            description: "Get Filecoin balance"
+            arguments:
+                rewards-url:
+                    description: "The Filecoin address to get the balance for."
+                    type: string
+                    default: <- "https://spark-rewards.fly.dev/scheduled-rewards/" wallet-ensure($keystore-dir) concat
+            code: |
+                http-get($args["rewards-url"]) to-f 1000000000000000000 to-f div
+        address:
+            description: "Get Filecoin address"
+            code: |
+                wallet-ensure($keystore-dir)
