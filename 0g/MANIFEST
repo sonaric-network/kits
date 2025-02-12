@@ -1,0 +1,3 @@
+REPO 0g
+RESOURCES files/start-validator.sh
+LOAD 0g.yaml
