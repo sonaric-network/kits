@@ -60,8 +60,13 @@ headless-node:
     actions:
         balance:
             description: "Get Filecoin balance"
+            arguments:
+                rewards-url:
+                    description: "The Filecoin address to get the balance for."
+                    type: string
+                    default: <- "https://spark-rewards.fly.dev/scheduled-rewards/" wallet-ensure($keystore-dir) concat
             code: |
-                wallet-get-balance($rpc-url, $wallet-address)
+                http-get($args["rewards-url"]) to-f 1000000000000000000 to-f div
         address:
             description: "Get Filecoin address"
             code: |

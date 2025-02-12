@@ -111,7 +111,7 @@ To get the wallet address:
 ```
 
 ## Balance
-To check the balance of the wallet address:
+To check the amount of scheduled rewards for the wallet address:
 ```bash
 sonaric do local/filstation/headless-node/balance
 ```
@@ -122,7 +122,7 @@ sonaric do local/filstation/headless-node/balance
 ✔ Parse parameters success
 ✔ Running the action... DONE
 ✔ Running action: 
-5.0 FIL
+0.000158027581917348
 ✨ Took: 1s
 ```
 
